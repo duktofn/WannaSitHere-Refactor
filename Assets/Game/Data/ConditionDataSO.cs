@@ -1,6 +1,5 @@
-using Game.Model;
+using Game.Domain.RuntimeData;
 using Game.Shared;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Game.Data

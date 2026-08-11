@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Game.Model;
+using Game.Domain.RuntimeData;
 using Game.Shared;
 using UnityEngine;
 
@@ -10,6 +10,7 @@ namespace Game.Data {
         public string personName;
         public PersonTrait trait;
         public List<ConditionDataSO> conditions;
+        public Sprite baseSprite;
 
         public PersonRuntimeData ToRuntimeData()
         {
@@ -22,13 +23,14 @@ namespace Game.Data {
 
             IReadOnlyList<ConditionRuntimeData> conditionReadOnly = conditionRuntime.ToArray();
 
-            return new PersonRuntimeData(personName, trait, conditionReadOnly);
+            return new PersonRuntimeData(personName, trait, conditionReadOnly, baseSprite);
         }
 
         private void OnValidate()
         {
             if (conditions.Count > GameConfig.MAX_CONDITION_PER_PERSON) 
-                conditions.RemoveRange(GameConfig.MAX_CONDITION_PER_PERSON, conditions.Count - GameConfig.MAX_CONDITION_PER_PERSON);
+                conditions.RemoveRange(GameConfig.MAX_CONDITION_PER_PERSON, 
+                                       conditions.Count - GameConfig.MAX_CONDITION_PER_PERSON);
         }
     }
 }

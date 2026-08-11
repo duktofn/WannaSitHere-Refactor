@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Game.Data
 {
     public static class GameConfig
