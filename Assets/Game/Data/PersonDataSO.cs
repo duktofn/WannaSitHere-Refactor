@@ -1,9 +1,11 @@
 using System.Collections.Generic;
-using Game.Domain.RuntimeData;
+using Game.Domain.Person;
+using Game.Domain.Condition;
 using Game.Shared;
 using UnityEngine;
 
-namespace Game.Data {
+namespace Game.Data 
+{
     [CreateAssetMenu(fileName = "New Person", menuName = "Game/New Person")]
     public class PersonDataSO : ScriptableObject
     {

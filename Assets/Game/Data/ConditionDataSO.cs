@@ -1,4 +1,4 @@
-using Game.Domain.RuntimeData;
+using Game.Domain.Condition;
 using Game.Shared;
 using UnityEngine;
 

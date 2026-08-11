@@ -1,9 +1,9 @@
 using Game.Shared;
 using Game.Data;
 using UnityEngine;
-using System;
+using Game.Domain.Person;
 
-namespace Game.Domain.RuntimeData
+namespace Game.Domain.Grid
 {
     public class CellRuntimeData
     {

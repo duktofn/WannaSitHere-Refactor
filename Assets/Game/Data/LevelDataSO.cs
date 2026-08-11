@@ -1,4 +1,5 @@
 using UnityEngine;
+using Game.Shared;
 
 namespace Game.Data
 {
@@ -12,7 +13,7 @@ namespace Game.Data
         public Vector2Int mainGridPos;
         public Vector2Int waitGridPos;
 
-        public CellGrid mainGrid;
-        public CellGrid waitGrid;
+        public Grid<CellDataSO> mainGrid;
+        public Grid<CellDataSO> waitGrid;
     }
 }

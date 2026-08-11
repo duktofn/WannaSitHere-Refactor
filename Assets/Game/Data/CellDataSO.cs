@@ -1,4 +1,4 @@
-using Game.Domain.RuntimeData;
+using Game.Domain.Grid;
 using Game.Shared;
 using UnityEngine;
 

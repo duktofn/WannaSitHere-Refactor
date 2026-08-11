@@ -1,6 +1,6 @@
 using Game.Shared;
 
-namespace Game.Domain.RuntimeData
+namespace Game.Domain.Condition
 {
     public class ConditionRuntimeData
     {

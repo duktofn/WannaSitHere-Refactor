@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using Game.Shared;
+using Game.Domain.Condition;
 using UnityEngine;
 
-namespace Game.Domain.RuntimeData
+namespace Game.Domain.Person
 {
     public class PersonRuntimeData
     {
