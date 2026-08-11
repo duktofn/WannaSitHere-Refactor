@@ -7,7 +7,8 @@ namespace Game.Data
     public class CellDataSO : ScriptableObject
     {
         public CellType type;
-        public Food food;
+        public PersonDataSO person;  // For Wait Seat
+        public Food food;            // For food type
         public Sprite sprite;
     }
 }

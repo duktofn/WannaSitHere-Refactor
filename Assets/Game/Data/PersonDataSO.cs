@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Game.Model;
 using Game.Shared;
 using UnityEngine;
 
@@ -7,5 +9,20 @@ namespace Game.Data {
     {
         public string personName;
         public PersonTrait trait;
+        public List<ConditionDataSO> conditions;
+
+        public PersonRuntimeData ToRuntimeData()
+        {
+            List<ConditionRuntimeData> conditionRuntime = new();
+
+            foreach(var c in conditions)
+            {
+                conditionRuntime.Add(c.ToRuntimeData());
+            }
+
+            IReadOnlyList<ConditionRuntimeData> conditionReadOnly = conditionRuntime.ToArray();
+
+            return new PersonRuntimeData(personName, trait, conditionReadOnly);
+        }
     }
 }
