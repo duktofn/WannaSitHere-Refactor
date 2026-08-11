@@ -24,5 +24,11 @@ namespace Game.Data {
 
             return new PersonRuntimeData(personName, trait, conditionReadOnly);
         }
+
+        private void OnValidate()
+        {
+            if (conditions.Count > GameConfig.MAX_CONDITION_PER_PERSON) 
+                conditions.RemoveRange(GameConfig.MAX_CONDITION_PER_PERSON, conditions.Count - GameConfig.MAX_CONDITION_PER_PERSON);
+        }
     }
 }
