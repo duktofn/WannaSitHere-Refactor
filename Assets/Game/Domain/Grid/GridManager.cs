@@ -14,6 +14,8 @@ namespace Game.Domain.Grid
         {
             Vector2 mainGridPos = GetGridWorldPosition(_main);
             _main = new Grid<CellRuntimeData>(currentLevel.MainGrid);
+
+            foreach (CellRuntimeData in )
         }
 
         public void CreateWaitGrid()

@@ -13,7 +13,7 @@ namespace Game.Shared
         [Range(0, 1)] public float PosX { get; private set; }
         [Range(0, 1)] public float PosY { get; private set; }
 
-        public T[,] GridContent { get; }
+        public T[] GridContent { get; }
 
         public Grid(
             Vector2Int gridSize,
@@ -32,7 +32,7 @@ namespace Game.Shared
             PosX = Mathf.Clamp01(posX);
             PosY = Mathf.Clamp01(posY);
 
-            GridContent = new T[gridSize.x, gridSize.y];
+            GridContent = new T[gridSize.x * gridSize.y];
         }
 
         public Grid(Grid<T> other)
@@ -48,7 +48,7 @@ namespace Game.Shared
         public Grid(Vector2Int size)
         {
             GridSize = size;
-            GridContent = new T[size.x, size.y];
+            GridContent = new T[size.x * size.y];
         }
 
         public T Get(int x, int y)
@@ -56,7 +56,7 @@ namespace Game.Shared
             if (x >= GridSize.x || y >= GridSize.y || x < 0 || y < 0)
                 return default;
 
-            return GridContent[x, y];
+            return GridContent[x + y * GridSize.x];
         }
 
         public void Set(int x, int y, T value)
@@ -64,7 +64,7 @@ namespace Game.Shared
             if (x >= GridSize.x || y >= GridSize.y || x < 0 || y < 0)
                 return;
 
-            GridContent[x, y] = value;
+            GridContent[x + y * GridSize.x] = value;
         }
     }
 }

@@ -27,7 +27,7 @@ namespace Game.Data
                     if (cellData == null)
                         continue;
 
-                    result.Set(x, y, cellData.ToRuntimeData());
+                    result.Set(x, y, cellData.ToRuntimeData(x, y));
                 }
             }
 

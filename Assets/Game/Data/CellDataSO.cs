@@ -12,9 +12,9 @@ namespace Game.Data
         public Food food;                   // For food type
         public Sprite sprite;
 
-        public CellRuntimeData ToRuntimeData()
+        public CellRuntimeData ToRuntimeData(int x, int y)
         {
-            return new CellRuntimeData(type, defaultPerson, food, sprite);
+            return new CellRuntimeData(x, y, type, defaultPerson, food, sprite);
         }
     }
 }
