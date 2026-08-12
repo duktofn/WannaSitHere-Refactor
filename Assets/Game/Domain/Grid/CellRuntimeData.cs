@@ -7,22 +7,21 @@ namespace Game.Domain.Grid
 {
     public class CellRuntimeData
     {
-        public readonly int X;
-        public readonly int Y;
+        public readonly Vector2 Index;
         public readonly CellType Type;
         public readonly PersonDataSO DefaultPerson; 
         public readonly Food Food;                  
         public readonly Sprite Sprite;
+
         public PersonRuntimeData CurrentPerson { get; private set; }
 
-        public CellRuntimeData(int X, int Y,
+        public CellRuntimeData(Vector2 index,
                                CellType type,
                                PersonDataSO defaultPerson,
                                Food food,
                                Sprite sprite)
-        {
-            this.X = X;
-            this.Y = Y;
+        {   
+            Index = index;
             Type = type;
             DefaultPerson = defaultPerson;
             Food = food;

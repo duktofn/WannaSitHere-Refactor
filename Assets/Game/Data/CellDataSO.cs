@@ -14,7 +14,7 @@ namespace Game.Data
 
         public CellRuntimeData ToRuntimeData(int x, int y)
         {
-            return new CellRuntimeData(x, y, type, defaultPerson, food, sprite);
+            return new CellRuntimeData(new Vector2(x, y), type, defaultPerson, food, sprite);
         }
     }
 }
