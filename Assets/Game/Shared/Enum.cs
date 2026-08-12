@@ -28,4 +28,9 @@ namespace Game.Shared
     {
         Seat = 0, Food = 1, Block = 2
     }
+
+    public enum PersonState
+    {
+        Normal = 0, Angry = 1, Happy = 2 
+    }
 }
