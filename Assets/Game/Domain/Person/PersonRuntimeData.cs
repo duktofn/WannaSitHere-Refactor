@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using Game.Shared;
 using Game.Domain.Condition;
 using UnityEngine;
+using System;
+using Unity.VisualScripting;
 
 namespace Game.Domain.Person
 {
@@ -11,6 +13,9 @@ namespace Game.Domain.Person
         public readonly PersonTrait Trait;
         public readonly IReadOnlyList<ConditionRuntimeData> Conditions;
         public readonly Sprite BaseSprite;
+        public PersonState State { get; private set; }
+
+        public event Action<PersonState> OnPersonStateChanged;
         
         public PersonRuntimeData(string personName, 
                                 PersonTrait trait, 
@@ -21,6 +26,13 @@ namespace Game.Domain.Person
             Trait = trait;
             Conditions = conditions;
             BaseSprite = baseSprite;
+            SetState(PersonState.Normal);
+        }
+
+        public void SetState(PersonState state)
+        {
+            State = state;
+            OnPersonStateChanged?.Invoke(State);
         }
     }
 }
