@@ -6,14 +6,19 @@ namespace Game.Shared
     [Serializable]
     public class Grid<T>
     {
-        public Vector2Int GridSize { get; }
-        public Vector2 CellSize { get; }
-        public Vector2 CellDistance { get; }
+        [SerializeField] private Vector2Int _gridSize;
+        [SerializeField] private Vector2 _cellSize;
+        [SerializeField] private Vector2 _cellDistance;
+        [SerializeField, Range(0, 1)] private float _posX;
+        [SerializeField, Range(0, 1)] private float _posY;
+        [SerializeField] private T[] _gridContent;
 
-        [Range(0, 1)] public float PosX { get; private set; }
-        [Range(0, 1)] public float PosY { get; private set; }
-
-        public T[] GridContent { get; }
+        public Vector2Int GridSize => _gridSize;
+        public Vector2 CellSize => _cellSize;
+        public Vector2 CellDistance => _cellDistance;
+        public float PosX => _posX;
+        public float PosY => _posY;
+        public T[] GridContent => _gridContent;
 
         public Grid(
             Vector2Int gridSize,
@@ -25,46 +30,44 @@ namespace Game.Shared
             if (gridSize.x <= 0 || gridSize.y <= 0)
                 throw new ArgumentOutOfRangeException(nameof(gridSize));
 
-            GridSize = gridSize;
-            CellSize = cellSize;
-            CellDistance = cellDistance;
-
-            PosX = Mathf.Clamp01(posX);
-            PosY = Mathf.Clamp01(posY);
-
-            GridContent = new T[gridSize.x * gridSize.y];
+            _gridSize = gridSize;
+            _cellSize = cellSize;
+            _cellDistance = cellDistance;
+            _posX = Mathf.Clamp01(posX);
+            _posY = Mathf.Clamp01(posY);
+            _gridContent = new T[gridSize.x * gridSize.y];
         }
 
         public Grid(Grid<T> other)
         {
-            GridSize = other.GridSize;
-            CellSize = other.CellSize;
-            CellDistance = other.CellDistance;
-            PosX = other.PosX;
-            PosY = other.PosY;
-            GridContent = other.GridContent;
+            _gridSize = other._gridSize;
+            _cellSize = other._cellSize;
+            _cellDistance = other._cellDistance;
+            _posX = other._posX;
+            _posY = other._posY;
+            _gridContent = other._gridContent;
         }
 
         public Grid(Vector2Int size)
         {
-            GridSize = size;
-            GridContent = new T[size.x * size.y];
+            _gridSize = size;
+            _gridContent = new T[size.x * size.y];
         }
 
         public T Get(int x, int y)
         {
-            if (x >= GridSize.x || y >= GridSize.y || x < 0 || y < 0)
+            if (x >= _gridSize.x || y >= _gridSize.y || x < 0 || y < 0)
                 return default;
 
-            return GridContent[x + y * GridSize.x];
+            return _gridContent[x + y * _gridSize.x];
         }
 
         public void Set(int x, int y, T value)
         {
-            if (x >= GridSize.x || y >= GridSize.y || x < 0 || y < 0)
+            if (x >= _gridSize.x || y >= _gridSize.y || x < 0 || y < 0)
                 return;
 
-            GridContent[x + y * GridSize.x] = value;
+            _gridContent[x + y * _gridSize.x] = value;
         }
     }
 }
