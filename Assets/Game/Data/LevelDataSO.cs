@@ -1,5 +1,8 @@
 using UnityEngine;
 using Game.Shared;
+using Game.Domain.SaveAndLoad;
+using Game.Domain.Grid;
+using System;
 
 namespace Game.Data
 {
@@ -8,12 +11,32 @@ namespace Game.Data
     {
         public int levelMove;
 
-        public Vector2Int mainGridSize;
-        public Vector2Int waitGridSize;
-        public Vector2Int mainGridPos;
-        public Vector2Int waitGridPos;
-
         public Grid<CellDataSO> mainGrid;
         public Grid<CellDataSO> waitGrid;
+
+        private Grid<CellRuntimeData> ConvertGrid(Grid<CellDataSO> source)
+        {
+            var result = new Grid<CellRuntimeData>(source.GridSize);
+
+            for (int x = 0; x < source.GridSize.x; x++)
+            {
+                for (int y = 0; y < source.GridSize.y; y++)
+                {
+                    CellDataSO cellData = source.Get(x, y);
+
+                    if (cellData == null)
+                        continue;
+
+                    result.Set(x, y, cellData.ToRuntimeData());
+                }
+            }
+
+            return result;
+        }
+
+        public LevelRuntimeData ToRuntimeData()
+        {
+            return new LevelRuntimeData(levelMove, ConvertGrid(mainGrid), ConvertGrid(waitGrid));
+        }
     }
 }
