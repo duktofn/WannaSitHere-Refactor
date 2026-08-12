@@ -7,7 +7,7 @@ namespace Game.View
     public class CellView : MonoBehaviour
     {
         private CellRuntimeData _cell;
-
+        
         public void AssignPersonToCell(PersonRuntimeData person)
         {
             _cell.SetPerson(person);

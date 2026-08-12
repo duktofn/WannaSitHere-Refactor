@@ -1,49 +1,59 @@
 using Game.Domain.SaveAndLoad;
 using Game.Shared;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Game.Domain.Grid
 {
-    public class GridManager
+    public class GridManager : MonoBehaviour
     {
         private Grid<CellRuntimeData> _main;
         private Grid<CellRuntimeData> _wait;
-        private LevelRuntimeData currentLevel;
-
+        private LevelRuntimeData _currentLevel;
+        [SerializeField] private GameObject cellPrefabs;
+        [SerializeField] private List<Vector2> adjacent;
+        
         public void CreateMainGrid()
         {
-            Vector2 mainGridPos = GetGridWorldPosition(_main);
-            _main = new Grid<CellRuntimeData>(currentLevel.MainGrid);
+            _main = new Grid<CellRuntimeData>(_currentLevel.MainGrid);
 
-            foreach (CellRuntimeData in )
+            foreach (CellRuntimeData c in _main.GridContent)
+            {
+                Vector2 step = _main.CellDistance + _main.CellSize;
+                Vector2 cellOffset = new Vector2((c.Index.x - (_main.GridSize.x - 1) / 2f) * step.x,
+                                                 (c.Index.y - (_main.GridSize.y - 1) / 2f) * step.y);
+
+                GameObject tmpCell = Instantiate(cellPrefabs);
+                tmpCell.transform.position = new Vector3(cellOffset.x, cellOffset.y);
+            }
         }
 
         public void CreateWaitGrid()
         {
-            Vector2 waitGridPos = GetGridWorldPosition(_wait);
-            _wait = new Grid<CellRuntimeData>(currentLevel.WaitGrid);
+            _wait = new Grid<CellRuntimeData>(_currentLevel.WaitGrid);
+            
+            foreach(CellRuntimeData c in _wait.GridContent) {
+                Vector2 step = _wait.CellDistance + _wait.CellSize;
+                Vector2 cellOffset = new Vector2((c.Index.x - (_wait.GridSize.x - 1) / 2f) * step.x,
+                                                 (c.Index.y - (_wait.GridSize.y - 1) / 2f) * step.y);
+
+                GameObject tmpCell = Instantiate(cellPrefabs);
+                tmpCell.transform.position = new Vector3(cellOffset.x, cellOffset.y);
+            }
         }
-
-        public Vector2 GetGridWorldPosition(Grid<CellRuntimeData> grid)
+        
+        public List<CellRuntimeData> GetAdjacentCells(Vector2 index, Grid<CellRuntimeData> grid)
         {
-            Camera mainCam = Camera.main;
+            List<CellRuntimeData> res = new();
 
-            if (mainCam == null)
-            {
-                Debug.LogWarning("Cannot find camera, Base Position return to Vector2.zero");
-                return Vector2.zero;
+            foreach(Vector2 v in adjacent) {
+                foreach(CellRuntimeData c in grid.GridContent)
+                {
+                    if (c.Index == index + v) res.Add(c);
+                }
             }
 
-            Vector2 originalPosition = mainCam.ViewportToWorldPoint(new Vector3(grid.PosX, 
-                                                                                grid.PosY, 
-                                                                                mainCam.nearClipPlane + 1f));
-
-            Vector2 offSet = new Vector2(
-                -0.5f * (grid.CellSize.x + grid.CellDistance.x) * (grid.GridSize.x - 1),
-                -0.5f * (grid.CellSize.y + grid.CellDistance.y) * (grid.GridSize.y - 1)
-            );
-
-            return originalPosition + offSet;
+            return res;
         }
     }
 }
