@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using Game.Domain.Grid;
 using Game.Shared;
-using UnityEngine;
-using UnityEngine.Analytics;
 
 namespace Game.Domain.Condition
 {
@@ -12,7 +10,7 @@ namespace Game.Domain.Condition
         {
             foreach (var a in adjacent) 
             {
-                if (condition.Target == ConditionTarget.Food && 
+                if (condition.Target == ConditionTarget.Food &&
                     condition.Type == ConditionType.Hate &&
                     condition.FoodTarget == a.Food)
                 {
@@ -21,7 +19,7 @@ namespace Game.Domain.Condition
 
                 if (condition.Target == ConditionTarget.Person && 
                     condition.Type == ConditionType.Hate &&
-                    condition.TargetTrait == a.Person.Trait)
+                    condition.TargetTrait == a.CurrentPerson.Trait)
                 {
                     return false;
                 }
@@ -29,5 +27,7 @@ namespace Game.Domain.Condition
 
             return true;
         }
+
+        
     }
 }
