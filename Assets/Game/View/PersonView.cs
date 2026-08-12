@@ -14,7 +14,7 @@ namespace Game.View
         [SerializeField] private Sprite HappyFace;
         [SerializeField] private Sprite NormalFace;
         [SerializeField] private Sprite AngryFace;
-        [SerializeField] private PersonRuntimeData _person;
+        private PersonRuntimeData _person;
 
         private void Awake()
         {

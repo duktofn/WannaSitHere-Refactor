@@ -11,7 +11,7 @@ namespace Game.Domain.Grid
         public readonly PersonDataSO DefaultPerson; 
         public readonly Food Food;                  
         public readonly Sprite Sprite;
-        public PersonRuntimeData Person { get; private set; }
+        public PersonRuntimeData CurrentPerson { get; private set; }
 
         public CellRuntimeData(CellType type,
                                PersonDataSO defaultPerson,
@@ -26,7 +26,8 @@ namespace Game.Domain.Grid
 
         public void SetPerson(PersonRuntimeData person)
         {
-            Person = person;
+            if (CurrentPerson == person) return;
+            CurrentPerson = person;
         }
     }
 }

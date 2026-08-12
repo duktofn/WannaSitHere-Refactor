@@ -3,7 +3,6 @@ using Game.Shared;
 using Game.Domain.Condition;
 using UnityEngine;
 using System;
-using Unity.VisualScripting;
 
 namespace Game.Domain.Person
 {
@@ -31,6 +30,7 @@ namespace Game.Domain.Person
 
         public void SetState(PersonState state)
         {
+            if (State == state) return;
             State = state;
             OnPersonStateChanged?.Invoke(State);
         }

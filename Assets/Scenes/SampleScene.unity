@@ -533,7 +533,6 @@ GameObject:
   - component: {fileID: 1998911904}
   - component: {fileID: 1998911905}
   - component: {fileID: 1998911906}
-  - component: {fileID: 1998911907}
   m_Layer: 0
   m_Name: PersonViewPrefab
   m_TagString: Untagged
@@ -634,21 +633,6 @@ MonoBehaviour:
   HappyFace: {fileID: 6266176060360064, guid: 66f624f076f00954d921d51703f55005, type: 3}
   NormalFace: {fileID: 4606157284126940538, guid: 0200ef72e0c0c7b4ea478ad00fc8b280, type: 3}
   AngryFace: {fileID: -9082789242079819192, guid: e3efea3c606ecb54d9f8305a4965127c, type: 3}
-  _person: {fileID: 1998911907}
---- !u!114 &1998911907
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1998911903}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c4c213191109a341ab927a18ff06d1a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Domain.Person.PersonRuntimeData
-  BaseSprite: {fileID: -7650137855209502040, guid: 49547a00c80b8694d8e286b4ee8e958c, type: 3}
-  State: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

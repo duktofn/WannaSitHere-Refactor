@@ -10,8 +10,8 @@ namespace Game.Shared
         public Vector2 CellSize { get; }
         public Vector2 CellDistance { get; }
 
-        [SerializeField, Range(0, 1)] private float PosX;
-        [SerializeField, Range(0, 1)] private float PosY;
+        [Range(0, 1)] public float PosX { get; private set; }
+        [Range(0, 1)] public float PosY { get; private set; }
 
         public T[,] GridContent { get; }
 
