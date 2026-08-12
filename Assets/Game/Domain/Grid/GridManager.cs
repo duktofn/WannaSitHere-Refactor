@@ -20,11 +20,11 @@ namespace Game.Domain.Grid
             foreach (CellRuntimeData c in _main.GridContent)
             {
                 Vector2 step = _main.CellDistance + _main.CellSize;
-                Vector2 cellOffset = new Vector2((c.Index.x - (_main.GridSize.x - 1) / 2f) * step.x,
-                                                 (c.Index.y - (_main.GridSize.y - 1) / 2f) * step.y);
+                Vector3 cellOffset = new Vector3((c.Index.x - (_main.GridSize.x - 1) / 2f) * step.x,
+                                                 (c.Index.y - (_main.GridSize.y - 1) / 2f) * step.y,
+                                                 0f);
 
-                GameObject tmpCell = Instantiate(cellPrefabs);
-                tmpCell.transform.position = new Vector3(cellOffset.x, cellOffset.y);
+                GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity);
             }
         }
 
@@ -34,11 +34,11 @@ namespace Game.Domain.Grid
             
             foreach(CellRuntimeData c in _wait.GridContent) {
                 Vector2 step = _wait.CellDistance + _wait.CellSize;
-                Vector2 cellOffset = new Vector2((c.Index.x - (_wait.GridSize.x - 1) / 2f) * step.x,
-                                                 (c.Index.y - (_wait.GridSize.y - 1) / 2f) * step.y);
+                Vector3 cellOffset = new Vector3((c.Index.x - (_wait.GridSize.x - 1) / 2f) * step.x,
+                                                 (c.Index.y - (_wait.GridSize.y - 1) / 2f) * step.y,
+                                                 0f);
 
-                GameObject tmpCell = Instantiate(cellPrefabs);
-                tmpCell.transform.position = new Vector3(cellOffset.x, cellOffset.y);
+                GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity);
             }
         }
         
@@ -54,6 +54,13 @@ namespace Game.Domain.Grid
             }
 
             return res;
+        }
+
+        public void Initialize(LevelRuntimeData level)
+        {
+            _currentLevel = level;
+            _main = level?.MainGrid;
+            _wait = level?.WaitGrid;
         }
     }
 }
