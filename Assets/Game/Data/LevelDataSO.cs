@@ -16,7 +16,16 @@ namespace Game.Data
 
         private Grid<CellRuntimeData> ConvertGrid(Grid<CellDataSO> source)
         {
-            var result = new Grid<CellRuntimeData>(source.GridSize);
+            if (source == null)
+                return null;
+
+            var result = new Grid<CellRuntimeData>(
+                source.GridSize,
+                source.CellSize,
+                source.CellDistance,
+                source.PosX,
+                source.PosY
+            );
 
             for (int x = 0; x < source.GridSize.x; x++)
             {
