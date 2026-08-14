@@ -2,7 +2,6 @@ using UnityEngine;
 using Game.Shared;
 using Game.Domain.SaveAndLoad;
 using Game.Domain.Grid;
-using System;
 
 namespace Game.Data
 {
@@ -36,7 +35,7 @@ namespace Game.Data
                     if (cellData == null)
                         continue;
 
-                    result.Set(x, y, cellData.ToRuntimeData(x, y));
+                    result.Set(x, y, cellData.ToRuntimeData(x, y, source.CellSize));
                 }
             }
 

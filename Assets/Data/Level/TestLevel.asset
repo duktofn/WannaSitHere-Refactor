@@ -30,18 +30,15 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
   waitGrid:
-    _gridSize: {x: 3, y: 3}
+    _gridSize: {x: 3, y: 2}
     _cellSize: {x: 0.5, y: 0.5}
     _cellDistance: {x: 0.12, y: 0.12}
     _posX: 0.5
-    _posY: 0.2
+    _posY: 0.288
     _gridContent:
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
     - {fileID: 11400000, guid: 3e06d9b9dbff9a84497c9cbefcad30e9, type: 2}
-    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
-    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
-    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
-    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: af2328b49f862e34dac70fe4615b36ae, type: 2}

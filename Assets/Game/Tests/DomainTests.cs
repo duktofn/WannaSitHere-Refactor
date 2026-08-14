@@ -66,7 +66,15 @@ namespace Game.Tests
                 "Angry at Hamburger"
             );
 
-            var cellWithFood = new CellRuntimeData(Vector2.zero, CellType.Food, null, Food.Hamburger, null);
+            var cellSize = new Vector2(0.5f, 0.5f);
+            var cellWithFood = new CellRuntimeData(
+                Vector2Int.zero,
+                CellType.Food,
+                cellSize,
+                null,
+                Food.Hamburger,
+                null
+            );
             var adjacentCells = new List<CellRuntimeData> { cellWithFood };
 
             bool result = checker.Check(adjacentCells, condition);

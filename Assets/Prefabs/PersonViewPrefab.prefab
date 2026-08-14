@@ -102,6 +102,8 @@ GameObject:
   - component: {fileID: 6780860575813416422}
   - component: {fileID: 2879686718210338451}
   - component: {fileID: 1362204648338547286}
+  - component: {fileID: 5701669066215742745}
+  - component: {fileID: -27170740095953137}
   m_Layer: 0
   m_Name: PersonViewPrefab
   m_TagString: Untagged
@@ -196,12 +198,73 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f7fe127c22e9e86489d8650838d245f1, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.View.PersonView
-  PersonBody: {fileID: 6909110439111727522}
-  PersonFace: {fileID: 6130074942627649104}
-  HappyFace: {fileID: 6266176060360064, guid: 66f624f076f00954d921d51703f55005, type: 3}
-  NormalFace: {fileID: 4606157284126940538, guid: 0200ef72e0c0c7b4ea478ad00fc8b280, type: 3}
-  AngryFace: {fileID: -9082789242079819192, guid: e3efea3c606ecb54d9f8305a4965127c, type: 3}
+  m_EditorClassIdentifier: Assembly-CSharp::Game.View.Person.PersonView
+  personBody: {fileID: 6909110439111727522}
+  personFace: {fileID: 6130074942627649104}
+  happyFace: {fileID: 6266176060360064, guid: 66f624f076f00954d921d51703f55005, type: 3}
+  normalFace: {fileID: 4606157284126940538, guid: 0200ef72e0c0c7b4ea478ad00fc8b280, type: 3}
+  angryFace: {fileID: -9082789242079819192, guid: e3efea3c606ecb54d9f8305a4965127c, type: 3}
+--- !u!61 &5701669066215742745
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2863313955090313580}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 0.5, y: 0.5}
+  m_EdgeRadius: 0
+--- !u!114 &-27170740095953137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2863313955090313580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08bf03a698feb144f99a6e5a8e30d792, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Manager.PersonDragManager
+  scaleFactor: 1.25
+  playTime: 0.25
+  scaleEase: 2
 --- !u!1 &4720381945932151968
 GameObject:
   m_ObjectHideFlags: 0

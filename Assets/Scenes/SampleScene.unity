@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 10276211}
   - component: {fileID: 10276212}
   - component: {fileID: 10276213}
+  - component: {fileID: 10276214}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -163,7 +164,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 82e6f71d9845c8e4f9ee1bc406187606, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Domain.Grid.GridManager
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Manager.GridManager
   cellPrefabs: {fileID: 3845831781986120399, guid: 9bf77078a523ea747a1f7820a9637dc3, type: 3}
   adjacent:
   - {x: 1, y: 0}
@@ -184,6 +185,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Tests.LevelTest
   levelData: {fileID: 11400000, guid: d5b914eb713754b4ea96e12254feb1df, type: 2}
   gridManager: {fileID: 10276212}
+--- !u!114 &10276214
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10276210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c2dba7453a2e724bb0773d4bb824aa2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Manager.PersonMoveManager
+  gridManager: {fileID: 10276212}
+  cellLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  snapTime: 0.15
+  moveEase: 3
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -196,6 +215,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -321,6 +341,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56666c5a40171f54783dd416a44f42bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.Physics2DRaycaster
+  m_EventMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_MaxRayIntersections: 0
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
