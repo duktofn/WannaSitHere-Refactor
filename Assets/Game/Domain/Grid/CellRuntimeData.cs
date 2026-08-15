@@ -13,6 +13,7 @@ namespace Game.Domain.Grid
         public readonly PersonRuntimeData DefaultPerson; 
         public readonly Food Food;                  
         public readonly Sprite Sprite;
+        public readonly GridId OwnGrid;
 
         public PersonRuntimeData CurrentPerson { get; private set; }
 
@@ -21,7 +22,8 @@ namespace Game.Domain.Grid
                                Vector2 size,
                                PersonRuntimeData defaultPerson,
                                Food food,
-                               Sprite sprite)
+                               Sprite sprite,
+                               GridId ownGrid)
         {   
             Index = index;
             Type = type;
@@ -29,6 +31,7 @@ namespace Game.Domain.Grid
             DefaultPerson = defaultPerson;
             Food = food;
             Sprite = sprite;
+            OwnGrid = ownGrid;
             CurrentPerson = defaultPerson;
         }
 

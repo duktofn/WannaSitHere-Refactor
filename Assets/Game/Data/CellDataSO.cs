@@ -13,10 +13,11 @@ namespace Game.Data
         public Food food;                   // For food type
         public Sprite sprite;
 
-        public CellRuntimeData ToRuntimeData(int x, int y, Vector2 size)
+        public CellRuntimeData ToRuntimeData(int x, int y, Vector2 size, GridId ownGrid)
         {
             PersonRuntimeData runtimePerson = defaultPerson != null ? defaultPerson.ToRuntimeData() : null;
-            return new CellRuntimeData(new Vector2Int(x, y), type, size, runtimePerson, food, sprite);
+            
+            return new CellRuntimeData(new Vector2Int(x, y), type, size, runtimePerson, food, sprite, ownGrid);
         }
     }
 }

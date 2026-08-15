@@ -13,7 +13,7 @@ namespace Game.Data
         public Grid<CellDataSO> mainGrid;
         public Grid<CellDataSO> waitGrid;
 
-        private Grid<CellRuntimeData> ConvertGrid(Grid<CellDataSO> source)
+        private Grid<CellRuntimeData> ConvertGrid(Grid<CellDataSO> source, GridId id)
         {
             if (source == null)
                 return null;
@@ -35,7 +35,7 @@ namespace Game.Data
                     if (cellData == null)
                         continue;
 
-                    result.Set(x, y, cellData.ToRuntimeData(x, y, source.CellSize));
+                    result.Set(x, y, cellData.ToRuntimeData(x, y, source.CellSize, id));
                 }
             }
 
@@ -44,7 +44,9 @@ namespace Game.Data
 
         public LevelRuntimeData ToRuntimeData()
         {
-            return new LevelRuntimeData(levelMove, ConvertGrid(mainGrid), ConvertGrid(waitGrid));
+            return new LevelRuntimeData(levelMove, 
+                                        ConvertGrid(mainGrid, GridId.MainGrid), 
+                                        ConvertGrid(waitGrid, GridId.WaitGrid));
         }
     }
 }

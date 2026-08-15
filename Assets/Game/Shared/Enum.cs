@@ -33,4 +33,9 @@ namespace Game.Shared
     {
         Normal = 0, Angry = 1, Happy = 2 
     }
+
+    public enum GridId
+    {
+        MainGrid = 0, WaitGrid = 1
+    }
 }
