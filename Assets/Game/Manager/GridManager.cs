@@ -5,6 +5,8 @@ using Game.Shared;
 using UnityEngine;
 using System.Collections.Generic;
 using Game.View.Person;
+using Game.Domain.Condition;
+using System;
 
 namespace Game.Manager
 {
@@ -13,13 +15,16 @@ namespace Game.Manager
         private Grid<CellRuntimeData> _main;
         private Grid<CellRuntimeData> _wait;
         private LevelRuntimeData _currentLevel;
-        private PersonMoveManager personMoveManager;
+        private ConditionChecker _conditionCheck;
+
+        [SerializeField] private PersonMoveManager personMoveManager;
         [SerializeField] private GameObject cellPrefabs;
         [SerializeField] private List<Vector2> adjacent;
 
         private void Awake()
         {
             personMoveManager = GetComponent<PersonMoveManager>();
+            _conditionCheck = new ConditionChecker();
         }
         
         public void CreateMainGrid()
@@ -36,6 +41,9 @@ namespace Game.Manager
 
                 GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity);
                 tmpCell.GetComponent<CellView>().BindData(c, personMoveManager);
+
+                if (c.CurrentPerson != null)
+                    CheckPersonCondition(c, c.CurrentPerson, c.OwnGrid);
             }
         }
 
@@ -52,6 +60,9 @@ namespace Game.Manager
 
                 GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity);
                 tmpCell.GetComponent<CellView>().BindData(c, personMoveManager);
+
+                if (c.CurrentPerson != null)
+                    CheckPersonCondition(c, c.CurrentPerson, c.OwnGrid);
             }
         }
 
@@ -66,7 +77,7 @@ namespace Game.Manager
             return worldPoint;
         }
         
-        public List<CellRuntimeData> GetAdjacentCells(Vector2 index, Grid<CellRuntimeData> grid)
+        public List<CellRuntimeData> GetAdjacentCells(Vector2Int index, Grid<CellRuntimeData> grid)
         {
             List<CellRuntimeData> res = new();
 
@@ -100,9 +111,7 @@ namespace Game.Manager
             if (sourceCell == targetCell)
                 return targetRuntimeCell.CurrentPerson == person;
 
-            CellRuntimeData sourceRuntimeCell = sourceCell != null
-                ? sourceCell.RuntimeData
-                : null;
+            CellRuntimeData sourceRuntimeCell = sourceCell != null ? sourceCell.RuntimeData : null;
 
             if (sourceRuntimeCell != null && sourceRuntimeCell.CurrentPerson != person)
                 return false;
@@ -114,7 +123,38 @@ namespace Game.Manager
 
             targetRuntimeCell.SetPerson(person);
             sourceRuntimeCell?.SetPerson(targetPerson);
+            
+            CheckPersonCondition(targetRuntimeCell, person, targetRuntimeCell.OwnGrid);
+            
+            if (sourceRuntimeCell != null && targetPerson != null)
+            {
+                CheckPersonCondition(sourceRuntimeCell, targetPerson, sourceRuntimeCell.OwnGrid);
+            }
+            
             return true;
+        }
+
+        public void CheckPersonCondition(CellRuntimeData containCell, PersonRuntimeData person, GridId cellGrid)
+        {
+            if (containCell == null || person == null)
+                return;
+
+            if (cellGrid == GridId.WaitGrid)
+            {
+                person.SetState(PersonState.Normal);
+                return;    
+            }
+
+            bool IsConditionOk = true;
+            List<CellRuntimeData> adj = GetAdjacentCells(containCell.Index, _main);
+
+            foreach(ConditionRuntimeData crd in person.Conditions)
+            {
+                if (!_conditionCheck.Check(adj, crd)) IsConditionOk = false; 
+                if (!IsConditionOk) break; 
+            }
+
+            person.SetState(IsConditionOk ? PersonState.Happy : PersonState.Angry);
         }
 
         public void Initialize(LevelRuntimeData level)

@@ -73,13 +73,67 @@ namespace Game.Tests
                 cellSize,
                 null,
                 Food.Hamburger,
-                null
+                null,
+                GridId.MainGrid
             );
             var adjacentCells = new List<CellRuntimeData> { cellWithFood };
 
             bool result = checker.Check(adjacentCells, condition);
 
             Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void ConditionChecker_HatePersonCondition_IgnoresEmptySeat()
+        {
+            var checker = new ConditionChecker();
+            var condition = new ConditionRuntimeData(
+                ConditionType.Hate,
+                ConditionTarget.Person,
+                PersonTrait.Cool,
+                Food.Hamburger,
+                "Hates Cool person",
+                "Angry at Cool person"
+            );
+
+            var emptySeat = new CellRuntimeData(
+                Vector2Int.zero,
+                CellType.Seat,
+                new Vector2(0.5f, 0.5f),
+                null,
+                Food.Hamburger,
+                null,
+                GridId.MainGrid
+            );
+
+            Assert.IsTrue(checker.Check(new List<CellRuntimeData> { emptySeat }, condition));
+        }
+
+        [Test]
+        public void ConditionChecker_LikeFoodCondition_RequiresMatchingFood()
+        {
+            var checker = new ConditionChecker();
+            var condition = new ConditionRuntimeData(
+                ConditionType.Like,
+                ConditionTarget.Food,
+                PersonTrait.Cool,
+                Food.Hamburger,
+                "Likes Hamburger",
+                "Angry without Hamburger"
+            );
+
+            var matchingFood = new CellRuntimeData(
+                Vector2Int.zero,
+                CellType.Food,
+                new Vector2(0.5f, 0.5f),
+                null,
+                Food.Hamburger,
+                null,
+                GridId.MainGrid
+            );
+
+            Assert.IsTrue(checker.Check(new List<CellRuntimeData> { matchingFood }, condition));
+            Assert.IsFalse(checker.Check(new List<CellRuntimeData>(), condition));
         }
 
         [Test]
