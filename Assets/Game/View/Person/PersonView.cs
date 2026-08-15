@@ -17,28 +17,56 @@ namespace Game.View.Person
         [SerializeField] private Sprite angryFace;
 
         private PersonRuntimeData _person;
+        private bool _isSubscribed;
 
         private void Start()
         {
-            personBody.sprite = _person.BaseSprite;
+            if (_person != null)
+                personBody.sprite = _person.BaseSprite;
         }
 
         private void OnEnable()
         {
-            if (_person != null) 
-                _person.OnPersonStateChanged += UpdateState;
+            SubscribeToStateChanges();
+
+            if (_person != null)
+                UpdateState(_person.State);
         }
 
         private void OnDisable()
         {
-            if (_person != null) 
-                _person.OnPersonStateChanged -= UpdateState;
+            UnsubscribeFromStateChanges();
         }
 
         public void BindData(PersonRuntimeData person)
         {
-            if (person == null) return;
+            UnsubscribeFromStateChanges();
             _person = person;
+
+            if (_person == null)
+                return;
+
+            personBody.sprite = _person.BaseSprite;
+            SubscribeToStateChanges();
+            UpdateState(_person.State);
+        }
+
+        private void SubscribeToStateChanges()
+        {
+            if (_person == null || _isSubscribed)
+                return;
+
+            _person.OnPersonStateChanged += UpdateState;
+            _isSubscribed = true;
+        }
+
+        private void UnsubscribeFromStateChanges()
+        {
+            if (_person == null || !_isSubscribed)
+                return;
+
+            _person.OnPersonStateChanged -= UpdateState;
+            _isSubscribed = false;
         }
 
         private void UpdateState(PersonState state)
