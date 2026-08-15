@@ -123,15 +123,30 @@ namespace Game.Manager
 
             targetRuntimeCell.SetPerson(person);
             sourceRuntimeCell?.SetPerson(targetPerson);
-            
-            CheckPersonCondition(targetRuntimeCell, person, targetRuntimeCell.OwnGrid);
-            
-            if (sourceRuntimeCell != null && targetPerson != null)
-            {
-                CheckPersonCondition(sourceRuntimeCell, targetPerson, sourceRuntimeCell.OwnGrid);
-            }
+
+            CheckAllPersonConditions();
             
             return true;
+        }
+
+        private void CheckAllPersonConditions()
+        {
+            CheckGridPersonConditions(_main);
+            CheckGridPersonConditions(_wait);
+        }
+
+        private void CheckGridPersonConditions(Grid<CellRuntimeData> grid)
+        {
+            if (grid == null)
+                return;
+
+            foreach (CellRuntimeData cell in grid.GridContent)
+            {
+                if (cell?.CurrentPerson == null)
+                    continue;
+
+                CheckPersonCondition(cell, cell.CurrentPerson, cell.OwnGrid);
+            }
         }
 
         public void CheckPersonCondition(CellRuntimeData containCell, PersonRuntimeData person, GridId cellGrid)
