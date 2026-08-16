@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Data.PersonDataSO
   personName: Cooly
   trait: 0
-  conditions: []
+  conditions:
+  - {fileID: 11400000, guid: 56be8f26cc282174c8fdee2508ac07b9, type: 2}
   baseSprite: {fileID: -7650137855209502040, guid: 49547a00c80b8694d8e286b4ee8e958c, type: 3}
