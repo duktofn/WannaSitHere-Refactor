@@ -24,7 +24,7 @@ namespace Game.Tests
             gridManager.CreateMainGrid();
             gridManager.CreateWaitGrid();
 
-            Debug.Log($"[LevelTest] Successfully initialized and created grid. Level moves: {runtime.LevelMove}");
+            Debug.Log("[LevelTest] Successfully initialized and created grid");
         }
     }
 }

@@ -144,10 +144,10 @@ namespace Game.Tests
             var level = new LevelRuntimeData(10, mainGrid, waitGrid);
 
             level.ModifyMove(-1);
-            Assert.AreEqual(9, level.LevelMove);
+            Assert.AreEqual(9, level.CurrentMove);
 
             level.ModifyMove(3);
-            Assert.AreEqual(12, level.LevelMove);
+            Assert.AreEqual(12, level.CurrentMove);
         }
     }
 }
