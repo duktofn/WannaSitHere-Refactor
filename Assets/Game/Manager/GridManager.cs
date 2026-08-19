@@ -6,7 +6,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Game.View.Person;
 using Game.Domain.Condition;
-using System;
+using Game.Events;
 
 namespace Game.Manager
 {
@@ -17,9 +17,14 @@ namespace Game.Manager
         private LevelRuntimeData _currentLevel;
         private ConditionChecker _conditionCheck;
 
+        [SerializeField] private LevelView levelView;
         [SerializeField] private PersonMoveManager personMoveManager;
         [SerializeField] private GameObject cellPrefabs;
         [SerializeField] private List<Vector2> adjacent;
+
+        [Header("Events")]
+        [SerializeField] private VoidEventChannelSO OnWinEvent;
+        [SerializeField] private VoidEventChannelSO OnLoseEvent;
 
         private void Awake()
         {
@@ -79,16 +84,18 @@ namespace Game.Manager
         
         public List<CellRuntimeData> GetAdjacentCells(Vector2Int index, Grid<CellRuntimeData> grid)
         {
-            List<CellRuntimeData> res = new();
+            List<CellRuntimeData> result = new();
 
-            foreach(Vector2 v in adjacent) {
-                foreach(CellRuntimeData c in grid.GridContent)
+            foreach (Vector2 offset in adjacent)
+            {
+                foreach (CellRuntimeData cell in grid.GridContent)
                 {
-                    if (c.Index == index + v) res.Add(c);
+                    if (cell.Index == index + offset)
+                        result.Add(cell);
                 }
             }
 
-            return res;
+            return result;
         }
 
         public bool TryAssignPerson(CellView targetCell, PersonRuntimeData person)
@@ -101,7 +108,7 @@ namespace Game.Manager
             CellView targetCell,
             PersonRuntimeData person)
         {
-            if (targetCell == null || person == null)
+            if (_currentLevel == null || targetCell == null || person == null)
                 return false;
 
             CellRuntimeData targetRuntimeCell = targetCell.RuntimeData;
@@ -109,7 +116,13 @@ namespace Game.Manager
                 return false;
 
             if (sourceCell == targetCell)
-                return targetRuntimeCell.CurrentPerson == person;
+            {
+                bool moveSucceeded = targetRuntimeCell.CurrentPerson == person;
+                if (moveSucceeded)
+                    _currentLevel.ModifyMove(-1);
+
+                return moveSucceeded;
+            }
 
             CellRuntimeData sourceRuntimeCell = sourceCell != null ? sourceCell.RuntimeData : null;
 
@@ -124,21 +137,28 @@ namespace Game.Manager
             targetRuntimeCell.SetPerson(person);
             sourceRuntimeCell?.SetPerson(targetPerson);
 
+            // Consume one move after a successful TryMovePerson operation.
+            _currentLevel.ModifyMove(-1);
             CheckAllPersonConditions();
-            
+
             return true;
         }
 
         private void CheckAllPersonConditions()
         {
-            CheckGridPersonConditions(_main);
-            CheckGridPersonConditions(_wait);
+            if (CheckGridPersonConditions(_main) && CheckGridPersonConditions(_wait)) {
+                OnWinEvent.Raise();
+                return;
+            }
+
+            if (_currentLevel.IsOutOfMove)
+                OnLoseEvent.Raise();
         }
 
-        private void CheckGridPersonConditions(Grid<CellRuntimeData> grid)
+        private bool CheckGridPersonConditions(Grid<CellRuntimeData> grid)
         {
             if (grid == null)
-                return;
+                return false;
 
             foreach (CellRuntimeData cell in grid.GridContent)
             {
@@ -146,7 +166,11 @@ namespace Game.Manager
                     continue;
 
                 CheckPersonCondition(cell, cell.CurrentPerson, cell.OwnGrid);
+                if (cell.CurrentPerson.State != PersonState.Happy)
+                    return false;
             }
+
+            return true;
         }
 
         public void CheckPersonCondition(CellRuntimeData containCell, PersonRuntimeData person, GridId cellGrid)
@@ -157,19 +181,22 @@ namespace Game.Manager
             if (cellGrid == GridId.WaitGrid)
             {
                 person.SetState(PersonState.Normal);
-                return;    
+                return;
             }
 
-            bool IsConditionOk = true;
-            List<CellRuntimeData> adj = GetAdjacentCells(containCell.Index, _main);
+            bool isConditionOk = true;
+            List<CellRuntimeData> adjacentCells = GetAdjacentCells(containCell.Index, _main);
 
-            foreach(ConditionRuntimeData crd in person.Conditions)
+            foreach (ConditionRuntimeData condition in person.Conditions)
             {
-                if (!_conditionCheck.Check(adj, crd)) IsConditionOk = false; 
-                if (!IsConditionOk) break; 
+                if (!_conditionCheck.Check(adjacentCells, condition))
+                    isConditionOk = false;
+
+                if (!isConditionOk)
+                    break;
             }
 
-            person.SetState(IsConditionOk ? PersonState.Happy : PersonState.Angry);
+            person.SetState(isConditionOk ? PersonState.Happy : PersonState.Angry);
         }
 
         public void Initialize(LevelRuntimeData level)
@@ -177,6 +204,14 @@ namespace Game.Manager
             _currentLevel = level;
             _main = level?.MainGrid;
             _wait = level?.WaitGrid;
+
+            if (levelView == null)
+            {
+                Debug.LogError("[GridManager] LevelView reference is missing.");
+                return;
+            }
+
+            levelView.BindData(level);
         }
     }
 }
