@@ -15,7 +15,7 @@ namespace Game.Manager
         private Grid<CellRuntimeData> _main;
         private Grid<CellRuntimeData> _wait;
         private LevelRuntimeData _currentLevel;
-        private ConditionChecker _conditionCheck;
+        private LevelConditionEvaluator _conditionEvaluator;
 
         [SerializeField] private LevelView levelView;
         [SerializeField] private PersonMoveManager personMoveManager;
@@ -29,7 +29,7 @@ namespace Game.Manager
         private void Awake()
         {
             personMoveManager = GetComponent<PersonMoveManager>();
-            _conditionCheck = new ConditionChecker();
+            _conditionEvaluator = new LevelConditionEvaluator(adjacent);
         }
         
         public void CreateMainGrid()
@@ -84,18 +84,7 @@ namespace Game.Manager
         
         public List<CellRuntimeData> GetAdjacentCells(Vector2Int index, Grid<CellRuntimeData> grid)
         {
-            List<CellRuntimeData> result = new();
-
-            foreach (Vector2 offset in adjacent)
-            {
-                foreach (CellRuntimeData cell in grid.GridContent)
-                {
-                    if (cell.Index == index + offset)
-                        result.Add(cell);
-                }
-            }
-
-            return result;
+            return _conditionEvaluator.GetAdjacentCells(index, grid);
         }
 
         public bool TryAssignPerson(CellView targetCell, PersonRuntimeData person)
@@ -146,7 +135,7 @@ namespace Game.Manager
 
         private void CheckAllPersonConditions()
         {
-            if (CheckGridPersonConditions(_main) && CheckGridPersonConditions(_wait)) {
+            if (_conditionEvaluator.AreAllPersonConditionsSatisfied(_main, _wait)) {
                 OnWinEvent.Raise();
                 return;
             }
@@ -155,48 +144,9 @@ namespace Game.Manager
                 OnLoseEvent.Raise();
         }
 
-        private bool CheckGridPersonConditions(Grid<CellRuntimeData> grid)
-        {
-            if (grid == null)
-                return false;
-
-            foreach (CellRuntimeData cell in grid.GridContent)
-            {
-                if (cell?.CurrentPerson == null)
-                    continue;
-
-                CheckPersonCondition(cell, cell.CurrentPerson, cell.OwnGrid);
-                if (cell.CurrentPerson.State != PersonState.Happy)
-                    return false;
-            }
-
-            return true;
-        }
-
         public void CheckPersonCondition(CellRuntimeData containCell, PersonRuntimeData person, GridId cellGrid)
         {
-            if (containCell == null || person == null)
-                return;
-
-            if (cellGrid == GridId.WaitGrid)
-            {
-                person.SetState(PersonState.Normal);
-                return;
-            }
-
-            bool isConditionOk = true;
-            List<CellRuntimeData> adjacentCells = GetAdjacentCells(containCell.Index, _main);
-
-            foreach (ConditionRuntimeData condition in person.Conditions)
-            {
-                if (!_conditionCheck.Check(adjacentCells, condition))
-                    isConditionOk = false;
-
-                if (!isConditionOk)
-                    break;
-            }
-
-            person.SetState(isConditionOk ? PersonState.Happy : PersonState.Angry);
+            _conditionEvaluator.CheckPersonCondition(containCell, person, cellGrid, _main);
         }
 
         public void Initialize(LevelRuntimeData level)
