@@ -164,7 +164,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 82e6f71d9845c8e4f9ee1bc406187606, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Manager.GridManager
+  m_EditorClassIdentifier: Game.Presentation::Game.Presentation.Board.GridManager
   levelView: {fileID: 284943829}
   personMoveManager: {fileID: 0}
   cellPrefabs: {fileID: 3845831781986120399, guid: 9bf77078a523ea747a1f7820a9637dc3, type: 3}
@@ -186,7 +186,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 10a980de8e039a54b94a55ef82ed60f2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Tests.LevelTest
+  m_EditorClassIdentifier: Game.Bootstrap::Game.Bootstrap.LevelBootstrapper
   levelData: {fileID: 11400000, guid: d5b914eb713754b4ea96e12254feb1df, type: 2}
   gridManager: {fileID: 10276212}
 --- !u!114 &10276214
@@ -200,7 +200,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5c2dba7453a2e724bb0773d4bb824aa2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Manager.PersonMoveManager
+  m_EditorClassIdentifier: Game.Presentation::Game.Presentation.People.PersonMoveManager
   gridManager: {fileID: 10276212}
   cellLayer:
     serializedVersion: 2

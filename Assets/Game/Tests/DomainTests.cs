@@ -1,13 +1,12 @@
 using NUnit.Framework;
 using UnityEngine;
-using Game.Shared;
-using Game.Domain.Grid;
-using Game.Domain.Person;
-using Game.Domain.Condition;
-using Game.Domain.SaveAndLoad;
 using System.Collections.Generic;
+using Game.Core.Board;
+using Game.Core.Conditions;
+using Game.Core.Levels;
+using Game.Core.People;
 
-namespace Game.Tests
+namespace Game.Tests.EditMode
 {
     public class DomainTests
     {

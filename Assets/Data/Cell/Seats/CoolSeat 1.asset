@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 36d0383138abb0e4a82deb90d01c4f41, type: 3}
   m_Name: CoolSeat 1
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Data.CellDataSO
+  m_EditorClassIdentifier: Game.Authoring::Game.Authoring.Board.CellDataSO
   type: 0
   defaultPerson: {fileID: 11400000, guid: dec06a060522db74dad1c27a25546f7f, type: 2}
   food: 0

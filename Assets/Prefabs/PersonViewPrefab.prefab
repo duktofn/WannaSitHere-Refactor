@@ -198,7 +198,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f7fe127c22e9e86489d8650838d245f1, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.View.Person.PersonView
+  m_EditorClassIdentifier: Game.Presentation::Game.Presentation.People.PersonView
   personBody: {fileID: 6909110439111727522}
   personFace: {fileID: 6130074942627649104}
   happyFace: {fileID: 6266176060360064, guid: 66f624f076f00954d921d51703f55005, type: 3}
@@ -261,7 +261,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 08bf03a698feb144f99a6e5a8e30d792, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Manager.PersonDragManager
+  m_EditorClassIdentifier: Game.Presentation::Game.Presentation.Input.PersonDragManager
   scaleFactor: 1.25
   playTime: 0.25
   scaleEase: 2
