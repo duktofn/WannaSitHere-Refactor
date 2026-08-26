@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2dafde19f4b6c67459ae741a97b9ce4f, type: 3}
   m_Name: TestLevel
-  m_EditorClassIdentifier: Game.Authoring::Game.Authoring.Levels.LevelDataSO
+  m_EditorClassIdentifier: Game.Data::Game.Data.Levels.LevelDataSO
   levelMove: 20
   mainGrid:
     _gridSize: {x: 3, y: 3}

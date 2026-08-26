@@ -15,24 +15,25 @@ Game.Core
 ├── Levels         Trạng thái level khi runtime
 └── People         Runtime state của nhân vật
 
-Game.Authoring     ScriptableObject dùng để thiết kế level trong Inspector
-Game.Presentation  MonoBehaviour, input, view, UI, animation và event channel
+Game.Data          ScriptableObject dùng để thiết kế level trong Inspector
+Game.View          MonoBehaviour, input, view, UI, animation và event channel
+Game.Events        ScriptableObject event channel
 Game.Bootstrap     Điểm khởi tạo scene và wiring dependency
 Game.Editor        Custom Inspector chỉ chạy trong Unity Editor
-Game.Tests         EditMode tests cho Core
+Game.Tests.EditMode EditMode tests cho Core
 ```
 
 Chiều dependency cho phép:
 
 ```text
-Game.Bootstrap ──> Game.Authoring ───> Game.Core
-       └─────────> Game.Presentation ─> Game.Core
+Game.Bootstrap ──> Game.Data ───> Game.Core
+       └─────────> Game.View ───> Game.Core, Game.Events
 
-Game.Editor ──────> Game.Authoring
-Game.Tests ───────> Game.Core
+Game.Editor ──────> Game.Data
+Game.Tests.EditMode ───────> Game.Core
 ```
 
-`Game.Core` không được tham chiếu `Game.Authoring`, `Game.Presentation` hoặc `Game.Bootstrap`. `Game.Presentation` cũng không được tham chiếu `Game.Authoring`; việc biến asset thiết kế thành runtime state thuộc về Bootstrap.
+`Game.Core` không được tham chiếu `Game.Data`, `Game.View`, `Game.Events` hoặc `Game.Bootstrap`. `Game.View` cũng không được tham chiếu `Game.Data`; việc biến asset thiết kế thành runtime state thuộc về Bootstrap.
 
 ## Vai trò và giới hạn namespace
 
@@ -49,39 +50,45 @@ Core được phép thay đổi runtime state và đánh giá rule. Core không 
 
 Lưu ý: Core hiện vẫn dùng một vài value type của Unity (`Vector2`, `Vector2Int`) và giữ `Sprite` trong một số runtime data. Đây là giới hạn kỹ thuật còn lại của code hiện tại; không nên thêm UI/MonoBehaviour vào Core. Nếu cần tách Core thành pure C# về sau, thay `Sprite` bằng visual ID và tách thông tin layout khỏi `Grid<T>`.
 
-### `Game.Authoring.*`
+### `Game.Data.*`
 
 Đây là dữ liệu mà designer cấu hình trong Inspector:
 
-- `PersonDataSO`, `CellDataSO`, `ConditionDataSO`, `LevelDataSO`.
-- Các class có trách nhiệm chuyển dữ liệu authoring sang Core qua `ToRuntimeData()`.
-- `Game.Authoring.People.GameConfig` chứa validation dành cho authoring, ví dụ giới hạn condition của một người.
+- `Game.Data.People`: `PersonDataSO`, `GameConfig`.
+- `Game.Data.Board`: `CellDataSO`.
+- `Game.Data.Conditions`: `ConditionDataSO`.
+- `Game.Data.Levels`: `LevelDataSO`.
+- Các class có trách nhiệm chuyển dữ liệu data sang Core qua `ToRuntimeData()`.
+- `Game.Data.People.GameConfig` chứa validation dành cho data authoring, ví dụ giới hạn condition của một người.
 
-Authoring được phép phụ thuộc Core và Unity `ScriptableObject`. Nó không được xử lý drag, thay đổi trạng thái level đang chơi hoặc hiển thị UI.
+Data được phép phụ thuộc Core và Unity `ScriptableObject`. Nó không được xử lý drag, thay đổi trạng thái level đang chơi hoặc hiển thị UI.
 
-### `Game.Presentation.*`
+### `Game.View.*`
 
 Đây là Unity-facing layer:
 
-- `Board`: tạo cell trong scene, bind data và điều phối move với view.
-- `People`: hiển thị nhân vật, animation di chuyển và đồng bộ view sau swap.
-- `Input`: nhận drag event từ Unity EventSystem.
-- `UI`: hiển thị số lượt, panel kết quả và text effect.
-- `Signals`: ScriptableObject event channel cho các tín hiệu UI như win/lose.
+- `Game.View.Board`: tạo cell trong scene, bind data và điều phối move với view.
+- `Game.View.People`: hiển thị nhân vật, animation di chuyển và đồng bộ view sau swap.
+- `Game.View.Input`: nhận drag event từ Unity EventSystem.
+- `Game.View.UI`: hiển thị số lượt, panel kết quả và text effect.
 
-Presentation được phép dùng `MonoBehaviour`, `Instantiate`, Physics, camera, TMP và PrimeTween. Nó gọi Core để đọc/thay đổi gameplay state, nhưng không nên tạo thêm rule gameplay trong view hoặc UI.
+View được phép dùng `MonoBehaviour`, `Instantiate`, Physics, camera, TMP và PrimeTween. Nó gọi Core để đọc/thay đổi gameplay state, nhưng không nên tạo thêm rule gameplay trong view hoặc UI.
+
+### `Game.Events`
+
+Chứa ScriptableObject event channels (`VoidEventChannelSO`, `SinglePayloadChannelSO`, `DoublePayloadChannelSO`) để decoupled giao tiếp giữa view và các hệ thống khác.
 
 ### `Game.Bootstrap`
 
-`LevelBootstrapper` là entry point của scene. Nó nhận `LevelDataSO`, tạo `LevelRuntimeData`, sau đó khởi tạo `GridManager` và tạo hai grid. Bootstrap là nơi duy nhất được phép biết cả Authoring lẫn Presentation.
+`LevelBootstrapper` là entry point của scene. Nó nhận `LevelDataSO`, tạo `LevelRuntimeData`, sau đó khởi tạo `GridManager` và tạo hai grid. Bootstrap là nơi duy nhất được phép biết cả Data lẫn View.
 
-### `Game.Editor.*`
+### `Game.Editor`
 
 Chứa tooling chỉ chạy trong Unity Editor. Hiện có `LevelDataSOEditor`, custom inspector để chỉnh grid của `LevelDataSO`. Không đưa `UnityEditor` hoặc code editor vào runtime assembly.
 
 ### `Game.Tests.EditMode`
 
-Chứa NUnit test cho Core. Test ở đây có thể tham chiếu Core, nhưng không tham chiếu Presentation hoặc Bootstrap trừ khi một test thật sự cần Unity scene.
+Chứa NUnit test cho Core. Test ở đây có thể tham chiếu Core, nhưng không tham chiếu View hoặc Bootstrap trừ khi một test thật sự cần Unity scene.
 
 ## Flow khi chạy game
 
@@ -98,7 +105,7 @@ Chứa NUnit test cho Core. Test ở đây có thể tham chiếu Core, nhưng k
 2. Nó gọi `PersonMoveManager` để lưu vị trí gốc, tween theo con trỏ và tìm `CellView` đang overlap lúc thả.
 3. `PersonMoveManager.MoveToCell()` gọi `GridManager.TryMovePerson()`.
 4. `GridManager` kiểm tra target có phải ghế hợp lệ không, đổi `CurrentPerson` giữa source/target, rồi trừ một lượt.
-5. Nếu move thành công, Presentation tween các `PersonView` tới cell mới và cập nhật reference cell hiện tại.
+5. Nếu move thành công, View tween các `PersonView` tới cell mới và cập nhật reference cell hiện tại.
 
 ### 3. Đánh giá kết quả
 
@@ -110,7 +117,7 @@ Chứa NUnit test cho Core. Test ở đây có thể tham chiếu Core, nhưng k
 
 ## Quy ước khi thêm code
 
-- Bắt đầu bằng câu hỏi: code này là rule/state, dữ liệu thiết kế, Unity presentation, scene wiring hay editor tooling?
+- Bắt đầu bằng câu hỏi: code này là rule/state, dữ liệu thiết kế, Unity view, scene wiring hay editor tooling?
 - Đặt code vào assembly có trách nhiệm tương ứng; không tạo namespace `Shared`, `Common` hoặc `Manager` chung chung.
 - Chỉ expose `public` khi type cần dùng qua assembly khác; ưu tiên `internal` cho implementation nội bộ.
-- Nếu gameplay orchestration không còn cần Unity object, tách nó từ Presentation sang một `Game.Application` assembly mới thay vì để `GridManager` tiếp tục phình to.
+- Nếu gameplay orchestration không còn cần Unity object, tách nó từ View sang một `Game.Application` assembly mới thay vì để `GridManager` tiếp tục phình to.

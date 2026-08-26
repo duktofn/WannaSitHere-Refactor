@@ -11,4 +11,4 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f93ec929b3141d74c91378eddf2a5901, type: 3}
   m_Name: OnWinLevelEvent
-  m_EditorClassIdentifier: Game.Presentation::Game.Presentation.Signals.VoidEventChannelSO
+  m_EditorClassIdentifier: Game.Events::Game.Events.VoidEventChannelSO

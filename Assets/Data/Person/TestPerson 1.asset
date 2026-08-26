@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec11410e7f8fe95488ce8b4b989c78c6, type: 3}
   m_Name: TestPerson 1
-  m_EditorClassIdentifier: Game.Authoring::Game.Authoring.People.PersonDataSO
+  m_EditorClassIdentifier: Game.Data::Game.Data.People.PersonDataSO
   personName: Cooly
   trait: 0
   conditions:

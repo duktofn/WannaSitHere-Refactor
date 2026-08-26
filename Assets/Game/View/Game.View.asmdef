@@ -1,12 +1,14 @@
 {
-    "name": "Game.Editor",
-    "rootNamespace": "Game.Editor",
+    "name": "Game.View",
+    "rootNamespace": "Game.View",
     "references": [
-        "Game.Data"
+        "Game.Core",
+        "PrimeTween.Runtime",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Game.Events"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

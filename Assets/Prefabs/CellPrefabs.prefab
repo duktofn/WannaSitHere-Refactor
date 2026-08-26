@@ -45,7 +45,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30a54a77447736947829f7113cfaf297, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.Presentation::Game.Presentation.Board.CellView
+  m_EditorClassIdentifier: Game.View::Game.View.Board.CellView
   personViewPrefabs: {fileID: 2863313955090313580, guid: 0cc523f4cefaf974bacd4a38408820ab, type: 3}
   personView: {fileID: 1362204648338547286, guid: 0cc523f4cefaf974bacd4a38408820ab, type: 3}
 --- !u!61 &4311430509083209812

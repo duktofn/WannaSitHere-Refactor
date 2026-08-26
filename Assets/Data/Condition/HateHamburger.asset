@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04e0ac5b57e01c648b98376410138b70, type: 3}
   m_Name: HateHamburger
-  m_EditorClassIdentifier: Game.Authoring::Game.Authoring.Conditions.ConditionDataSO
+  m_EditorClassIdentifier: Game.Data::Game.Data.Conditions.ConditionDataSO
   type: 1
   target: 0
   targetTrait: 0

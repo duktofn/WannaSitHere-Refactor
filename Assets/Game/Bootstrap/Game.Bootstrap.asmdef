@@ -2,9 +2,9 @@
     "name": "Game.Bootstrap",
     "rootNamespace": "Game.Bootstrap",
     "references": [
-        "Game.Authoring",
         "Game.Core",
-        "Game.Presentation"
+        "Game.Data",
+        "Game.View"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

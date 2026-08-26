@@ -1,7 +1,7 @@
 using UnityEngine;
-using Game.Authoring.Levels;
+using Game.Data.Levels;
 using Game.Core.Levels;
-using Game.Presentation.Board;
+using Game.View.Board;
 
 namespace Game.Bootstrap
 {

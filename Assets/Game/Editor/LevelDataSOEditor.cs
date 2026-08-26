@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEditor;
-using Game.Authoring.Board;
-using Game.Authoring.Levels;
+using Game.Data.Board;
+using Game.Data.Levels;
 
-namespace Game.Editor.Levels
+namespace Game.Editor
 {
     [CustomEditor(typeof(LevelDataSO))]
     public class LevelDataSOEditor : UnityEditor.Editor

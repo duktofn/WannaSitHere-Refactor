@@ -1,12 +1,10 @@
 {
-    "name": "Game.Editor",
-    "rootNamespace": "Game.Editor",
+    "name": "Game.Data",
+    "rootNamespace": "Game.Data",
     "references": [
-        "Game.Data"
+        "Game.Core"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
