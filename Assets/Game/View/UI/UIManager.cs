@@ -5,8 +5,8 @@ namespace Game.View.UI
 {
     public class UIManager : MonoBehaviour
     {
-        [SerializeField] private GameObject levelEndPanel;
-        [SerializeField] private LevelEndText levelEndText;
+        [SerializeField] private GameObject levelWinPanel;
+        [SerializeField] private GameObject levelLosePanel;
         [SerializeField] private string winText;
         [SerializeField] private string loseText;
 
@@ -27,19 +27,18 @@ namespace Game.View.UI
 
         private void Awake()
         {
-            levelEndPanel.SetActive(false);
+            levelWinPanel.SetActive(false);
+            levelLosePanel.SetActive(false);
         }
 
         public void ShowWin()
         {
-            levelEndText.SetDisplayText(winText);
-            levelEndPanel.SetActive(true);
+            levelWinPanel.SetActive(true);
         }
 
         public void ShowLose()
         {
-            levelEndText.SetDisplayText(loseText);
-            levelEndPanel.SetActive(true);
+            levelLosePanel.SetActive(true);
         }
     }
 }
