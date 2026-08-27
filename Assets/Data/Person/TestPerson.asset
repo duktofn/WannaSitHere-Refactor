@@ -16,4 +16,5 @@ MonoBehaviour:
   trait: 0
   conditions:
   - {fileID: 11400000, guid: 7b4a02bb7c462774ea56c3203a0c985a, type: 2}
+  - {fileID: 11400000, guid: 56be8f26cc282174c8fdee2508ac07b9, type: 2}
   baseSprite: {fileID: -7650137855209502040, guid: 49547a00c80b8694d8e286b4ee8e958c, type: 3}

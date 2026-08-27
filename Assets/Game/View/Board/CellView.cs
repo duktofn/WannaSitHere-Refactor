@@ -30,7 +30,7 @@ namespace Game.View.Board
                     return;
                 }
 
-                GameObject tmp = Instantiate(personViewPrefabs, transform.position, Quaternion.identity);
+                GameObject tmp = Instantiate(personViewPrefabs, transform.position, Quaternion.identity, transform.root);
                 personView = tmp.GetComponent<PersonView>();
                 personView.BindData(_cell.DefaultPerson);
                 tmp.GetComponent<PersonDragManager>()

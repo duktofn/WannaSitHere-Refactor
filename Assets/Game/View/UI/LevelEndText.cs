@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using PrimeTween;
 using TMPro;
 using UnityEngine;
@@ -23,16 +24,16 @@ namespace Game.View.UI
 
         private void OnEnable()
         {
-            _ = RevealingEffect();
+            RevealingEffect().Forget();
         }
 
         [ContextMenu("Play Revealing Effect")]
         public void PlayRevealingEffect()
         {
-            _ = RevealingEffect();
+            RevealingEffect().Forget();
         }
 
-        public async Awaitable RevealingEffect()
+        public async UniTask RevealingEffect()
         {
             if (letters == null || letters.Count == 0) return;
 
@@ -45,23 +46,23 @@ namespace Game.View.UI
                 }
             }
 
-            await Awaitable.NextFrameAsync();
+            await UniTask.NextFrame();
 
             foreach (var let in letters)
             {
                 if (let != null && let.gameObject.activeSelf)
                 {
-                    _ = ScaleLetterPopAsync(let.transform);
+                    ScaleLetterPopAsync(let.transform).Forget();
 
                     if (delayBetweenLetter > 0f)
                     {
-                        await Awaitable.WaitForSecondsAsync(delayBetweenLetter);
+                        await UniTask.WaitForSeconds(delayBetweenLetter);
                     }
                 }
             }
         }
 
-        private async Awaitable ScaleLetterPopAsync(Transform target)
+        private async UniTask ScaleLetterPopAsync(Transform target)
         {
             Tween.StopAll(target);
             target.localScale = Vector3.zero;
