@@ -15,8 +15,16 @@ namespace Game.View.People
         [SerializeField] private Sprite normalFace;
         [SerializeField] private Sprite angryFace;
 
+        [Header("Tooltip")]
+        [SerializeField] private PersonTooltip personTooltip;
+
         private PersonRuntimeData _person;
         private bool _isSubscribed;
+
+        private void Awake()
+        {
+            personTooltip = GetComponent<PersonTooltip>();
+        }
 
         private void Start()
         {
@@ -48,6 +56,9 @@ namespace Game.View.People
             personBody.sprite = _person.BaseSprite;
             SubscribeToStateChanges();
             UpdateState(_person.State);
+
+            if (personTooltip != null)
+                personTooltip.BindData(_person);
         }
 
         private void SubscribeToStateChanges()

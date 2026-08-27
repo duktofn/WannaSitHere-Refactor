@@ -41,6 +41,26 @@ namespace Game.Core.Conditions
             return result;
         }
 
+        public bool IsConditionSatisfied(
+            CellRuntimeData containCell,
+            ConditionRuntimeData condition,
+            Grid<CellRuntimeData> mainGrid)
+        {
+            if (containCell == null || mainGrid == null)
+                return false;
+
+            if (condition == null)
+                return true;
+
+            if (containCell.OwnGrid == GridId.WaitGrid)
+                return false;
+
+            return _conditionChecker.Check(
+                GetAdjacentCells(containCell.Index, mainGrid),
+                condition
+            );
+        }
+
         public void CheckPersonCondition(
             CellRuntimeData containCell,
             PersonRuntimeData person,
@@ -57,11 +77,9 @@ namespace Game.Core.Conditions
             }
 
             bool isConditionOk = true;
-            List<CellRuntimeData> adjacentCells = GetAdjacentCells(containCell.Index, mainGrid);
-
             foreach (ConditionRuntimeData condition in person.Conditions)
             {
-                if (!_conditionChecker.Check(adjacentCells, condition))
+                if (!IsConditionSatisfied(containCell, condition, mainGrid))
                     isConditionOk = false;
 
                 if (!isConditionOk)

@@ -85,7 +85,9 @@ namespace Game.View.People
             if (!dragContexts.TryGetValue(personTransform, out DragContext context))
                 return false;
 
-            if (targetCell == null || targetCell.GetCellType() != CellType.Seat)
+            if (targetCell == null ||
+                targetCell.RuntimeData == null ||
+                targetCell.GetCellType() != CellType.Seat)
             {
                 Tween.Position(personTransform, context.StartPosition, snapTime, moveEase);
                 dragContexts.Remove(personTransform);

@@ -14,12 +14,17 @@ namespace Game.View.Input
         [SerializeField] private float playTime;
         [SerializeField] private Ease scaleEase;
 
+        [Header("Tooltip")]
+        [SerializeField] private PersonTooltip personTooltip;
+
         private Collider2D col;
         private PersonMoveManager personMove;
         private PersonRuntimeData person;
         private CellView currentCell;
         private Vector3 lastDragWorldPos;
         private bool hasLastDragWorldPos;
+
+        public CellView CurrentCell => currentCell;
 
         public void Initialize(
             PersonMoveManager moveManager,
@@ -45,6 +50,9 @@ namespace Game.View.Input
         {
             if (personMove == null)
                 return;
+
+            if (personTooltip != null)
+                personTooltip.Hide();
 
             personMove.BeginMove(transform, col, transform.position, currentCell);
             lastDragWorldPos = GetPointerWorldPos(eventData);

@@ -6,7 +6,9 @@
         "PrimeTween.Runtime",
         "Unity.TextMeshPro",
         "UnityEngine.UI",
-        "Game.Events"
+        "Game.Events",
+        "UniTask",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

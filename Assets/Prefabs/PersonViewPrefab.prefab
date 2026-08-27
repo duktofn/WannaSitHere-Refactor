@@ -232,6 +232,7 @@ GameObject:
   - component: {fileID: 1362204648338547286}
   - component: {fileID: 5701669066215742745}
   - component: {fileID: -27170740095953137}
+  - component: {fileID: 1718191659006246686}
   m_Layer: 0
   m_Name: PersonViewPrefab
   m_TagString: Untagged
@@ -333,6 +334,7 @@ MonoBehaviour:
   happyFace: {fileID: 6266176060360064, guid: 66f624f076f00954d921d51703f55005, type: 3}
   normalFace: {fileID: 4606157284126940538, guid: 0200ef72e0c0c7b4ea478ad00fc8b280, type: 3}
   angryFace: {fileID: -9082789242079819192, guid: e3efea3c606ecb54d9f8305a4965127c, type: 3}
+  personTooltip: {fileID: 0}
 --- !u!61 &5701669066215742745
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -394,6 +396,31 @@ MonoBehaviour:
   scaleFactor: 1.25
   playTime: 0.25
   scaleEase: 2
+  personTooltip: {fileID: 0}
+--- !u!114 &1718191659006246686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2863313955090313580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1be7dfef690691942ab42ed278d00eb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.PersonTooltip
+  tooltipsRoot: {fileID: 664924811151998865}
+  top: {fileID: 353428023432676104}
+  mid: {fileID: 8735099567453862541}
+  bot: {fileID: 1339961556838775159}
+  nameText: {fileID: 7798593697930781321}
+  traitText: {fileID: 5841999925495633595}
+  conditionText: {fileID: 8944233159554215276}
+  duration: 0.15
+  showEase: 27
+  hideEase: 26
+  verticalPadding: 0.15
+  horizontalPadding: 0.15
 --- !u!1 &3060349569635356774
 GameObject:
   m_ObjectHideFlags: 0
@@ -428,8 +455,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.209, y: -0.007}
-  m_SizeDelta: {x: 2, y: 0.2}
+  m_AnchoredPosition: {x: -0.007, y: -0.007}
+  m_SizeDelta: {x: 1.568, y: 0.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &3854913660188160229
 MeshRenderer:
@@ -791,7 +818,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.616, y: 0.3}
+  m_AnchoredPosition: {x: 0.616, y: 0.275}
   m_SizeDelta: {x: 0.6, y: 0.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &4952711409446638930
@@ -1063,7 +1090,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.575, y: 0.3}
+  m_AnchoredPosition: {x: -0.575, y: 0.275}
   m_SizeDelta: {x: 0.8, y: 0.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &6498293133720736637

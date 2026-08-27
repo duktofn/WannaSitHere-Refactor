@@ -46,7 +46,7 @@ namespace Game.View.Board
                                                  0f)
                                     + GetGridWorldPos(_main);
 
-                GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity);
+                GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity, gridRoot);
                 tmpCell.GetComponent<CellView>().BindData(c, personMoveManager);
 
                 if (c.CurrentPerson != null)
@@ -65,7 +65,7 @@ namespace Game.View.Board
                                                  0f)
                                     + GetGridWorldPos(_wait);
 
-                GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity);
+                GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity, gridRoot);
                 tmpCell.GetComponent<CellView>().BindData(c, personMoveManager);
 
                 if (c.CurrentPerson != null)
@@ -87,6 +87,18 @@ namespace Game.View.Board
         public List<CellRuntimeData> GetAdjacentCells(Vector2Int index, Grid<CellRuntimeData> grid)
         {
             return _conditionEvaluator.GetAdjacentCells(index, grid);
+        }
+
+        public bool IsConditionSatisfied(CellView cell, ConditionRuntimeData condition)
+        {
+            if (cell?.RuntimeData == null || _main == null || _conditionEvaluator == null)
+                return false;
+
+            return _conditionEvaluator.IsConditionSatisfied(
+                cell.RuntimeData,
+                condition,
+                _main
+            );
         }
 
         public bool TryAssignPerson(CellView targetCell, PersonRuntimeData person)
