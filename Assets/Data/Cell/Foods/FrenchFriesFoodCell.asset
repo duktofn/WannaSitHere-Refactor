@@ -15,4 +15,4 @@ MonoBehaviour:
   type: 1
   defaultPerson: {fileID: 0}
   food: 1
-  sprite: {fileID: 0}
+  sprite: {fileID: 8090622000860335674, guid: 4137a7314dfcf814d813da9385195078, type: 3}

@@ -216,6 +216,7 @@ GameObject:
   - component: {fileID: 138342406}
   - component: {fileID: 138342405}
   - component: {fileID: 138342404}
+  - component: {fileID: 138342407}
   m_Layer: 5
   m_Name: AdsRewardButton
   m_TagString: Untagged
@@ -287,7 +288,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 138342405}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 138342407}
+        m_TargetAssemblyTypeName: Game.View.UI.ButtonPunchShake, Game.View
+        m_MethodName: OnButtonPressed
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &138342405
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,6 +339,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 138342402}
   m_CullTransparentMesh: 1
+--- !u!114 &138342407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 138342402}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 254a7c99ef797914abedd1f3b0fbb71b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonPunchShake
+  duration: 0.25
+  punchStrength: {x: -0.2, y: -0.2, z: -0.2}
 --- !u!1 &257647941
 GameObject:
   m_ObjectHideFlags: 0
@@ -337,6 +364,7 @@ GameObject:
   - component: {fileID: 257647942}
   - component: {fileID: 257647944}
   - component: {fileID: 257647943}
+  - component: {fileID: 257647945}
   m_Layer: 5
   m_Name: Ads
   m_TagString: Untagged
@@ -351,9 +379,9 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 257647941}
-  m_LocalRotation: {x: 0, y: 0, z: 0.13052616, w: 0.9914449}
+  m_LocalRotation: {x: -0.0015522839, y: 0.0001693114, z: 0.13055938, w: 0.9914393}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.0248849, y: 1.0248849, z: 1.0248849}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 138342403}
@@ -401,6 +429,25 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 257647941}
   m_CullTransparentMesh: 1
+--- !u!114 &257647945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 257647941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71a9f353b20bce747af1d8b122d55dff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.UI.AdsShaking
+  scaleUpFactor: 1.1
+  scaleUpTime: 0.5
+  scaleEase: 0
+  scaleDownTime: 0.5
+  shakeStrength: {x: 10, y: 10, z: 10}
+  shakeDuration: 2
+  idleDelay: 1
 --- !u!1 &284943824
 GameObject:
   m_ObjectHideFlags: 0
@@ -453,7 +500,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 1284, y: 2778}
+  m_ReferenceResolution: {x: 2778, y: 1284}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
@@ -530,6 +577,8 @@ GameObject:
   - component: {fileID: 290189615}
   - component: {fileID: 290189617}
   - component: {fileID: 290189616}
+  - component: {fileID: 290189619}
+  - component: {fileID: 290189618}
   m_Layer: 5
   m_Name: WinPanel
   m_TagString: Untagged
@@ -598,6 +647,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 290189614}
   m_CullTransparentMesh: 1
+--- !u!114 &290189618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 290189614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2f6bf6b0ef57d2418fb614f5f9c3187, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.UI.LevelEndBackground
+  images:
+  - {fileID: 554320050}
+  - {fileID: 444186233}
+  - {fileID: 626058157}
+  - {fileID: 1148350184}
+  - {fileID: 138342405}
+  - {fileID: 257647943}
+  - {fileID: 1098082644}
+  - {fileID: 1064699228}
+  - {fileID: 1455096795}
+  revealDuration: 0.5
+  revealEase: 0
+  revealDelay: 0.15
+--- !u!114 &290189619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 290189614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58a473dc13804714b9b46178b0f5996e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.UI.LevelEndText
+  letters:
+  - {fileID: 565339608}
+  - {fileID: 685584329}
+  - {fileID: 1838631908}
+  - {fileID: 1223945401}
+  - {fileID: 1894723877}
+  - {fileID: 578616931}
+  - {fileID: 1740132134}
+  - {fileID: 1075775360}
+  scaleUpFactor: 1.15
+  scaleUpTime: 0.15
+  scaleUpEase: 0
+  scaleDownTime: 0.15
+  scaleDownEase: 0
+  delayBetweenLetter: 0.1
 --- !u!1 &292624713
 GameObject:
   m_ObjectHideFlags: 0
@@ -1151,7 +1252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.39215687}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2517,6 +2618,7 @@ GameObject:
   - component: {fileID: 1064699229}
   - component: {fileID: 1064699228}
   - component: {fileID: 1064699227}
+  - component: {fileID: 1064699230}
   m_Layer: 5
   m_Name: RewardButton
   m_TagString: Untagged
@@ -2587,7 +2689,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1064699228}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1064699230}
+        m_TargetAssemblyTypeName: Game.View.UI.ButtonPunchShake, Game.View
+        m_MethodName: OnButtonPressed
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1064699228
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2626,6 +2740,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1064699225}
   m_CullTransparentMesh: 1
+--- !u!114 &1064699230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064699225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 254a7c99ef797914abedd1f3b0fbb71b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonPunchShake
+  duration: 0.25
+  punchStrength: {x: -0.2, y: -0.2, z: -0.2}
 --- !u!1 &1075775358
 GameObject:
   m_ObjectHideFlags: 0
@@ -2888,7 +3016,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.39215687}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3567,7 +3695,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1606493272}
   - component: {fileID: 1606493275}
-  - component: {fileID: 1606493273}
   m_Layer: 5
   m_Name: Text
   m_TagString: Untagged
@@ -3602,33 +3729,6 @@ RectTransform:
   m_AnchoredPosition: {x: -297, y: 862}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1606493273
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1606493271}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58a473dc13804714b9b46178b0f5996e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.LevelEndText
-  letters:
-  - {fileID: 565339608}
-  - {fileID: 685584329}
-  - {fileID: 1838631908}
-  - {fileID: 1223945401}
-  - {fileID: 1894723877}
-  - {fileID: 578616931}
-  - {fileID: 1740132134}
-  - {fileID: 1075775360}
-  scaleUpFactor: 1.15
-  scaleUpTime: 0.15
-  scaleUpEase: 0
-  scaleDownTime: 0.15
-  scaleDownEase: 0
-  delayBetweenLetter: 0.1
 --- !u!222 &1606493275
 CanvasRenderer:
   m_ObjectHideFlags: 0

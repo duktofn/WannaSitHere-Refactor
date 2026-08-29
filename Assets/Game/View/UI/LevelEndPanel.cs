@@ -1,17 +1,52 @@
+using System.Collections.Generic;
 using UnityEngine;
-using PrimeTween; 
+using UnityEngine.UI;
+using PrimeTween;
+using Cysharp.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace Game.View.UI
 {
-    public class LevelEndPanel : MonoBehaviour
+    public class LevelEndBackground : MonoBehaviour
     {
+        [SerializeField] private List<Image> images;
         [SerializeField] private float revealDuration;
-        [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private Ease revealEase;
+        [SerializeField] private float revealDelay;
+
+        private void Awake()
+        {
+            foreach (Image img in images)
+            {
+                img.color = new Color(img.color.r, img.color.g, img.color.b, 0);
+            }
+        }
 
         private void OnEnable()
         {
-            Tween.Custom(0f, 1f, revealDuration, onValueChange: value => canvasGroup.alpha = value, revealEase);
+            Revealing().Forget();
+        }
+
+        [ContextMenu("Revealing")]
+        public async UniTask Revealing()
+        {
+            foreach (Image img in images)
+            {
+                await UniTask.Delay((int) (revealDelay * 1000));
+
+                _ = Tween.Custom(
+                    0f,
+                    1f,
+                    revealDuration,
+                    value =>
+                    {
+                        Color color = img.color;
+                        color.a = value;
+                        img.color = color;
+                    },
+                    ease: revealEase
+                );
+            }
         }
     }
 }

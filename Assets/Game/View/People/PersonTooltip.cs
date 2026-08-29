@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 namespace Game.View
 {
@@ -26,17 +27,30 @@ namespace Game.View
         [SerializeField] private Ease hideEase = Ease.InBack;
 
         [Header("Mid Resize")]
-        [SerializeField] private float padding = 0.2f;
+        [SerializeField, FormerlySerializedAs("padding")] private float topPadding = 0.08f;
+        [SerializeField] private float bottomPadding = 0.08f;
+        [SerializeField] private float horizontalPadding = 0.15f;
 
         private const int MaxConditions = 2;
 
         private bool _isShowTooltips;
         private Vector3 _originalLocalPos;
         private InputAction _pointerPressAction;
+        private float _botAnchorY;
+        private bool _hasBotAnchor;
+        private float _midBaseScaleY = 1f;
 
         private void Awake()
         {
             _originalLocalPos = tooltipsRoot.transform.localPosition;
+            if (bot != null)
+            {
+                _botAnchorY = bot.transform.localPosition.y;
+                _hasBotAnchor = true;
+            }
+
+            if (mid != null)
+                _midBaseScaleY = Mathf.Abs(mid.transform.localScale.y);
 
             _pointerPressAction = new InputAction("PointerPress", InputActionType.Button, "<Pointer>/press");
         }
@@ -116,12 +130,94 @@ namespace Game.View
 
         private void ResizeToFitConditionText()
         {
+            if (conditionText == null || top == null || top.sprite == null ||
+                mid == null || mid.sprite == null || bot == null || bot.sprite == null)
+            {
+                return;
+            }
+
+            float midWidth = mid.sprite.bounds.size.x * Mathf.Abs(mid.transform.localScale.x);
+            float textWidth = Mathf.Max(0.01f, midWidth - horizontalPadding * 2f);
+            conditionText.rectTransform.sizeDelta = new Vector2(textWidth, 100f);
+            conditionText.ForceMeshUpdate();
+            float textHeight = conditionText.GetPreferredValues(
+                conditionText.text,
+                textWidth,
+                Mathf.Infinity
+            ).y;
+            conditionText.rectTransform.sizeDelta = new Vector2(textWidth, textHeight);
+
+            float midBaseHeight = mid.sprite.bounds.size.y * _midBaseScaleY;
+            float desiredMidHeight = Mathf.Max(
+                textHeight + topPadding + bottomPadding,
+                midBaseHeight
+            );
+            float scaleY = desiredMidHeight / mid.sprite.bounds.size.y;
+            mid.transform.localScale = new Vector3(
+                mid.transform.localScale.x,
+                scaleY,
+                mid.transform.localScale.z
+            );
+
+            float actualMidHeight = mid.sprite.bounds.size.y * Mathf.Abs(scaleY);
+            float botHeight = bot.sprite.bounds.size.y * Mathf.Abs(bot.transform.localScale.y);
+            float topHeight = top.sprite.bounds.size.y * Mathf.Abs(top.transform.localScale.y);
+
+            // Bot remains fixed. Mid stacks above Bot and Top stacks above Mid.
+            float botCenterY = _hasBotAnchor ? _botAnchorY : bot.transform.localPosition.y;
+            float botTopY = botCenterY + botHeight * 0.5f;
+            float midCenterY = botTopY + actualMidHeight * 0.5f;
+            float topCenterY = botTopY + actualMidHeight + topHeight * 0.5f;
+
+            bot.transform.localPosition = new Vector3(
+                bot.transform.localPosition.x,
+                botCenterY,
+                bot.transform.localPosition.z
+            );
+            mid.transform.localPosition = new Vector3(
+                mid.transform.localPosition.x,
+                midCenterY,
+                mid.transform.localPosition.z
+            );
+            top.transform.localPosition = new Vector3(
+                top.transform.localPosition.x,
+                topCenterY,
+                top.transform.localPosition.z
+            );
+
+            SetHeaderPosition(nameText, topCenterY);
+            SetHeaderPosition(traitText, topCenterY);
+
+            Vector3 conditionPosition = conditionText.transform.localPosition;
+            conditionText.verticalAlignment = VerticalAlignmentOptions.Top;
+            conditionText.rectTransform.pivot = new Vector2(
+                conditionText.rectTransform.pivot.x,
+                1f
+            );
+            conditionText.transform.localPosition = new Vector3(
+                conditionPosition.x,
+                botTopY + actualMidHeight - topPadding,
+                conditionPosition.z
+            );
+        }
+
+        private static void SetHeaderPosition(TextMeshPro text, float y)
+        {
+            if (text == null)
+                return;
+
+            Vector3 position = text.transform.localPosition;
+            text.transform.localPosition = new Vector3(position.x, y, position.z);
+        }
+
+        private void ResizeLegacyToFitConditionText()
+        {
             conditionText.ForceMeshUpdate();
             float textHeight = conditionText.GetRenderedValues(true).y;
 
             // Scale Y của mid cho vừa text
             float midOriginalHeight = mid.bounds.size.y / mid.transform.localScale.y;
-            float scaleY = (textHeight + padding) / midOriginalHeight;
+            float scaleY = (textHeight + topPadding + bottomPadding) / midOriginalHeight;
             mid.transform.localScale = new Vector3(mid.transform.localScale.x, scaleY, mid.transform.localScale.z);
 
             

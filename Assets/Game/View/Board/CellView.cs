@@ -3,25 +3,30 @@ using Game.Core.Board;
 using Game.Core.People;
 using Game.View.Input;
 using Game.View.People;
+using UnityEngine.EventSystems;
 
 namespace Game.View.Board
 {
-    public class CellView : MonoBehaviour
+    public class CellView : MonoBehaviour, IPointerClickHandler
     {
         private CellRuntimeData _cell;
         [SerializeField] private GameObject personViewPrefabs;
         [SerializeField] private PersonView personView;
+        [SerializeField] private SpriteRenderer renderer;
 
         public CellRuntimeData RuntimeData => _cell;
         public PersonView CurrentPersonView => personView;
 
         public CellType GetCellType() => _cell.Type;
 
-        public void BindData(CellRuntimeData cell, PersonMoveManager personMoveManager)
+        private void InitCell(PersonMoveManager personMoveManager)
         {
-            if (cell == null) return;
-            _cell = cell;
-            personView = null;
+            if (_cell.Type == CellType.Food)
+            {
+                renderer.sprite = _cell.Sprite;
+                return;
+            }
+
             if (_cell.DefaultPerson != null)
             {
                 if (personViewPrefabs == null)
@@ -38,6 +43,14 @@ namespace Game.View.Board
             }
         }
 
+        public void BindData(CellRuntimeData cell, PersonMoveManager personMoveManager)
+        {
+            if (cell == null) return;
+            _cell = cell;
+            personView = null;
+            InitCell(personMoveManager);
+        }
+
         public void SetPersonView(PersonView view)
         {
             personView = view;
@@ -45,14 +58,22 @@ namespace Game.View.Board
 
         public Vector2Int GetCellIndex()
         {
-            if (_cell != null) 
+            if (_cell == null)
+            {
                 Debug.LogWarning("No Cell valid to get index");
+                return Vector2Int.zero;
+            }
             return _cell.Index;
         }
         
         public void AssignPersonToCell(PersonRuntimeData person)
         {
             _cell.SetPerson(person);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            // TODO: Implement click handling logic
         }
     }
 }

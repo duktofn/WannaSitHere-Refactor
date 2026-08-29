@@ -396,7 +396,7 @@ MonoBehaviour:
   scaleFactor: 1.25
   playTime: 0.25
   scaleEase: 2
-  personTooltip: {fileID: 0}
+  personTooltip: {fileID: 1718191659006246686}
 --- !u!114 &1718191659006246686
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -419,8 +419,9 @@ MonoBehaviour:
   duration: 0.15
   showEase: 27
   hideEase: 26
-  verticalPadding: 0.15
-  horizontalPadding: 0.15
+  topPadding: 0.1
+  bottomPadding: 0
+  horizontalPadding: 0.1
 --- !u!1 &3060349569635356774
 GameObject:
   m_ObjectHideFlags: 0
