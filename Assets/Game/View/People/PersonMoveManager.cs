@@ -83,20 +83,46 @@ namespace Game.View.People
             CellView targetCell)
         {
             if (!dragContexts.TryGetValue(personTransform, out DragContext context))
-                return false;
-
-            if (targetCell == null ||
-                targetCell.RuntimeData == null ||
-                targetCell.GetCellType() != CellType.Seat)
             {
+                Debug.LogWarning("[MoveToCell] FAIL: No drag context found for person.");
+                return false;
+            }
+
+            if (targetCell == null)
+            {
+                Debug.LogWarning("[MoveToCell] FAIL: targetCell is null — no overlapping cell found.");
                 Tween.Position(personTransform, context.StartPosition, snapTime, moveEase);
                 dragContexts.Remove(personTransform);
                 return false;
             }
 
-            if (gridManager == null ||
-                !gridManager.TryMovePerson(context.SourceCell, targetCell, person))
+            if (targetCell.RuntimeData == null)
             {
+                Debug.LogWarning($"[MoveToCell] FAIL: targetCell '{targetCell.name}' has null RuntimeData.");
+                Tween.Position(personTransform, context.StartPosition, snapTime, moveEase);
+                dragContexts.Remove(personTransform);
+                return false;
+            }
+
+            if (targetCell.GetCellType() != CellType.Seat)
+            {
+                Debug.LogWarning($"[MoveToCell] FAIL: targetCell type is {targetCell.GetCellType()}, not Seat.");
+                Tween.Position(personTransform, context.StartPosition, snapTime, moveEase);
+                dragContexts.Remove(personTransform);
+                return false;
+            }
+
+            if (gridManager == null)
+            {
+                Debug.LogWarning("[MoveToCell] FAIL: gridManager is null.");
+                Tween.Position(personTransform, context.StartPosition, snapTime, moveEase);
+                dragContexts.Remove(personTransform);
+                return false;
+            }
+
+            if (!gridManager.TryMovePerson(context.SourceCell, targetCell, person))
+            {
+                Debug.LogWarning($"[MoveToCell] FAIL: TryMovePerson rejected. Source={context.SourceCell?.name}, Target={targetCell.name}");
                 Tween.Position(personTransform, context.StartPosition, snapTime, moveEase);
                 dragContexts.Remove(personTransform);
                 return false;
