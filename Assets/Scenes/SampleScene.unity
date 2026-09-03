@@ -2351,7 +2351,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c2dba7453a2e724bb0773d4bb824aa2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.People.PersonMoveManager
-  gridManager: {fileID: 0}
+  gridManager: {fileID: 788058380}
   cellLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -2370,7 +2370,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.Board.GridManager
   levelView: {fileID: 284943829}
-  personMoveManager: {fileID: 0}
+  personMoveManager: {fileID: 788058379}
   cellPrefabs: {fileID: 3845831781986120399, guid: 9bf77078a523ea747a1f7820a9637dc3, type: 3}
   adjacent:
   - {x: 1, y: 0}
