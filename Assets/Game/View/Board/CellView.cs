@@ -3,27 +3,71 @@ using Game.Core.Board;
 using Game.Core.People;
 using Game.View.Input;
 using Game.View.People;
-using UnityEngine.EventSystems;
+using PrimeTween;
+using Cysharp.Threading.Tasks;
+using TMPro;
+using UnityEngine.InputSystem;
 
 namespace Game.View.Board
 {
-    public class CellView : MonoBehaviour, IPointerClickHandler
+    public class CellView : MonoBehaviour
     {
         private CellRuntimeData _cell;
         [SerializeField] private GameObject personViewPrefabs;
         [SerializeField] private PersonView personView;
-        [SerializeField] private SpriteRenderer renderer;
+        [SerializeField] private SpriteRenderer spriteRenderer;
+
+        [SerializeField] private GameObject foodTooltips;
+        [SerializeField] private TextMeshPro foodName;
+
+        [Header("Show/Hide Tween")]
+        [SerializeField] private float duration;
+        [SerializeField] private Ease showEase = Ease.OutBack;
+        [SerializeField] private Ease hideEase = Ease.InBack;
+        private Vector3 _originalLocalPos;
+        private InputAction _pointerPressAction;
 
         public CellRuntimeData RuntimeData => _cell;
         public PersonView CurrentPersonView => personView;
 
         public CellType GetCellType() => _cell.Type;
 
+        private void Awake()
+        {
+            foodTooltips.SetActive(false);
+            _originalLocalPos = foodTooltips.transform.localPosition;
+            _pointerPressAction = new InputAction("PointerPress", InputActionType.Button, "<Pointer>/press");
+        }
+
+        private void StartListeningForOutsideClick()
+        {
+            _pointerPressAction.performed += OnPointerPressed;
+            _pointerPressAction.Enable();
+        }
+
+        private void StopListeningForOutsideClick()
+        {
+            _pointerPressAction.performed -= OnPointerPressed;
+            _pointerPressAction.Disable();
+        }
+
+        private void OnDisable()
+        {
+            StopListeningForOutsideClick();
+        }
+
+        private void OnDestroy()
+        {
+            _pointerPressAction?.Dispose();
+        }
+
         private void InitCell(PersonMoveManager personMoveManager)
         {
             if (_cell.Type == CellType.Food)
             {
-                renderer.sprite = _cell.Sprite;
+                spriteRenderer.sprite = _cell.Sprite;
+                foodName.text = _cell.Food.ToString();
+                StartListeningForOutsideClick();
                 return;
             }
 
@@ -71,9 +115,61 @@ namespace Game.View.Board
             _cell.SetPerson(person);
         }
 
-        public void OnPointerClick(PointerEventData eventData)
+        private void OnPointerPressed(InputAction.CallbackContext ctx)
         {
-            // TODO: Implement click handling logic
+            Vector2 screenPos = Pointer.current.position.ReadValue();
+
+            Camera cam = Camera.main;
+            if (cam == null) return;
+
+            Vector2 worldPos = cam.ScreenToWorldPoint(screenPos);
+            var hit = Physics2D.OverlapPoint(worldPos);
+
+            if (hit != null && hit.transform == transform)
+            {
+                ToggleTooltips();
+            }
+            else if (foodTooltips.activeSelf)
+            {
+                HideTween().Forget();
+            }
+        }
+
+        private void ToggleTooltips()
+        {
+            if (GetCellType() != CellType.Food) return;
+            if (!foodTooltips.activeSelf)
+            {
+                ShowTween().Forget();
+                StartListeningForOutsideClick();
+            }
+            else
+            {
+                HideTween().Forget();
+            }
+        }
+
+        private async UniTask ShowTween()
+        {
+            Tween.StopAll(foodTooltips.transform);
+
+            foodTooltips.transform.localPosition = Vector3.zero;
+            foodTooltips.transform.localScale = Vector3.zero;
+            foodTooltips.SetActive(true);
+
+            _ = Tween.Scale(foodTooltips.transform, endValue: 1f, duration: duration, ease: showEase);
+            await Tween.LocalPosition(foodTooltips.transform, endValue: _originalLocalPos, duration: duration, ease: showEase);
+        }
+
+        private async UniTask HideTween()
+        {
+            StopListeningForOutsideClick();
+            Tween.StopAll(foodTooltips.transform);
+
+            _ = Tween.Scale(foodTooltips.transform, endValue: 0f, duration: duration, ease: hideEase);
+            await Tween.LocalPosition(foodTooltips.transform, endValue: Vector3.zero, duration: duration, ease: hideEase);
+
+            foodTooltips.SetActive(false);
         }
     }
 }
