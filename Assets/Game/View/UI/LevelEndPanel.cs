@@ -24,7 +24,7 @@ namespace Game.View.UI
 
         private void OnEnable()
         {
-            Revealing().Forget();
+            gameObject.SetActive(false);
         }
 
         [ContextMenu("Revealing")]
