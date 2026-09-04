@@ -44,9 +44,6 @@ namespace Game.App
             if (sourceCell == targetCell)
             {
                 bool moveSucceeded = targetCell.CurrentPerson == person;
-                if (moveSucceeded)
-                    _currentLevel.ModifyMove(-1);
-
                 return moveSucceeded;
             }
 
