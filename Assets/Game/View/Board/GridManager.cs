@@ -119,9 +119,6 @@ namespace Game.View.Board
             if (sourceCell == targetCell)
             {
                 bool moveSucceeded = targetRuntimeCell.CurrentPerson == person;
-                if (moveSucceeded)
-                    _currentLevel.ModifyMove(-1);
-
                 return moveSucceeded;
             }
 
