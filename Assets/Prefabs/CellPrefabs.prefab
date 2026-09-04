@@ -104,6 +104,8 @@ GameObject:
   - component: {fileID: 5460060082434372298}
   - component: {fileID: 4311430509083209812}
   - component: {fileID: -4017916868443775454}
+  - component: {fileID: 8084275805189365847}
+  - component: {fileID: 5186082401732036565}
   m_Layer: 3
   m_Name: CellPrefabs
   m_TagString: Untagged
@@ -139,14 +141,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30a54a77447736947829f7113cfaf297, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.Board.CellView
-  personViewPrefabs: {fileID: 2863313955090313580, guid: 0cc523f4cefaf974bacd4a38408820ab, type: 3}
-  personView: {fileID: 1362204648338547286, guid: 0cc523f4cefaf974bacd4a38408820ab, type: 3}
   spriteRenderer: {fileID: -4017916868443775454}
   foodTooltips: {fileID: 1537363800532209841}
-  foodName: {fileID: 8004394741451557375}
-  duration: 0.15
-  showEase: 27
-  hideEase: 26
+  personSpawner: {fileID: 0}
+  personView: {fileID: 1362204648338547286, guid: 0cc523f4cefaf974bacd4a38408820ab, type: 3}
 --- !u!61 &4311430509083209812
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -252,6 +250,36 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &8084275805189365847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845831781986120399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a00b640ee08296e40846613c3785f888, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.People.PersonSpawner
+  personViewPrefabs: {fileID: 2863313955090313580, guid: 0cc523f4cefaf974bacd4a38408820ab, type: 3}
+--- !u!114 &5186082401732036565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3845831781986120399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a97c02fb28dfd5a4ea91518a0ef8f7b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Board.FoodTooltips
+  tooltipVisual: {fileID: 1537363800532209841}
+  foodName: {fileID: 8004394741451557375}
+  duration: 0.15
+  showEase: 27
+  hideEase: 26
 --- !u!1 &6068166788351129312
 GameObject:
   m_ObjectHideFlags: 0
