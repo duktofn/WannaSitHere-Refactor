@@ -39,21 +39,32 @@ namespace Game.View.Board
             _pointerPressAction = new InputAction("PointerPress", InputActionType.Button, "<Pointer>/press");
         }
 
-        private void StartListeningForOutsideClick()
+        private void EnablePointerAction()
         {
+            if (_pointerPressAction == null) return;
+            _pointerPressAction.performed -= OnPointerPressed;
             _pointerPressAction.performed += OnPointerPressed;
             _pointerPressAction.Enable();
         }
 
-        private void StopListeningForOutsideClick()
+        private void DisablePointerAction()
         {
+            if (_pointerPressAction == null) return;
             _pointerPressAction.performed -= OnPointerPressed;
             _pointerPressAction.Disable();
         }
 
+        private void OnEnable()
+        {
+            if (_cell != null && _cell.Type == CellType.Food)
+            {
+                EnablePointerAction();
+            }
+        }
+
         private void OnDisable()
         {
-            StopListeningForOutsideClick();
+            DisablePointerAction();
         }
 
         private void OnDestroy()
@@ -61,13 +72,13 @@ namespace Game.View.Board
             _pointerPressAction?.Dispose();
         }
 
-        private void InitCell(PersonMoveManager personMoveManager)
+        private void InitCell(PersonMover personMoveManager)
         {
             if (_cell.Type == CellType.Food)
             {
                 spriteRenderer.sprite = _cell.Sprite;
                 foodName.text = _cell.Food.ToString();
-                StartListeningForOutsideClick();
+                EnablePointerAction();
                 return;
             }
 
@@ -87,7 +98,7 @@ namespace Game.View.Board
             }
         }
 
-        public void BindData(CellRuntimeData cell, PersonMoveManager personMoveManager)
+        public void BindData(CellRuntimeData cell, PersonMover personMoveManager)
         {
             if (cell == null) return;
             _cell = cell;
@@ -141,7 +152,6 @@ namespace Game.View.Board
             if (!foodTooltips.activeSelf)
             {
                 ShowTween().Forget();
-                StartListeningForOutsideClick();
             }
             else
             {
@@ -163,7 +173,6 @@ namespace Game.View.Board
 
         private async UniTask HideTween()
         {
-            StopListeningForOutsideClick();
             Tween.StopAll(foodTooltips.transform);
 
             _ = Tween.Scale(foodTooltips.transform, endValue: 0f, duration: duration, ease: hideEase);
