@@ -11,7 +11,6 @@ namespace Game.Events
         public void Raise()
         {
             OnRaised?.Invoke();
-            Debug.Log($"{GetType().Name} Raised");
         }
     }
 }

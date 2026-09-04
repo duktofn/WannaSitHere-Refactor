@@ -27,6 +27,18 @@ namespace Game.View.UI
             RevealingEffect().Forget();
         }
 
+        private void OnDisable()
+        {
+            if (letters == null) return;
+            foreach (var let in letters)
+            {
+                if (let != null)
+                {
+                    Tween.StopAll(let.transform);
+                }
+            }
+        }
+
         [ContextMenu("Play Revealing Effect")]
         public void PlayRevealingEffect()
         {
@@ -47,10 +59,13 @@ namespace Game.View.UI
             }
 
             await UniTask.NextFrame();
+            if (!gameObject.activeInHierarchy) return;
 
             foreach (var let in letters)
             {
-                if (let != null && let.gameObject.activeSelf)
+                if (!gameObject.activeInHierarchy) return;
+
+                if (let != null && let.gameObject.activeInHierarchy)
                 {
                     ScaleLetterPopAsync(let.transform).Forget();
 
@@ -64,10 +79,15 @@ namespace Game.View.UI
 
         private async UniTask ScaleLetterPopAsync(Transform target)
         {
+            if (target == null || !target.gameObject.activeInHierarchy) return;
+
             Tween.StopAll(target);
             target.localScale = Vector3.zero;
 
             await Tween.Scale(target, startValue: 0f, endValue: scaleUpFactor, duration: scaleUpTime, ease: scaleUpEase);
+
+            if (target == null || !target.gameObject.activeInHierarchy) return;
+
             await Tween.Scale(target, startValue: scaleUpFactor, endValue: 1f, duration: scaleDownTime, ease: scaleDownEase);
         }
     }

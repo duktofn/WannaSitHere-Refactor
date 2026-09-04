@@ -7,8 +7,6 @@ namespace Game.View.UI
     {
         [SerializeField] private GameObject levelWinPanel;
         [SerializeField] private GameObject levelLosePanel;
-        [SerializeField] private string winText;
-        [SerializeField] private string loseText;
 
         [SerializeField] private VoidEventChannelSO OnWinEvent;
         [SerializeField] private VoidEventChannelSO OnLoseEvent;
@@ -33,11 +31,13 @@ namespace Game.View.UI
 
         public void ShowWin()
         {
+            Debug.Log("Win Event raised");
             levelWinPanel.SetActive(true);
         }
 
         public void ShowLose()
         {
+            Debug.Log("Lose Event raised");
             levelLosePanel.SetActive(true);
         }
     }

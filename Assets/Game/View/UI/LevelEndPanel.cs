@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace Game.View.UI
 {
-    public class LevelEndBackground : MonoBehaviour
+    public class LevelEndPanel : MonoBehaviour
     {
         [SerializeField] private List<Image> images;
         [SerializeField] private float revealDuration;
@@ -24,7 +24,7 @@ namespace Game.View.UI
 
         private void OnEnable()
         {
-            gameObject.SetActive(false);
+            Revealing().Forget();
         }
 
         [ContextMenu("Revealing")]
