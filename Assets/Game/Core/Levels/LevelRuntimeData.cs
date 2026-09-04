@@ -25,8 +25,6 @@ namespace Game.Core.Levels
             _levelMove = move;
             MainGrid = main;
             WaitGrid = wait;
-
-            OnMoveChanged?.Invoke(_levelMove);
         }
     }
 }

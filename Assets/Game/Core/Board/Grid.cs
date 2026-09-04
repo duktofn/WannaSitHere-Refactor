@@ -45,7 +45,7 @@ namespace Game.Core.Board
             _cellDistance = other._cellDistance;
             _posX = other._posX;
             _posY = other._posY;
-            _gridContent = other._gridContent;
+            _gridContent = (T[]) other._gridContent.Clone();
         }
 
         public Grid(Vector2Int size)

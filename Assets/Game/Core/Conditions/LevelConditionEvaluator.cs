@@ -15,12 +15,49 @@ namespace Game.Core.Conditions
             _adjacentOffsets = adjacentOffsets;
         }
 
+        public void UpdateAllPersonStates(
+            Grid<CellRuntimeData> mainGrid,
+            Grid<CellRuntimeData> waitGrid)
+        {
+            UpdateGridPersonStates(mainGrid, mainGrid);
+            UpdateGridPersonStates(waitGrid, mainGrid);
+        }
+
+        private void UpdateGridPersonStates(
+            Grid<CellRuntimeData> grid,
+            Grid<CellRuntimeData> mainGrid)
+        {
+            if (grid == null)
+                return;
+
+            foreach (CellRuntimeData cell in grid.GridContent)
+            {
+                if (cell?.CurrentPerson != null)
+                {
+                    CheckPersonCondition(cell, cell.CurrentPerson, cell.OwnGrid, mainGrid);
+                }
+            }
+        }
+
         public bool AreAllPersonConditionsSatisfied(
             Grid<CellRuntimeData> mainGrid,
             Grid<CellRuntimeData> waitGrid)
         {
-            return CheckGridPersonConditions(mainGrid, mainGrid) &&
-                   CheckGridPersonConditions(waitGrid, mainGrid);
+            return IsGridAllHappy(mainGrid) && IsGridAllHappy(waitGrid);
+        }
+
+        private bool IsGridAllHappy(Grid<CellRuntimeData> grid)
+        {
+            if (grid == null)
+                return false;
+
+            foreach (CellRuntimeData cell in grid.GridContent)
+            {
+                if (cell?.CurrentPerson != null && cell.CurrentPerson.State != PersonState.Happy)
+                    return false;
+            }
+
+            return true;
         }
 
         public List<CellRuntimeData> GetAdjacentCells(
@@ -87,26 +124,6 @@ namespace Game.Core.Conditions
             }
 
             person.SetState(isConditionOk ? PersonState.Happy : PersonState.Angry);
-        }
-
-        private bool CheckGridPersonConditions(
-            Grid<CellRuntimeData> grid,
-            Grid<CellRuntimeData> mainGrid)
-        {
-            if (grid == null)
-                return false;
-
-            foreach (CellRuntimeData cell in grid.GridContent)
-            {
-                if (cell?.CurrentPerson == null)
-                    continue;
-
-                CheckPersonCondition(cell, cell.CurrentPerson, cell.OwnGrid, mainGrid);
-                if (cell.CurrentPerson.State != PersonState.Happy)
-                    return false;
-            }
-
-            return true;
         }
     }
 }
