@@ -6,6 +6,7 @@ using Game.Core.Levels;
 using Game.Core.People;
 using Game.View.People;
 using Game.Events;
+using Game.App;
 
 namespace Game.View.Board
 {
@@ -14,27 +15,39 @@ namespace Game.View.Board
         private Grid<CellRuntimeData> _main;
         private Grid<CellRuntimeData> _wait;
         private LevelRuntimeData _currentLevel;
-        private LevelConditionEvaluator _conditionEvaluator;
+        private LevelManager _levelManager;
 
         [SerializeField] private PersonMover personMoveManager;
         [SerializeField] private GameObject cellPrefabs;
         [SerializeField] private List<Vector2> adjacent;
         [SerializeField] private Transform gridRoot;
 
-
         [Header("Events")]
         [SerializeField] private VoidEventChannelSO OnWinEvent;
         [SerializeField] private VoidEventChannelSO OnLoseEvent;
 
+        public LevelManager LevelManager => _levelManager;
+
         private void Awake()
         {
-            personMoveManager = GetComponent<PersonMover>();
-            _conditionEvaluator = new LevelConditionEvaluator(adjacent);
+            if (personMoveManager == null)
+                personMoveManager = GetComponent<PersonMover>();
         }
-        
+
+        public void Initialize(LevelRuntimeData level)
+        {
+            _currentLevel = level;
+            _main = level?.MainGrid;
+            _wait = level?.WaitGrid;
+            _levelManager = new LevelManager(level, adjacent, OnWinEvent, OnLoseEvent);
+        }
+
         public void CreateMainGrid()
         {
-            _main = new Grid<CellRuntimeData>(_currentLevel.MainGrid);
+            if (_main == null)
+                _main = _currentLevel?.MainGrid;
+
+            if (_main == null) return;
 
             foreach (CellRuntimeData c in _main.GridContent)
             {
@@ -42,7 +55,7 @@ namespace Game.View.Board
                 Vector3 cellOffset = new Vector3((c.Index.x - (_main.GridSize.x - 1) / 2f) * step.x,
                                                  (c.Index.y - (_main.GridSize.y - 1) / 2f) * step.y,
                                                  0f)
-                                    + GetGridWorldPos(_main);
+                                     + GetGridWorldPos(_main);
 
                 GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity, gridRoot);
                 tmpCell.GetComponent<CellView>().BindData(c, personMoveManager);
@@ -54,14 +67,18 @@ namespace Game.View.Board
 
         public void CreateWaitGrid()
         {
-            _wait = new Grid<CellRuntimeData>(_currentLevel.WaitGrid);
-            
-            foreach(CellRuntimeData c in _wait.GridContent) {
+            if (_wait == null)
+                _wait = _currentLevel?.WaitGrid;
+
+            if (_wait == null) return;
+
+            foreach (CellRuntimeData c in _wait.GridContent)
+            {
                 Vector2 step = _wait.CellDistance + _wait.CellSize;
                 Vector3 cellOffset = new Vector3((c.Index.x - (_wait.GridSize.x - 1) / 2f) * step.x,
                                                  (c.Index.y - (_wait.GridSize.y - 1) / 2f) * step.y,
                                                  0f)
-                                    + GetGridWorldPos(_wait);
+                                     + GetGridWorldPos(_wait);
 
                 GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity, gridRoot);
                 tmpCell.GetComponent<CellView>().BindData(c, personMoveManager);
@@ -81,27 +98,15 @@ namespace Game.View.Board
             worldPoint.z = 0;
             return worldPoint;
         }
-        
+
         public List<CellRuntimeData> GetAdjacentCells(Vector2Int index, Grid<CellRuntimeData> grid)
         {
-            return _conditionEvaluator.GetAdjacentCells(index, grid);
+            return _levelManager?.GetAdjacentCells(index, grid) ?? new List<CellRuntimeData>();
         }
 
         public bool IsConditionSatisfied(CellView cell, ConditionRuntimeData condition)
         {
-            if (cell?.RuntimeData == null || _main == null || _conditionEvaluator == null)
-                return false;
-
-            return _conditionEvaluator.IsConditionSatisfied(
-                cell.RuntimeData,
-                condition,
-                _main
-            );
-        }
-
-        public bool TryAssignPerson(CellView targetCell, PersonRuntimeData person)
-        {
-            return TryMovePerson(null, targetCell, person);
+            return _levelManager?.IsConditionSatisfied(cell?.RuntimeData, condition) ?? false;
         }
 
         public bool TryMovePerson(
@@ -109,60 +114,12 @@ namespace Game.View.Board
             CellView targetCell,
             PersonRuntimeData person)
         {
-            if (_currentLevel == null || targetCell == null || person == null)
-                return false;
-
-            CellRuntimeData targetRuntimeCell = targetCell.RuntimeData;
-            if (targetRuntimeCell == null || targetRuntimeCell.Type != CellType.Seat)
-                return false;
-
-            if (sourceCell == targetCell)
-            {
-                bool moveSucceeded = targetRuntimeCell.CurrentPerson == person;
-                return moveSucceeded;
-            }
-
-            CellRuntimeData sourceRuntimeCell = sourceCell != null ? sourceCell.RuntimeData : null;
-
-            if (sourceRuntimeCell != null && sourceRuntimeCell.CurrentPerson != person)
-                return false;
-
-            PersonRuntimeData targetPerson = targetRuntimeCell.CurrentPerson;
-
-            if (targetPerson != null && sourceRuntimeCell == null)
-                return false;
-
-            targetRuntimeCell.SetPerson(person);
-            sourceRuntimeCell?.SetPerson(targetPerson);
-
-            // Consume one move after a successful TryMovePerson operation.
-            _currentLevel.ModifyMove(-1);
-            CheckAllPersonConditions();
-
-            return true;
-        }
-
-        private void CheckAllPersonConditions()
-        {
-            if (_conditionEvaluator.AreAllPersonConditionsSatisfied(_main, _wait)) {
-                OnWinEvent.Raise();
-                return;
-            }
-
-            if (_currentLevel.IsOutOfMove)
-                OnLoseEvent.Raise();
+            return _levelManager?.TryMovePerson(sourceCell?.RuntimeData, targetCell?.RuntimeData, person) ?? false;
         }
 
         public void CheckPersonCondition(CellRuntimeData containCell, PersonRuntimeData person, GridId cellGrid)
         {
-            _conditionEvaluator.CheckPersonCondition(containCell, person, cellGrid, _main);
-        }
-
-        public void Initialize(LevelRuntimeData level)
-        {
-            _currentLevel = level;
-            _main = level?.MainGrid;
-            _wait = level?.WaitGrid;
+            _levelManager?.CheckPersonCondition(containCell, person, cellGrid);
         }
     }
 }

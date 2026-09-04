@@ -1,11 +1,9 @@
 {
-    "name": "Game.Bootstrap",
-    "rootNamespace": "Game.Bootstrap",
+    "name": "Game.App",
+    "rootNamespace": "Game.App",
     "references": [
         "Game.Core",
-        "Game.Data",
-        "Game.View",
-        "Game.App"
+        "Game.Events"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -17,3 +15,4 @@
     "versionDefines": [],
     "noEngineReferences": false
 }
+
