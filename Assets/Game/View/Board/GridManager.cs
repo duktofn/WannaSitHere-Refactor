@@ -6,7 +6,6 @@ using Game.Core.Levels;
 using Game.Core.People;
 using Game.View.People;
 using Game.Events;
-using Game.View.UI;
 
 namespace Game.View.Board
 {
@@ -17,8 +16,7 @@ namespace Game.View.Board
         private LevelRuntimeData _currentLevel;
         private LevelConditionEvaluator _conditionEvaluator;
 
-        [SerializeField] private LevelView levelView;
-        [SerializeField] private PersonMoveManager personMoveManager;
+        [SerializeField] private PersonMover personMoveManager;
         [SerializeField] private GameObject cellPrefabs;
         [SerializeField] private List<Vector2> adjacent;
         [SerializeField] private Transform gridRoot;
@@ -30,7 +28,7 @@ namespace Game.View.Board
 
         private void Awake()
         {
-            personMoveManager = GetComponent<PersonMoveManager>();
+            personMoveManager = GetComponent<PersonMover>();
             _conditionEvaluator = new LevelConditionEvaluator(adjacent);
         }
         
@@ -168,14 +166,6 @@ namespace Game.View.Board
             _currentLevel = level;
             _main = level?.MainGrid;
             _wait = level?.WaitGrid;
-
-            if (levelView == null)
-            {
-                Debug.LogError("[GridManager] LevelView reference is missing.");
-                return;
-            }
-
-            levelView.BindData(level);
         }
     }
 }

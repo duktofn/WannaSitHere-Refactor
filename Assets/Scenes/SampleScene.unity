@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 10276211}
   - component: {fileID: 10276213}
+  - component: {fileID: 10276214}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -163,8 +164,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10a980de8e039a54b94a55ef82ed60f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game.Bootstrap::Game.Bootstrap.LevelBootstrapper
-  levelData: {fileID: 11400000, guid: d5b914eb713754b4ea96e12254feb1df, type: 2}
+  levelData:
+  - {fileID: 11400000, guid: d5b914eb713754b4ea96e12254feb1df, type: 2}
   gridManager: {fileID: 788058380}
+  levelView: {fileID: 284943829}
+  currentLevel: 1
+--- !u!114 &10276214
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10276210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 505e567f9045fe248b9c21686f2ad95f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.UI.UIManager
+  levelWinPanel: {fileID: 290189614}
+  levelLosePanel: {fileID: 1963032961}
+  OnWinEvent: {fileID: 11400000, guid: e720f7945dc0bd74b808cc6edd387b9f, type: 2}
+  OnLoseEvent: {fileID: 11400000, guid: 65ac03fb9c0e67c49a5b483f6f6fcf1d, type: 2}
 --- !u!1 &104004712
 GameObject:
   m_ObjectHideFlags: 0
@@ -662,7 +682,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &290189615
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1603,7 +1623,7 @@ MonoBehaviour:
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000
+  m_ApplyToSortingLayers: 00000000055b2602
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -2369,7 +2389,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82e6f71d9845c8e4f9ee1bc406187606, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.Board.GridManager
-  levelView: {fileID: 284943829}
   personMoveManager: {fileID: 788058379}
   cellPrefabs: {fileID: 3845831781986120399, guid: 9bf77078a523ea747a1f7820a9637dc3, type: 3}
   adjacent:
@@ -3992,7 +4011,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1963032962
 RectTransform:
   m_ObjectHideFlags: 0
