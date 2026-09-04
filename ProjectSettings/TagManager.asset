@@ -12,7 +12,7 @@ TagManager:
   - Water
   - UI
   - Person
-  - 
+  - Tooltips
   - 
   - 
   - 
@@ -49,6 +49,9 @@ TagManager:
     locked: 0
   - name: Background
     uniqueID: 1856284923
+    locked: 0
+  - name: Tooltips
+    uniqueID: 36068101
     locked: 0
   m_RenderingLayers:
   - Default

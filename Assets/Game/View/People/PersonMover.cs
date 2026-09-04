@@ -8,7 +8,7 @@ using Game.View.Input;
 
 namespace Game.View.People
 {
-    public class PersonMoveManager : MonoBehaviour
+    public class PersonMover : MonoBehaviour
     {
         [SerializeField] private GridManager gridManager;
         [SerializeField] private LayerMask cellLayer;

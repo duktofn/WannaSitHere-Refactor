@@ -16,6 +16,7 @@ namespace Game.View
         [SerializeField] private SpriteRenderer top;
         [SerializeField] private SpriteRenderer mid;
         [SerializeField] private SpriteRenderer bot;
+        [SerializeField] private string textSortingLayer;
 
         [SerializeField] private TextMeshPro nameText;
         [SerializeField] private TextMeshPro traitText;
@@ -53,6 +54,10 @@ namespace Game.View
                 _midBaseScaleY = Mathf.Abs(mid.transform.localScale.y);
 
             _pointerPressAction = new InputAction("PointerPress", InputActionType.Button, "<Pointer>/press");
+
+            nameText.GetComponent<MeshRenderer>().sortingLayerName = textSortingLayer;
+            traitText.GetComponent<MeshRenderer>().sortingLayerName = textSortingLayer;
+            conditionText.GetComponent<MeshRenderer>().sortingLayerName = textSortingLayer;
         }
 
         private void OnDestroy()
@@ -230,6 +235,12 @@ namespace Game.View
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            if (eventData.dragging || 
+                Vector2.Distance(eventData.pressPosition, eventData.position) > 5f)
+            {
+                return;                
+            }
+
             ToggleTooltips();
         }
 

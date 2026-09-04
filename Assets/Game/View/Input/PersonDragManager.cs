@@ -18,7 +18,7 @@ namespace Game.View.Input
         [SerializeField] private PersonTooltip personTooltip;
 
         private Collider2D col;
-        private PersonMoveManager personMove;
+        private PersonMover personMove;
         private PersonRuntimeData person;
         private CellView currentCell;
         private Vector3 lastDragWorldPos;
@@ -27,7 +27,7 @@ namespace Game.View.Input
         public CellView CurrentCell => currentCell;
 
         public void Initialize(
-            PersonMoveManager moveManager,
+            PersonMover moveManager,
             PersonRuntimeData runtimePerson,
             CellView startCell)
         {
