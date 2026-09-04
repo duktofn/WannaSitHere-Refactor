@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using PrimeTween;
 using Cysharp.Threading.Tasks;
-using System.Runtime.InteropServices;
 
 namespace Game.View.UI
 {

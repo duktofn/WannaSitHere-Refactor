@@ -8,7 +8,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
-namespace Game.View
+namespace Game.View.People
 {
     public class PersonTooltip : MonoBehaviour, IPointerClickHandler
     {

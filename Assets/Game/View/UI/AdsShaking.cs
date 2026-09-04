@@ -1,14 +1,12 @@
 using Cysharp.Threading.Tasks;
 using PrimeTween;
 using UnityEngine;
-using UnityEngine.UIElements;
 using System.Threading;
 
 namespace Game.View.UI
 {
     public class AdsShaking : MonoBehaviour
     {
-        [SerializeField] private Image img;
         [SerializeField] private float scaleUpFactor;
         [SerializeField] private float scaleUpTime;
         [SerializeField] private Ease scaleEase;
