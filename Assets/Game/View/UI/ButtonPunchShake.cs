@@ -14,7 +14,7 @@ namespace Game.View.UI
             PunchShake().Forget();
         }
 
-        private async UniTask PunchShake()
+        public async UniTask PunchShake()
         {
             await Tween.PunchScale(transform, punchStrength, duration);
         }
