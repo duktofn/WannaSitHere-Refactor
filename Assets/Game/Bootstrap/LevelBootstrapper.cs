@@ -7,31 +7,52 @@ using System.Collections.Generic;
 
 namespace Game.Bootstrap
 {
-    public class LevelBootstrapper : MonoBehaviour
+    public class LevelBootstrapper
     {
-        [SerializeField] private List<LevelDataSO> levelData;
-        [SerializeField] private GridManager gridManager;
-        [SerializeField] private LevelView levelView;
-        [SerializeField] private int currentLevel;
+        private readonly List<LevelDataSO> _levelData;
+        private readonly GridManager _gridManager;
+        private readonly LevelView _levelView;
 
-        private void Start()
+        public LevelBootstrapper(List<LevelDataSO> levelData, GridManager gridManager, LevelView levelView)
         {
-            if (levelData == null || gridManager == null)
+            _levelData = levelData;
+            _gridManager = gridManager;
+            _levelView = levelView;
+        }
+
+        public void LoadLevel(int levelNumber)
+        {
+            if (_levelData == null)
             {
-                Debug.LogWarning("[LevelBootstrapper] Missing levelData or gridManager reference.");
+                Debug.LogWarning("[LevelBootstrapper] Missing Level Data reference.");
+                return;
+            } 
+            else if (_gridManager == null)
+            {
+                Debug.LogWarning("[LevelBootstrapper] Missing Grid Manager reference.");
                 return;
             }
 
-            LevelRuntimeData runtime = levelData[currentLevel - 1].ToRuntimeData();
+            int index = (levelNumber > 0 ? levelNumber - 1 : 0) % _levelData.Count;
+            LevelDataSO targetLevelSO = _levelData[index];
 
-            gridManager.Initialize(runtime);
-            gridManager.CreateMainGrid();
-            gridManager.CreateWaitGrid();
+            if (targetLevelSO == null)
+            {
+                Debug.LogError($"[LevelBootstrapper] LevelData at index {index} is null.");
+                return;
+            }
 
-            if (levelView != null)
-                levelView.BindData(runtime);
+            LevelRuntimeData runtime = targetLevelSO.ToRuntimeData();
 
-            Debug.Log("[LevelBootstrapper] Successfully initialized and created grid");
+            _gridManager.ClearGrids();
+            _gridManager.Initialize(runtime);
+            _gridManager.CreateMainGrid();
+            _gridManager.CreateWaitGrid();
+
+            if (_levelView != null)
+                _levelView.BindData(runtime);
+
+            Debug.Log($"[LevelBootstrapper] Level {levelNumber} (index {index}) loaded successfully");
         }
     }
 }

@@ -5,7 +5,8 @@
         "Game.Core",
         "Game.Data",
         "Game.View",
-        "Game.App"
+        "Game.App",
+        "Game.Events"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
