@@ -42,6 +42,15 @@ namespace Game.View.Board
             _levelManager = new LevelManager(level, adjacent, OnWinEvent, OnLoseEvent);
         }
 
+        public void ClearGrids()
+        {
+            if (gridRoot == null) return;
+            for (int i = gridRoot.childCount - 1; i >= 0; i--)
+            {
+                Destroy(gridRoot.GetChild(i).gameObject);
+            }
+        }
+
         public void CreateMainGrid()
         {
             if (_main == null)
