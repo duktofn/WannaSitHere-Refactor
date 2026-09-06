@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Game.Core.Board;
-using Game.Core.Conditions;
 using Game.Core.Levels;
+using Game.Core.Conditions;
+using Game.Core.Board;
 using Game.Core.People;
 using Game.Events;
 
