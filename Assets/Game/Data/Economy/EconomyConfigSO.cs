@@ -1,5 +1,5 @@
-using System;
 using UnityEngine;
+using Game.Core.Economy;
 
 namespace Game.Data.Economy {
     [CreateAssetMenu(fileName = "Economy Config", menuName = "Game/Economy")]
@@ -9,12 +9,5 @@ namespace Game.Data.Economy {
         public Reward levelAdsWinReward;
         public Reward dailyReward;
         public Reward[] weeklyReward = new Reward[7];
-    }
-
-    [Serializable]
-    public struct Reward
-    {
-        public RewardType type;
-        public int amount;
     }
 }
