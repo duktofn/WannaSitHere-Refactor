@@ -1,3 +1,5 @@
+using System;
+
 namespace Game.Core.Economy
 {
     public class Inventory
@@ -13,6 +15,8 @@ namespace Game.Core.Economy
         public int Remove => _currentRemove;
         public int MoreMoves => _currentMoreMoves;
         public int Undo => _currentUndo;
+
+        public event Action OnInventoryUpdate;
 
         public Inventory(int gold, int gem, int remove, int moreMoves, int undo)
         {
