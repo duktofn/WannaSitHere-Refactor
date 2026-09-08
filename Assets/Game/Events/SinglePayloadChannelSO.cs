@@ -1,6 +1,4 @@
 using System;
-using UnityEngine;
-using Game.Core.Economy;
 
 namespace Game.Events
 {
@@ -13,7 +11,4 @@ namespace Game.Events
             OnRaised?.Invoke(value);
         }
     }
-
-    [CreateAssetMenu(fileName = "OnItemChanged", menuName = "Game/Event Channel/On Item Changed")]
-    public class OnItemChangedSO : EventChannelSO<Reward> { }
 }

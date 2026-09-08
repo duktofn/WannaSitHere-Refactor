@@ -9,6 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: c6f4f387ae12b8d4ea63fe5ef3e82c1b, type: 3}
   m_Name: OnItemReceive
-  m_EditorClassIdentifier: Game.Events:Game.Events:OnItemChangedSO
+  m_EditorClassIdentifier: Game.Events::Game.Events.OnItemReceiveSO

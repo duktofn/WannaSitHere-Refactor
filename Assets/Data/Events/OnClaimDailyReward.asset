@@ -9,6 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7fc0032d64b167b42935f730f257dfe5, type: 3}
-  m_Name: OnItemSpend
-  m_EditorClassIdentifier: Game.Events::Game.Events.OnItemSpendSO
+  m_Script: {fileID: 11500000, guid: f93ec929b3141d74c91378eddf2a5901, type: 3}
+  m_Name: OnClaimDailyReward
+  m_EditorClassIdentifier: Game.Events::Game.Events.VoidEventChannelSO
+
