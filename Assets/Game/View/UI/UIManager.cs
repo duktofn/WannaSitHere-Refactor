@@ -1,5 +1,7 @@
 using UnityEngine;
 using Game.Events;
+using System;
+using TMPro;
 
 namespace Game.View.UI
 {
@@ -20,6 +22,9 @@ namespace Game.View.UI
         [SerializeField] private VoidEventChannelSO OnLoseEvent;
         [SerializeField] private VoidEventChannelSO OnNextLevelEvent;
         [SerializeField] private VoidEventChannelSO OnRestartLevelEvent;
+
+        [Header("UI Components")]
+        [SerializeField] private InventoryView inventoryView;
 
         private void OnEnable()
         {
