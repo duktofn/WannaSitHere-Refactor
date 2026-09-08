@@ -9,5 +9,8 @@ namespace Game.Data.Economy {
         public Reward levelAdsWinReward;
         public Reward dailyReward;
         public Reward[] weeklyReward = new Reward[7];
+        public Reward[] goldShopPrice = new Reward[3];
+        public int[] goldShopLimit = new int[3];
+        public Reward[] gemShopPrice = new Reward[3];
     }
 }
