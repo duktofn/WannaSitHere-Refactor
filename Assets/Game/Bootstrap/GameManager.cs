@@ -29,9 +29,19 @@ namespace Game.Bootstrap
         [SerializeField] private VoidEventChannelSO _onNextLevelEvent;
         [SerializeField] private VoidEventChannelSO _onRestartLevelEvent;
 
-        [Header("Events - Economy")]
-        [SerializeField] private OnItemChangedSO _onItemReceive;
-        [SerializeField] private OnItemChangedSO _onItemSpend;
+        [Header("Events - Rewards")]
+        [SerializeField] private VoidEventChannelSO _onClaimWinRewardEvent;
+        [SerializeField] private VoidEventChannelSO _onClaimAdsRewardEvent;
+        [SerializeField] private VoidEventChannelSO _onClaimDailyRewardEvent;
+
+        [Header("Events - Shop")]
+        [SerializeField] private VoidEventChannelSO _onBuyRemoveEvent;
+        [SerializeField] private VoidEventChannelSO _onBuyUndoEvent;
+        [SerializeField] private VoidEventChannelSO _onBuyMoreMovesEvent;
+
+        [Header("Events - Economy Feedback")]
+        [SerializeField] private OnItemReceiveSO _onItemReceive;
+        [SerializeField] private OnItemSpendSO _onItemSpend;
 
         private LevelBootstrapper _levelBootstrapper;
         private SaveLoadManager _saveLoad;
@@ -58,24 +68,42 @@ namespace Game.Bootstrap
 
         private void OnEnable()
         {
+            // Game Flow
             if (_onPlayGameEvent != null) _onPlayGameEvent.OnRaised += HandlePlayGame;
             if (_onWinEvent != null) _onWinEvent.OnRaised += HandleWin;
             if (_onLoseEvent != null) _onLoseEvent.OnRaised += HandleLose;
             if (_onNextLevelEvent != null) _onNextLevelEvent.OnRaised += NextLevel;
             if (_onRestartLevelEvent != null) _onRestartLevelEvent.OnRaised += RestartLevel;
-            if (_onItemReceive != null) _onItemReceive.OnRaised += HandleItemReceive;
-            if (_onItemSpend != null) _onItemSpend.OnRaised += HandleItemSpend;
+
+            // Rewards
+            if (_onClaimWinRewardEvent != null) _onClaimWinRewardEvent.OnRaised += HandleClaimWinReward;
+            if (_onClaimAdsRewardEvent != null) _onClaimAdsRewardEvent.OnRaised += HandleClaimAdsReward;
+            if (_onClaimDailyRewardEvent != null) _onClaimDailyRewardEvent.OnRaised += HandleClaimDailyReward;
+
+            // Shop
+            if (_onBuyRemoveEvent != null) _onBuyRemoveEvent.OnRaised += HandleBuyRemove;
+            if (_onBuyUndoEvent != null) _onBuyUndoEvent.OnRaised += HandleBuyUndo;
+            if (_onBuyMoreMovesEvent != null) _onBuyMoreMovesEvent.OnRaised += HandleBuyMoreMoves;
         }
 
         private void OnDisable()
         {
+            // Game Flow
             if (_onPlayGameEvent != null) _onPlayGameEvent.OnRaised -= HandlePlayGame;
             if (_onWinEvent != null) _onWinEvent.OnRaised -= HandleWin;
             if (_onLoseEvent != null) _onLoseEvent.OnRaised -= HandleLose;
             if (_onNextLevelEvent != null) _onNextLevelEvent.OnRaised -= NextLevel;
             if (_onRestartLevelEvent != null) _onRestartLevelEvent.OnRaised -= RestartLevel;
-            if (_onItemReceive != null) _onItemReceive.OnRaised -= HandleItemReceive;
-            if (_onItemSpend != null) _onItemSpend.OnRaised -= HandleItemSpend;
+
+            // Rewards
+            if (_onClaimWinRewardEvent != null) _onClaimWinRewardEvent.OnRaised -= HandleClaimWinReward;
+            if (_onClaimAdsRewardEvent != null) _onClaimAdsRewardEvent.OnRaised -= HandleClaimAdsReward;
+            if (_onClaimDailyRewardEvent != null) _onClaimDailyRewardEvent.OnRaised -= HandleClaimDailyReward;
+
+            // Shop
+            if (_onBuyRemoveEvent != null) _onBuyRemoveEvent.OnRaised -= HandleBuyRemove;
+            if (_onBuyUndoEvent != null) _onBuyUndoEvent.OnRaised -= HandleBuyUndo;
+            if (_onBuyMoreMovesEvent != null) _onBuyMoreMovesEvent.OnRaised -= HandleBuyMoreMoves;
         }
 
         // ── Game Flow ──────────────────────────────────────
@@ -89,12 +117,8 @@ namespace Game.Bootstrap
 
         private void HandleWin()
         {
-            if (_economyConfig != null)
-                _inventory.UpdateInventory(_economyConfig.levelWinReward);
-
             _gameData.currentLevel++;
             SaveGame();
-
             Debug.Log($"[GameManager] Win! Next level: {_gameData.currentLevel}");
         }
 
@@ -114,26 +138,85 @@ namespace Game.Bootstrap
             _levelBootstrapper.LoadLevel(levelToLoad);
         }
 
-        // ── Economy ────────────────────────────────────────
+        // ── Rewards ────────────────────────────────────────
 
-        private void HandleItemReceive(Reward reward)
+        private void HandleClaimWinReward()
         {
+            if (_economyConfig == null) return;
+
+            Reward reward = _economyConfig.levelWinReward;
             _inventory.UpdateInventory(reward);
+            _onItemReceive?.Raise(reward);
             SaveGame();
-            Debug.Log($"[GameManager] Received: {reward.amount} {reward.type}. Current: {_inventory.GetAmount(reward.type)}");
+
+            Debug.Log($"[GameManager] Claimed win reward: {reward.amount} {reward.type}");
         }
 
-        private void HandleItemSpend(Reward reward)
+        private void HandleClaimAdsReward()
         {
-            if (_inventory.TrySpendItem(reward))
+            if (_economyConfig == null) return;
+
+            Reward reward = _economyConfig.levelAdsWinReward;
+            _inventory.UpdateInventory(reward);
+            _onItemReceive?.Raise(reward);
+            SaveGame();
+
+            Debug.Log($"[GameManager] Claimed ads reward: {reward.amount} {reward.type}");
+        }
+
+        private void HandleClaimDailyReward()
+        {
+            if (_economyConfig == null) return;
+
+            Reward reward = _economyConfig.dailyReward;
+            _inventory.UpdateInventory(reward);
+            _onItemReceive?.Raise(reward);
+            SaveGame();
+
+            Debug.Log($"[GameManager] Claimed daily reward: {reward.amount} {reward.type}");
+        }
+
+        // ── Shop ───────────────────────────────────────────
+
+        private bool TryPurchase(Reward cost, Reward item)
+        {
+            if (!_inventory.TrySpendItem(cost))
             {
-                SaveGame();
-                Debug.Log($"[GameManager] Spent: {reward.amount} {reward.type}. Remaining: {_inventory.GetAmount(reward.type)}");
+                _onItemSpend?.Raise(cost);
+                Debug.LogWarning($"[GameManager] Not enough {cost.type}! Need {cost.amount}, have {_inventory.GetAmount(cost.type)}");
+                return false;
             }
-            else
-            {
-                Debug.LogWarning($"[GameManager] Not enough {reward.type}! Need {reward.amount}, have {_inventory.GetAmount(reward.type)}");
-            }
+
+            _inventory.UpdateInventory(item);
+            _onItemReceive?.Raise(item);
+            SaveGame();
+
+            Debug.Log($"[GameManager] Purchased {item.amount} {item.type} for {cost.amount} {cost.type}");
+            return true;
+        }
+
+        private void HandleBuyRemove()
+        {
+            TryPurchase(
+                cost: new Reward { type = ItemType.Gem, amount = 50 },
+                item: new Reward { type = ItemType.Remove, amount = 1 }
+            );
+        }
+
+        private void HandleBuyUndo()
+        {
+            TryPurchase(
+                cost: new Reward { type = ItemType.Gem, amount = 50 },
+                item: new Reward { type = ItemType.Undo, amount = 1 }
+            );
+        }
+
+        private void HandleBuyMoreMoves()
+        {
+            TryPurchase(
+                cost: new Reward { type = ItemType.Gold, amount = 100 },
+                item: new Reward { type = ItemType.MoreMoves, amount = 5 }
+            );
         }
 
         // ── Save/Load ──────────────────────────────────────
