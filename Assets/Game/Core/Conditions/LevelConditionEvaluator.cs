@@ -8,9 +8,9 @@ namespace Game.Core.Conditions
     public class LevelConditionEvaluator
     {
         private readonly ConditionChecker _conditionChecker = new();
-        private readonly List<Vector2> _adjacentOffsets;
+        private readonly List<Vector2Int> _adjacentOffsets;
 
-        public LevelConditionEvaluator(List<Vector2> adjacentOffsets)
+        public LevelConditionEvaluator(List<Vector2Int> adjacentOffsets)
         {
             _adjacentOffsets = adjacentOffsets;
         }
@@ -65,14 +65,15 @@ namespace Game.Core.Conditions
             Grid<CellRuntimeData> grid)
         {
             List<CellRuntimeData> result = new();
+            if (grid == null || _adjacentOffsets == null)
+                return result;
 
-            foreach (Vector2 offset in _adjacentOffsets)
+            foreach (Vector2Int v in _adjacentOffsets)
             {
-                foreach (CellRuntimeData cell in grid.GridContent)
-                {
-                    if (cell.Index == index + offset)
-                        result.Add(cell);
-                }
+                Vector2Int tmp = index + v;
+                CellRuntimeData cell = grid.Get(tmp.x, tmp.y);
+                if (cell != null)
+                    result.Add(cell);
             }
 
             return result;

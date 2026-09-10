@@ -19,7 +19,13 @@ namespace Game.View.Board
 
         [SerializeField] private PersonMover personMoveManager;
         [SerializeField] private GameObject cellPrefabs;
-        [SerializeField] private List<Vector2> adjacent;
+        [SerializeField] private List<Vector2Int> adjacent = new()
+        {
+            Vector2Int.right,
+            Vector2Int.left,
+            Vector2Int.up,
+            Vector2Int.down
+        };
         [SerializeField] private Transform gridRoot;
 
         [Header("Events")]

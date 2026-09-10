@@ -20,7 +20,7 @@ namespace Game.App
 
         public LevelManager(
             LevelRuntimeData currentLevel,
-            List<Vector2> adjacentOffsets,
+            List<Vector2Int> adjacentOffsets,
             VoidEventChannelSO onWinEvent = null,
             VoidEventChannelSO onLoseEvent = null)
         {
