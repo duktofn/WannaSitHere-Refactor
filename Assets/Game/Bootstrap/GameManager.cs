@@ -7,6 +7,7 @@ using Game.Data.Levels;
 using Game.View.Board;
 using Game.View.UI;
 using Game.Events;
+using Game.Data.People;
 
 namespace Game.Bootstrap
 {
@@ -19,6 +20,7 @@ namespace Game.Bootstrap
         [SerializeField] private EconomyConfigSO _economyConfig;
 
         [Header("Scene References")]
+        [SerializeField] private UIManager _uiManager;
         [SerializeField] private GridManager _gridManager;
         [SerializeField] private LevelView _levelView;
 
@@ -62,6 +64,9 @@ namespace Game.Bootstrap
                 _gameData.currentMoreMoves,
                 _gameData.currentUndo
             );
+
+            if (_uiManager != null)
+                _uiManager.Initialize(_inventory);
 
             _levelBootstrapper = new LevelBootstrapper(_levelData, _gridManager, _levelView);
         }
@@ -215,7 +220,7 @@ namespace Game.Bootstrap
         {
             TryPurchase(
                 cost: new Reward { type = ItemType.Gold, amount = 100 },
-                item: new Reward { type = ItemType.MoreMoves, amount = 5 }
+                item: new Reward { type = ItemType.MoreMoves, amount = GameConfig.MORE_MOVE_AMOUNT }
             );
         }
 

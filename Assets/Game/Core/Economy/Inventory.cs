@@ -61,6 +61,8 @@ namespace Game.Core.Economy
                     _currentMoreMoves += reward.amount;
                     break;
             }
+
+            OnInventoryUpdate?.Invoke();
         }
 
         public bool TrySpendItem(Reward item) => TrySpendItem(item.type, item.amount);
@@ -91,6 +93,7 @@ namespace Game.Core.Economy
                     return false;
             }
 
+            OnInventoryUpdate?.Invoke();
             return true;
         }
     }
