@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.Events;
+using Game.Core.Economy;
 using System;
 using TMPro;
 
@@ -8,13 +9,15 @@ namespace Game.View.UI
     public class UIManager : MonoBehaviour
     {
         [Header("Canvas")]
-        [SerializeField] private GameObject InGameUI;
-        [SerializeField] private GameObject MainMenu;
-        [SerializeField] private GameObject Transition;
+        [SerializeField] private GameObject InGameUICanvas;
+        [SerializeField] private GameObject MainMenuCanvas;
+        [SerializeField] private GameObject TransitionCanvas;
+        [SerializeField] private GameObject CurrencyCanvas;
 
         [Header("Win/Lose Panel")]
         [SerializeField] private GameObject levelWinPanel;
         [SerializeField] private GameObject levelLosePanel;
+        [SerializeField] private GameObject mainSettingPanel;
 
         [Header("Game Events")]
         [SerializeField] private VoidEventChannelSO OnPlayGameEvent;
@@ -22,6 +25,8 @@ namespace Game.View.UI
         [SerializeField] private VoidEventChannelSO OnLoseEvent;
         [SerializeField] private VoidEventChannelSO OnNextLevelEvent;
         [SerializeField] private VoidEventChannelSO OnRestartLevelEvent;
+        [SerializeField] private VoidEventChannelSO OnSettingShow;
+        [SerializeField] private VoidEventChannelSO OnSettingHide;
 
         [Header("UI Components")]
         [SerializeField] private InventoryView inventoryView;
@@ -33,6 +38,8 @@ namespace Game.View.UI
             if (OnLoseEvent != null) OnLoseEvent.OnRaised += ShowLose;
             if (OnNextLevelEvent != null) OnNextLevelEvent.OnRaised += HideWin;
             if (OnRestartLevelEvent != null) OnRestartLevelEvent.OnRaised += HideLose;
+            if (OnSettingShow != null) OnSettingShow.OnRaised += ShowSetting;
+            if (OnSettingHide != null) OnSettingHide.OnRaised += HideSetting;
         }
 
         private void OnDisable()
@@ -42,18 +49,29 @@ namespace Game.View.UI
             if (OnLoseEvent != null) OnLoseEvent.OnRaised -= ShowLose;
             if (OnNextLevelEvent != null) OnNextLevelEvent.OnRaised -= HideWin;
             if (OnRestartLevelEvent != null) OnRestartLevelEvent.OnRaised -= HideLose;
+            if (OnSettingShow != null) OnSettingShow.OnRaised -= ShowSetting;
+            if (OnSettingHide != null) OnSettingHide.OnRaised -= HideSetting;
         }
 
         private void Awake()
         {
             if (levelWinPanel != null) levelWinPanel.SetActive(false);
             if (levelLosePanel != null) levelLosePanel.SetActive(false);
+            mainSettingPanel?.SetActive(false);
+        }
+
+        public void Initialize(Inventory inventory)
+        {
+            if (inventoryView != null)
+                inventoryView.BindData(inventory);
         }
 
         private void PlayGame()
         {
-            if (MainMenu != null) MainMenu.SetActive(false);
-            if (InGameUI != null) InGameUI.SetActive(true);
+            MainMenuCanvas?.SetActive(false);
+            InGameUICanvas?.SetActive(true);
+            CurrencyCanvas?.SetActive(false);
+
             HideWin();
             HideLose();
         }
@@ -61,23 +79,35 @@ namespace Game.View.UI
         public void ShowWin()
         {
             Debug.Log("[UIManager] Win Event raised");
-            if (levelWinPanel != null) levelWinPanel.SetActive(true);
+            levelWinPanel?.SetActive(true);
+            CurrencyCanvas?.SetActive(true);
+        }
+
+        public void ShowSetting()
+        {
+            mainSettingPanel.SetActive(true);
+        }
+
+        public void HideSetting()
+        {
+            mainSettingPanel.SetActive(false);
         }
 
         public void ShowLose()
         {
             Debug.Log("[UIManager] Lose Event raised");
-            if (levelLosePanel != null) levelLosePanel.SetActive(true);
+            levelLosePanel?.SetActive(true);
+            CurrencyCanvas?.SetActive(true);
         }
 
         private void HideWin()
         {
-            if (levelWinPanel != null) levelWinPanel.SetActive(false);
+            levelWinPanel?.SetActive(false);
         }
 
         private void HideLose()
         {
-            if (levelLosePanel != null) levelLosePanel.SetActive(false);
+            levelLosePanel.SetActive(false);
         }
     }
 }

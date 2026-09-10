@@ -21,21 +21,30 @@ namespace Game.View.UI
         
         public void BindData(Inventory inventory)
         {
-            if (inventory != null)
+            if (inventory == null)
             {
-                _inventory = inventory;
+                Debug.LogWarning("[InventoryView] Data is null");
+                return;
             }
-            else Debug.LogWarning("[InventoryView] Data is null");
+
+            if (_inventory != null)
+                _inventory.OnInventoryUpdate -= UpdateView;
+
+            _inventory = inventory;
+            _inventory.OnInventoryUpdate += UpdateView;
+            UpdateView();
         }
 
         private void OnEnable()
         {
-            _inventory.OnInventoryUpdate += UpdateView;
+            if (_inventory != null)
+                _inventory.OnInventoryUpdate += UpdateView;
         }
 
         private void OnDisable()
         {
-            _inventory.OnInventoryUpdate -= UpdateView;
+            if (_inventory != null)
+                _inventory.OnInventoryUpdate -= UpdateView;
         }
 
         private void UpdateView()

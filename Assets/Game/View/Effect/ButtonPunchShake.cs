@@ -2,7 +2,7 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 using PrimeTween;
 
-namespace Game.View.UI
+namespace Game.View.Effect
 {
     public class ButtonPunchShake : MonoBehaviour
     {

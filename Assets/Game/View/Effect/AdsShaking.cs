@@ -3,7 +3,7 @@ using PrimeTween;
 using UnityEngine;
 using System.Threading;
 
-namespace Game.View.UI
+namespace Game.View.Effect
 {
     public class AdsShaking : MonoBehaviour
     {
@@ -16,6 +16,16 @@ namespace Game.View.UI
         [SerializeField] private int idleDelay;
 
         private CancellationTokenSource _cts;
+
+        private void OnEnable()
+        {
+            StartShaking();
+        }
+
+        private void OnDisable()
+        {
+            StopShaking();
+        }
 
         [ContextMenu("Start Shaking")]
         public void StartShaking()

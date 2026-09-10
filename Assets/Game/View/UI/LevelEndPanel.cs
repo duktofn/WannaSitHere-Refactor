@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using PrimeTween;
 using Cysharp.Threading.Tasks;
 
@@ -8,43 +9,72 @@ namespace Game.View.UI
 {
     public class LevelEndPanel : MonoBehaviour
     {
-        [SerializeField] private List<Image> images;
+        [FormerlySerializedAs("images")]
+        [SerializeField] private List<Graphic> graphics;
+        [SerializeField] private GameObject navigation;
+        [SerializeField] private GameObject reward;
         [SerializeField] private float revealDuration;
         [SerializeField] private Ease revealEase;
         [SerializeField] private float revealDelay;
 
         private void Awake()
         {
-            foreach (Image img in images)
-            {
-                img.color = new Color(img.color.r, img.color.g, img.color.b, 0);
-            }
+            ResetAlpha();
         }
 
         private void OnEnable()
         {
             Revealing().Forget();
+            navigation.SetActive(false);
+        }
+
+        private void OnDisable()
+        {
+            if (graphics == null) return;
+            foreach (Graphic graphic in graphics)
+            {
+                if (graphic != null)
+                {
+                    Tween.StopAll(graphic);
+                }
+            }
+        }
+
+        public void ResetAlpha()
+        {
+            if (graphics == null) return;
+            foreach (Graphic graphic in graphics)
+            {
+                if (graphic != null)
+                {
+                    Tween.StopAll(graphic);
+                    graphic.SetAlpha(0f);
+                }
+            }
         }
 
         [ContextMenu("Revealing")]
         public async UniTask Revealing()
         {
-            foreach (Image img in images)
-            {
-                await UniTask.Delay((int) (revealDelay * 1000));
+            if (graphics == null || graphics.Count == 0) return;
 
-                _ = Tween.Custom(
-                    0f,
-                    1f,
-                    revealDuration,
-                    value =>
-                    {
-                        Color color = img.color;
-                        color.a = value;
-                        img.color = color;
-                    },
-                    ease: revealEase
-                );
+            ResetAlpha();
+
+            foreach (Graphic graphic in graphics)
+            {
+                if (!gameObject.activeInHierarchy) return;
+
+                if (revealDelay > 0f)
+                {
+                    await UniTask.WaitForSeconds(revealDelay);
+                }
+
+                if (!gameObject.activeInHierarchy) return;
+
+                if (graphic != null)
+                {
+                    _ = graphic.TweenAlpha(0f, 1f, revealDuration, revealEase);
+                }
             }
         }
     }
