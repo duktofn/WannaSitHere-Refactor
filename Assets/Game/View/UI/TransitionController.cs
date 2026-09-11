@@ -2,320 +2,510 @@ using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
+using PrimeTween;
+using Cysharp.Threading.Tasks;
 
 namespace Game.View.UI
 {
     public class TransitionController : MonoBehaviour
     {
-        [Header("Objects & Material")]
-        [SerializeField] private Image circleOverlay;
-        [SerializeField] private Material circleCutoutMaterial;
+        [Header("UI References")]
+        [SerializeField] private Canvas transitionCanvas;
+        [SerializeField] private Image transitionImage;
+        [SerializeField] private Camera targetCamera;
 
-        [Header("Circle Hide (Close)")]
-        [SerializeField] private float hideDuration = 0.5f;
-        [SerializeField] private AnimationCurve hideCurve = AnimationCurve.EaseInOut(0f, 1.8f, 1f, 0f);
+        [Header("Transition Settings")]
+        [Tooltip("Thời gian mở màn hình (giây)")]
+        [FormerlySerializedAs("defaultDuration")]
+        [SerializeField] private float openDuration = 0.8f;
+        [Tooltip("Thời gian đóng màn hình (giây)")]
+        [SerializeField] private float closeDuration = 0.5f;
 
-        [Header("Circle Reveal (Open)")]
-        [FormerlySerializedAs("circleDuration")]
-        [SerializeField] private float revealDuration = 0.8f;
-        [FormerlySerializedAs("radiusCurve")]
-        [SerializeField] private AnimationCurve revealCurve = new AnimationCurve(
-            new Keyframe(0f, 0f),
-            new Keyframe(0.55f, 0.85f),
-            new Keyframe(0.7f, 0.68f),
-            new Keyframe(1f, 1.8f)
+        public float OpenDuration => openDuration;
+        public float CloseDuration => closeDuration;
+        [Tooltip("Bật nếu muốn dùng AnimationCurve để mở (mở hé -> dừng -> mở hẳn). Tắt nếu muốn dùng Open Ease thông thường.")]
+        [SerializeField] private bool useOpenCurve = true;
+        [Tooltip("Đường cong mở màn hình: 0 -> 0.35 (mở hé), 0.35 -> 0.55 (dừng lại), 0.55 -> 1.0 (mở bung hoàn toàn)")]
+        [SerializeField] private AnimationCurve openCurve = new AnimationCurve(
+            new Keyframe(0f, 0f, 0f, 2f),
+            new Keyframe(0.35f, 0.35f, 0f, 0f),
+            new Keyframe(0.55f, 0.35f, 0f, 0f),
+            new Keyframe(1f, 1f, 2f, 0f)
         );
+        [SerializeField] private Ease openEase = Ease.OutQuad;
+        [SerializeField] private Ease closeEase = Ease.InQuad;
+        [SerializeField] private float maxRadius = 1.25f;
+        [Tooltip("Khoảng thời gian dừng lại (giữ màn hình đen) giữa tween đóng và tween mở.")]
+        [SerializeField] private float delayBetweenTransitions = 0.2f;
+        [SerializeField] private bool playOpenOnStart = false;
 
-        private const float DefaultOpenRadius = 1.8f;
+        public float DelayBetweenTransitions => delayBetweenTransitions;
 
-        private static readonly int RadiusId = Shader.PropertyToID("_Radius");
-        private static readonly int AspectRatioId = Shader.PropertyToID("_AspectRatio");
+        [Header("Debug / Testing")]
+        [Tooltip("Kéo đối tượng muốn làm tâm vào đây để test. Để trống sẽ tự động lấy chính giữa màn hình.")]
+        [SerializeField] private Transform testTarget;
 
-        private Material circleMaterial;
-        private Material circleSourceMaterial;
-        private Material originalOverlayMaterial;
-        private Image materialOverlay;
-        private bool useAutomaticAspectRatio;
-        private bool isPlaying;
+        private Material _materialInstance;
+        private RectTransform _imageRectTransform;
+        private RectTransform _canvasRectTransform;
+        private Tween _currentTween;
 
-        public float TotalDuration => Mathf.Max(0f, hideDuration) + Mathf.Max(0f, revealDuration);
-        public bool IsPlaying => isPlaying;
+        private static readonly int RadiusProperty = Shader.PropertyToID("_Radius");
+        private static readonly int CenterXProperty = Shader.PropertyToID("_CenterX");
+        private static readonly int CenterYProperty = Shader.PropertyToID("_CenterY");
 
         private void Awake()
         {
-            EnsureCircleMaterial();
-            SetCircleRadius(EvaluateRadius(hideCurve, 0f, DefaultOpenRadius, 0f));
-            SetOverlayVisible(false);
+            ResolveReferences();
+            InitMaterial();
+
+            if (!playOpenOnStart && transitionCanvas != null)
+            {
+                transitionCanvas.gameObject.SetActive(false);
+            }
+        }
+
+        private void Start()
+        {
+            if (playOpenOnStart)
+            {
+                OpenAsync().Forget();
+            }
         }
 
         private void OnDestroy()
         {
-            ReleaseCircleMaterial();
-        }
-
-        public async Awaitable PlayAsync(Action onCovered)
-        {
-            if (isPlaying || !EnsureCircleMaterial())
-                return;
-
-            isPlaying = true;
-            SetOverlayVisible(true);
-
-            try
+            _currentTween.Stop();
+            if (_materialInstance != null)
             {
-                // 1. Close the circle until the overlay fully covers the screen.
-                await PlayCircleHideInternalAsync();
-
-                // 2. The screen is covered; update the game state now.
-                onCovered?.Invoke();
-
-                await Awaitable.NextFrameAsync();
-
-                // 3. Open the circle to reveal the updated screen.
-                await PlayCircleRevealInternalAsync();
-            }
-            finally
-            {
-                isPlaying = false;
-                SetOverlayVisible(false);
+                Destroy(_materialInstance);
             }
         }
 
-        [ContextMenu("Hide")]
-        public async Awaitable PlayCircleHideAsync()
+#if UNITY_EDITOR
+        private void OnValidate()
         {
-            if (isPlaying || !EnsureCircleMaterial())
-                return;
+            ResolveReferences();
+        }
+#endif
 
-            isPlaying = true;
-            SetOverlayVisible(true);
-
-            try
+        /// <summary>
+        /// Tự động tìm và liên kết các thành phần nếu chưa kéo thả vào Inspector
+        /// </summary>
+        public void ResolveReferences()
+        {
+            if (targetCamera == null)
             {
-                await PlayCircleHideInternalAsync();
+                targetCamera = Camera.main;
             }
-            finally
+
+            if (transitionCanvas == null)
             {
-                isPlaying = false;
+                transitionCanvas = GetComponentInChildren<Canvas>(true);
+                if (transitionCanvas == null)
+                {
+                    var allCanvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    foreach (var c in allCanvases)
+                    {
+                        if (c.name.IndexOf("transition", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            transitionCanvas = c;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (transitionCanvas != null)
+            {
+                _canvasRectTransform = transitionCanvas.GetComponent<RectTransform>();
+
+                if (transitionImage == null)
+                {
+                    transitionImage = transitionCanvas.GetComponentInChildren<Image>(true);
+                }
+            }
+
+            if (transitionImage != null)
+            {
+                _imageRectTransform = transitionImage.rectTransform;
             }
         }
 
-        [ContextMenu("Reveal")]
-        public async Awaitable PlayCircleRevealAsync()
+        private void InitMaterial()
         {
-            if (isPlaying || !EnsureCircleMaterial())
-                return;
-
-            isPlaying = true;
-            SetOverlayVisible(true);
-
-            try
+            if (transitionImage != null && transitionImage.material != null)
             {
-                await PlayCircleRevealInternalAsync();
-            }
-            finally
-            {
-                isPlaying = false;
-                SetOverlayVisible(false);
+                // Tạo Material clone riêng để không can thiệp trực tiếp vào file asset gốc
+                _materialInstance = new Material(transitionImage.material);
+                transitionImage.material = _materialInstance;
             }
         }
 
-        public void Preview(float normalizedTime)
+        private Material GetActiveMaterial()
         {
-            if (!EnsureCircleMaterial())
-                return;
-
-            normalizedTime = Mathf.Clamp01(normalizedTime);
-            SetOverlayVisible(true);
-
-            float safeHideDuration = Mathf.Max(0f, hideDuration);
-            float safeRevealDuration = Mathf.Max(0f, revealDuration);
-            float total = safeHideDuration + safeRevealDuration;
-
-            if (total <= 0f)
+            if (Application.isPlaying)
             {
-                SetCircleRadius(EvaluateRadius(revealCurve, 1f, 0f, DefaultOpenRadius));
-                return;
+                if (_materialInstance == null) InitMaterial();
+                return _materialInstance;
+            }
+            return transitionImage != null ? transitionImage.material : null;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // Public API
+        // ─────────────────────────────────────────────────────────────
+
+        public void OpenBlackScreen() => OpenAsync(testTarget).Forget();
+        public void CloseBlackScreen() => CloseAsync(testTarget).Forget();
+
+        private Easing GetDefaultOpenEasing()
+        {
+            if (useOpenCurve && openCurve != null && openCurve.length >= 2)
+            {
+                return Easing.Curve(openCurve);
+            }
+            return Easing.Standard(openEase);
+        }
+
+        /// <summary>
+        /// Mở màn hình (vòng tròn mở rộng từ 0 -> maxRadius hé lộ game)
+        /// </summary>
+        public async UniTask OpenAsync(Transform target = null, float? duration = null, Easing? easing = null)
+        {
+            Vector2 uvCenter = target != null ? CalculateCenterUV(target.position) : CalculateCenterUV();
+            Easing activeEasing = easing ?? GetDefaultOpenEasing();
+            await PlayTransitionAsync(0f, maxRadius, uvCenter, duration ?? openDuration, activeEasing, false);
+        }
+
+        public async UniTask OpenAsync(Vector3 worldPosition, float? duration = null, Easing? easing = null)
+        {
+            Vector2 uvCenter = CalculateCenterUV(worldPosition);
+            Easing activeEasing = easing ?? GetDefaultOpenEasing();
+            await PlayTransitionAsync(0f, maxRadius, uvCenter, duration ?? openDuration, activeEasing, false);
+        }
+
+        /// <summary>
+        /// Đóng màn hình (vòng tròn thu hẹp từ maxRadius -> 0 che đen game)
+        /// </summary>
+        public async UniTask CloseAsync(Transform target = null, float? duration = null, Easing? easing = null)
+        {
+            Vector2 uvCenter = target != null ? CalculateCenterUV(target.position) : CalculateCenterUV();
+            Easing activeEasing = easing ?? Easing.Standard(closeEase);
+            await PlayTransitionAsync(maxRadius, 0f, uvCenter, duration ?? closeDuration, activeEasing, true);
+        }
+
+        public async UniTask CloseAsync(Vector3 worldPosition, float? duration = null, Easing? easing = null)
+        {
+            Vector2 uvCenter = CalculateCenterUV(worldPosition);
+            Easing activeEasing = easing ?? Easing.Standard(closeEase);
+            await PlayTransitionAsync(maxRadius, 0f, uvCenter, duration ?? closeDuration, activeEasing, true);
+        }
+
+        /// <summary>
+        /// Thực hiện trọn vẹn chu kỳ: Đóng màn hình -> Chờ delay -> Gọi action -> Mở màn hình
+        /// </summary>
+        public async UniTask DoTransitionAsync(Action onCovered = null, Transform target = null, float? closeDurationOverride = null, float? openDurationOverride = null, float? delayBetween = null)
+        {
+            await CloseAsync(target, closeDurationOverride);
+
+            onCovered?.Invoke();
+
+            float wait = delayBetween ?? delayBetweenTransitions;
+            if (wait > 0f)
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(wait));
             }
 
-            float hideRatio = safeHideDuration / total;
+            await OpenAsync(target, openDurationOverride);
+        }
 
-            if (normalizedTime <= hideRatio && safeHideDuration > 0f)
+        public async UniTask DoTransitionAsync(Func<UniTask> onCovered, Transform target = null, float? closeDurationOverride = null, float? openDurationOverride = null, float? delayBetween = null)
+        {
+            await CloseAsync(target, closeDurationOverride);
+
+            if (onCovered != null)
             {
-                float hideT = normalizedTime / hideRatio;
-                SetCircleRadius(EvaluateRadius(hideCurve, hideT, DefaultOpenRadius, 0f));
+                await onCovered();
+            }
+
+            float wait = delayBetween ?? delayBetweenTransitions;
+            if (wait > 0f)
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(wait));
+            }
+
+            await OpenAsync(target, openDurationOverride);
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // Core Animation & Math
+        // ─────────────────────────────────────────────────────────────
+
+        private async UniTask PlayTransitionAsync(float startRadius, float endRadius, Vector2 centerUV, float duration, Easing easing, bool blockRaycastsAfter)
+        {
+            _currentTween.Stop();
+
+            ResolveReferences();
+
+            if (transitionCanvas != null)
+            {
+                transitionCanvas.gameObject.SetActive(true);
+            }
+
+            if (transitionImage != null)
+            {
+                transitionImage.gameObject.SetActive(true);
+                transitionImage.raycastTarget = true; // Chặn input khi đang chuyển cảnh
+            }
+
+            ApplyCenterAndSize(centerUV);
+
+            Material mat = GetActiveMaterial();
+            if (mat != null)
+            {
+                mat.SetFloat(RadiusProperty, startRadius);
+
+                _currentTween = Tween.Custom(startRadius, endRadius, duration: duration, ease: easing, onValueChange: val =>
+                {
+                    if (mat != null)
+                    {
+                        mat.SetFloat(RadiusProperty, val);
+                    }
+                });
+
+                await _currentTween;
+            }
+
+            // Nếu đã mở hoàn toàn, tắt raycast để người chơi tương tác với game
+            if (!blockRaycastsAfter)
+            {
+                if (transitionImage != null)
+                {
+                    transitionImage.raycastTarget = false;
+                }
+                if (transitionCanvas != null)
+                {
+                    transitionCanvas.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private Vector2 CalculateCenterUV()
+        {
+            return new Vector2(0.5f, 0.5f);
+        }
+
+        private Vector2 CalculateCenterUV(Vector3 worldPos)
+        {
+            if (targetCamera == null)
+            {
+                targetCamera = Camera.main;
+            }
+
+            Vector3 screenPos = targetCamera != null
+                ? targetCamera.WorldToScreenPoint(worldPos)
+                : new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
+
+            return CalculateCenterUVFromScreen(screenPos);
+        }
+
+        public Vector2 CalculateCenterUVFromScreen(Vector2 screenPos)
+        {
+            if (_canvasRectTransform == null)
+            {
+                ResolveReferences();
+            }
+
+            float screenWidth = Screen.width;
+            float screenHeight = Screen.height;
+
+            Rect canvasRect = _canvasRectTransform != null ? _canvasRectTransform.rect : new Rect(0, 0, screenWidth, screenHeight);
+            float canvasWidth = canvasRect.width;
+            float canvasHeight = canvasRect.height;
+
+            Vector2 canvasPos = new Vector2(
+                (screenPos.x / screenWidth) * canvasWidth,
+                (screenPos.y / screenHeight) * canvasHeight
+            );
+
+            float squareValue;
+            if (canvasWidth > canvasHeight)
+            {
+                // Landscape
+                squareValue = canvasWidth;
+                canvasPos.y += (canvasWidth - canvasHeight) * 0.5f;
             }
             else
             {
-                float revealT = Mathf.InverseLerp(hideRatio, 1f, normalizedTime);
-                SetCircleRadius(EvaluateRadius(revealCurve, revealT, 0f, DefaultOpenRadius));
+                // Portrait
+                squareValue = canvasHeight;
+                canvasPos.x += (canvasHeight - canvasWidth) * 0.5f;
             }
+
+            return canvasPos / squareValue;
         }
 
-        public void ResetPreview()
+        private void ApplyCenterAndSize(Vector2 centerUV)
         {
-            if (!EnsureCircleMaterial())
-                return;
+            if (_canvasRectTransform == null) return;
 
-            SetCircleRadius(EvaluateRadius(hideCurve, 0f, DefaultOpenRadius, 0f));
-            SetOverlayVisible(false);
-        }
+            Rect canvasRect = _canvasRectTransform.rect;
+            float squareValue = Mathf.Max(canvasRect.width, canvasRect.height);
 
-        public bool SetCircleRadius(float radius)
-        {
-            if (!EnsureCircleMaterial())
-                return false;
-
-            UpdateAspectRatio();
-            circleMaterial.SetFloat(RadiusId, Mathf.Max(0f, radius));
-            return true;
-        }
-
-        private async Awaitable PlayCircleHideInternalAsync()
-        {
-            await PlayRadiusCurveAsync(
-                Mathf.Max(0f, hideDuration),
-                hideCurve,
-                DefaultOpenRadius,
-                0f);
-        }
-
-        private async Awaitable PlayCircleRevealInternalAsync()
-        {
-            await PlayRadiusCurveAsync(
-                Mathf.Max(0f, revealDuration),
-                revealCurve,
-                0f,
-                DefaultOpenRadius);
-        }
-
-        private async Awaitable PlayRadiusCurveAsync(
-            float duration,
-            AnimationCurve curve,
-            float fallbackStart,
-            float fallbackEnd)
-        {
-            float startTime = Time.unscaledTime;
-
-            while (true)
+            if (_imageRectTransform != null)
             {
-                float t = duration <= 0f
-                    ? 1f
-                    : Mathf.Clamp01((Time.unscaledTime - startTime) / duration);
+                _imageRectTransform.sizeDelta = new Vector2(squareValue, squareValue);
+            }
 
-                SetCircleRadius(EvaluateRadius(curve, t, fallbackStart, fallbackEnd));
-
-                if (t >= 1f)
-                    break;
-
-                await Awaitable.NextFrameAsync();
+            Material mat = GetActiveMaterial();
+            if (mat != null)
+            {
+                mat.SetFloat(CenterXProperty, centerUV.x);
+                mat.SetFloat(CenterYProperty, centerUV.y);
             }
         }
 
-        private static float EvaluateRadius(
-            AnimationCurve curve,
-            float normalizedTime,
-            float fallbackStart,
-            float fallbackEnd)
+        private void OnDisable()
         {
-            float radius = curve != null
-                ? curve.Evaluate(normalizedTime)
-                : Mathf.Lerp(fallbackStart, fallbackEnd, normalizedTime);
-
-            return Mathf.Max(0f, radius);
+#if UNITY_EDITOR
+            if (_isEditorAnimating)
+            {
+                UnityEditor.EditorApplication.update -= OnEditorUpdate;
+                _isEditorAnimating = false;
+            }
+#endif
         }
 
-        private void SetOverlayVisible(bool visible)
+        // ─────────────────────────────────────────────────────────────
+        // Context Menu Testing (Chỉ gồm Tween Mở và Tween Đóng)
+        // ─────────────────────────────────────────────────────────────
+
+#if UNITY_EDITOR
+        private float _editorAnimStartTime;
+        private float _editorAnimDuration;
+        private float _editorAnimStartRadius;
+        private float _editorAnimEndRadius;
+        private bool _isEditorAnimating;
+        private bool _isEditorOpening;
+
+        private Action _editorAnimOnComplete;
+
+        [ContextMenu("Chạy Trọn Vẹn (Đóng -> Chờ -> Mở)")]
+        public void TweenFullTransition()
         {
-            if (circleOverlay != null && circleOverlay.gameObject.activeSelf != visible)
-                circleOverlay.gameObject.SetActive(visible);
+            if (Application.isPlaying)
+            {
+                DoTransitionAsync(target: testTarget).Forget();
+            }
+            else
+            {
+                StartEditorAnimation(maxRadius, 0f, closeDuration, isOpening: false, onComplete: () =>
+                {
+                    EditorDelayThenOpen().Forget();
+                });
+            }
         }
 
-        private bool EnsureCircleMaterial()
+        private async UniTaskVoid EditorDelayThenOpen()
         {
-            if (circleOverlay == null)
-                circleOverlay = GetComponentInChildren<Image>(true);
-
-            if (!circleOverlay)
-                return false;
-
-            Material sourceMaterial = circleCutoutMaterial;
-            if (!sourceMaterial)
-            {
-                sourceMaterial = materialOverlay == circleOverlay && circleSourceMaterial
-                    ? circleSourceMaterial
-                    : circleOverlay.material;
-            }
-            if (!sourceMaterial)
-            {
-                Debug.LogError(
-                    "TransitionController is missing the circle cutout material. Assign Mat_CircleCut to Circle Cutout Material.",
-                    this);
-                return false;
-            }
-
-            if (!sourceMaterial.HasProperty(RadiusId))
-            {
-                Debug.LogError(
-                    "TransitionController needs a circle cutout material with a _Radius property. " +
-                    "Assign Mat_CircleCut to Circle Cutout Material or to the Circle Overlay Image.",
-                    this);
-                return false;
-            }
-
-            if (circleMaterial && materialOverlay == circleOverlay &&
-                circleSourceMaterial == sourceMaterial && circleMaterial.HasProperty(RadiusId))
-            {
-                return true;
-            }
-
-            ReleaseCircleMaterial();
-
-            originalOverlayMaterial = circleOverlay.material;
-            circleMaterial = Instantiate(sourceMaterial);
-            circleSourceMaterial = sourceMaterial;
-            materialOverlay = circleOverlay;
-            useAutomaticAspectRatio = circleMaterial.HasProperty(AspectRatioId) &&
-                                      sourceMaterial.GetFloat(AspectRatioId) <= 0f;
-            circleMaterial.name = $"{sourceMaterial.name} (Canvas Transition Instance)";
-            circleMaterial.hideFlags = HideFlags.DontSave;
-            circleOverlay.material = circleMaterial;
-
-            UpdateAspectRatio();
-            return true;
+            float wait = delayBetweenTransitions > 0f ? delayBetweenTransitions : 0.2f;
+            await UniTask.Delay(TimeSpan.FromSeconds(wait));
+            StartEditorAnimation(0f, maxRadius, openDuration, isOpening: true);
         }
 
-        private void UpdateAspectRatio()
+        [ContextMenu("Tween Mở (Open)")]
+        public void TweenOpen()
         {
-            if (!useAutomaticAspectRatio || circleMaterial == null || circleOverlay == null ||
-                !circleMaterial.HasProperty(AspectRatioId))
+            if (Application.isPlaying)
             {
-                return;
+                OpenAsync(testTarget).Forget();
             }
-
-            Rect rect = circleOverlay.rectTransform.rect;
-            float aspectRatio = rect.height > Mathf.Epsilon ? rect.width / rect.height : 0f;
-            circleMaterial.SetFloat(AspectRatioId, aspectRatio > Mathf.Epsilon ? aspectRatio : 0f);
+            else
+            {
+                StartEditorAnimation(0f, maxRadius, openDuration, isOpening: true);
+            }
         }
 
-        private void ReleaseCircleMaterial()
+        [ContextMenu("Tween Đóng (Close)")]
+        public void TweenClose()
         {
-            if (materialOverlay != null && materialOverlay.material == circleMaterial)
-                materialOverlay.material = originalOverlayMaterial;
-
-            if (circleMaterial != null)
+            if (Application.isPlaying)
             {
-                if (Application.isPlaying)
-                    Destroy(circleMaterial);
-                else
-                    DestroyImmediate(circleMaterial);
+                CloseAsync(testTarget).Forget();
+            }
+            else
+            {
+                StartEditorAnimation(maxRadius, 0f, closeDuration, isOpening: false);
+            }
+        }
+
+        private void StartEditorAnimation(float startRadius, float endRadius, float duration, bool isOpening, Action onComplete = null)
+        {
+            ResolveReferences();
+            if (transitionCanvas != null) transitionCanvas.gameObject.SetActive(true);
+            if (transitionImage != null)
+            {
+                transitionImage.gameObject.SetActive(true);
+                Vector2 uvCenter = testTarget != null ? CalculateCenterUV(testTarget.position) : CalculateCenterUV();
+                ApplyCenterAndSize(uvCenter);
             }
 
-            circleMaterial = null;
-            circleSourceMaterial = null;
-            originalOverlayMaterial = null;
-            materialOverlay = null;
-            useAutomaticAspectRatio = false;
+            _editorAnimStartRadius = startRadius;
+            _editorAnimEndRadius = endRadius;
+            _editorAnimDuration = duration > 0f ? duration : 0.8f;
+            _editorAnimStartTime = (float)UnityEditor.EditorApplication.timeSinceStartup;
+            _isEditorOpening = isOpening;
+            _editorAnimOnComplete = onComplete;
+
+            if (!_isEditorAnimating)
+            {
+                _isEditorAnimating = true;
+                UnityEditor.EditorApplication.update += OnEditorUpdate;
+            }
         }
+
+        private void OnEditorUpdate()
+        {
+            float elapsed = (float)UnityEditor.EditorApplication.timeSinceStartup - _editorAnimStartTime;
+            float t = Mathf.Clamp01(elapsed / _editorAnimDuration);
+
+            float radius;
+            if (_isEditorOpening && useOpenCurve && openCurve != null && openCurve.length >= 2)
+            {
+                float progress = openCurve.Evaluate(t);
+                radius = Mathf.LerpUnclamped(_editorAnimStartRadius, _editorAnimEndRadius, progress);
+            }
+            else
+            {
+                float smoothT = t * t * (3f - 2f * t);
+                radius = Mathf.Lerp(_editorAnimStartRadius, _editorAnimEndRadius, smoothT);
+            }
+
+            if (transitionImage != null && transitionImage.material != null)
+            {
+                transitionImage.material.SetFloat(RadiusProperty, radius);
+                UnityEditor.EditorUtility.SetDirty(transitionImage);
+            }
+
+            UnityEditor.SceneView.RepaintAll();
+
+            if (t >= 1f)
+            {
+                UnityEditor.EditorApplication.update -= OnEditorUpdate;
+                _isEditorAnimating = false;
+
+                if (_editorAnimEndRadius > 0f)
+                {
+                    if (transitionImage != null) transitionImage.raycastTarget = false;
+                    if (transitionCanvas != null) transitionCanvas.gameObject.SetActive(false);
+                }
+
+                var callback = _editorAnimOnComplete;
+                _editorAnimOnComplete = null;
+                callback?.Invoke();
+            }
+        }
+#endif
     }
 }

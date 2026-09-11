@@ -1,8 +1,9 @@
+using System;
 using UnityEngine;
 using Game.Events;
 using Game.Core.Economy;
-using System;
 using TMPro;
+using Cysharp.Threading.Tasks;
 
 namespace Game.View.UI
 {
@@ -13,6 +14,9 @@ namespace Game.View.UI
         [SerializeField] private GameObject MainMenuCanvas;
         [SerializeField] private GameObject TransitionCanvas;
         [SerializeField] private GameObject CurrencyCanvas;
+
+        [Header("Transition")]
+        [SerializeField] private TransitionController transitionController;
 
         [Header("Win/Lose Panel")]
         [SerializeField] private GameObject levelWinPanel;
@@ -27,30 +31,28 @@ namespace Game.View.UI
         [SerializeField] private VoidEventChannelSO OnRestartLevelEvent;
         [SerializeField] private VoidEventChannelSO OnSettingShow;
         [SerializeField] private VoidEventChannelSO OnSettingHide;
+        [SerializeField] private VoidEventChannelSO OnBackToHome;
 
         [Header("UI Components")]
         [SerializeField] private InventoryView inventoryView;
 
+        private readonly EventListener _listener = new();
+
         private void OnEnable()
         {
-            if (OnPlayGameEvent != null) OnPlayGameEvent.OnRaised += PlayGame;
-            if (OnWinEvent != null) OnWinEvent.OnRaised += ShowWin;
-            if (OnLoseEvent != null) OnLoseEvent.OnRaised += ShowLose;
-            if (OnNextLevelEvent != null) OnNextLevelEvent.OnRaised += HideWin;
-            if (OnRestartLevelEvent != null) OnRestartLevelEvent.OnRaised += HideLose;
-            if (OnSettingShow != null) OnSettingShow.OnRaised += ShowSetting;
-            if (OnSettingHide != null) OnSettingHide.OnRaised += HideSetting;
+            _listener.Listen(OnPlayGameEvent, PlayGame);
+            _listener.Listen(OnWinEvent, ShowWin);
+            _listener.Listen(OnLoseEvent, ShowLose);
+            _listener.Listen(OnNextLevelEvent, NextLevel);
+            _listener.Listen(OnRestartLevelEvent, RestartLevel);
+            _listener.Listen(OnSettingShow, ShowSetting);
+            _listener.Listen(OnSettingHide, HideSetting);
+            _listener.Listen(OnBackToHome, BackToHome);
         }
 
         private void OnDisable()
         {
-            if (OnPlayGameEvent != null) OnPlayGameEvent.OnRaised -= PlayGame;
-            if (OnWinEvent != null) OnWinEvent.OnRaised -= ShowWin;
-            if (OnLoseEvent != null) OnLoseEvent.OnRaised -= ShowLose;
-            if (OnNextLevelEvent != null) OnNextLevelEvent.OnRaised -= HideWin;
-            if (OnRestartLevelEvent != null) OnRestartLevelEvent.OnRaised -= HideLose;
-            if (OnSettingShow != null) OnSettingShow.OnRaised -= ShowSetting;
-            if (OnSettingHide != null) OnSettingHide.OnRaised -= HideSetting;
+            _listener.UnbindAll();
         }
 
         private void Awake()
@@ -58,6 +60,11 @@ namespace Game.View.UI
             if (levelWinPanel != null) levelWinPanel.SetActive(false);
             if (levelLosePanel != null) levelLosePanel.SetActive(false);
             mainSettingPanel?.SetActive(false);
+
+            if (transitionController == null)
+            {
+                transitionController = GetComponent<TransitionController>();
+            }
         }
 
         public void Initialize(Inventory inventory)
@@ -66,13 +73,103 @@ namespace Game.View.UI
                 inventoryView.BindData(inventory);
         }
 
+        private void BackToHome()
+        {
+            if (transitionController != null)
+            {
+                BackToHomeWithTransition().Forget();
+            }
+            else
+            {
+                ApplyBackToHome();
+            }
+        }
+
+        private async UniTaskVoid BackToHomeWithTransition()
+        {
+            await transitionController.DoTransitionAsync(ApplyBackToHome);
+        }
+
+        private void ApplyBackToHome()
+        {
+            MainMenuCanvas?.SetActive(true);
+            InGameUICanvas?.SetActive(false);
+            CurrencyCanvas?.SetActive(true);
+
+            HideWin();
+            HideLose();
+        }
+
         private void PlayGame()
+        {
+            if (transitionController != null)
+            {
+                PlayGameWithTransition().Forget();
+            }
+            else
+            {
+                ApplyPlayGame();
+            }
+        }
+
+        private async UniTaskVoid PlayGameWithTransition()
+        {
+            await transitionController.DoTransitionAsync(ApplyPlayGame);
+        }
+
+        private void ApplyPlayGame()
         {
             MainMenuCanvas?.SetActive(false);
             InGameUICanvas?.SetActive(true);
             CurrencyCanvas?.SetActive(false);
 
             HideWin();
+            HideLose();
+        }
+
+        private void NextLevel()
+        {
+            if (transitionController != null)
+            {
+                NextLevelWithTransition().Forget();
+            }
+            else
+            {
+                ApplyNextLevel();
+            }
+        }
+
+        private async UniTaskVoid NextLevelWithTransition()
+        {
+            await transitionController.DoTransitionAsync(ApplyNextLevel);
+        }
+
+        private void ApplyNextLevel()
+        {
+            CurrencyCanvas?.SetActive(false);
+            HideWin();
+        }
+
+        private void RestartLevel()
+        {
+            if (transitionController != null)
+            {
+                RestartLevelWithTransition().Forget();
+            }
+            else
+            {
+                ApplyRestartLevel();
+            }
+        }
+
+        private async UniTaskVoid RestartLevelWithTransition()
+        {
+            await transitionController.DoTransitionAsync(ApplyRestartLevel);
+        }
+
+        private void ApplyRestartLevel()
+        {
+            CurrencyCanvas?.SetActive(false);
             HideLose();
         }
 
