@@ -49,6 +49,7 @@ namespace Game.Bootstrap
         private SaveLoadManager _saveLoad;
         private Inventory _inventory;
         private GameData _gameData;
+        private readonly EventListener _listener = new();
 
         public Inventory Inventory => _inventory;
 
@@ -74,41 +75,26 @@ namespace Game.Bootstrap
         private void OnEnable()
         {
             // Game Flow
-            if (_onPlayGameEvent != null) _onPlayGameEvent.OnRaised += HandlePlayGame;
-            if (_onWinEvent != null) _onWinEvent.OnRaised += HandleWin;
-            if (_onLoseEvent != null) _onLoseEvent.OnRaised += HandleLose;
-            if (_onNextLevelEvent != null) _onNextLevelEvent.OnRaised += NextLevel;
-            if (_onRestartLevelEvent != null) _onRestartLevelEvent.OnRaised += RestartLevel;
+            _listener.Listen(_onPlayGameEvent, HandlePlayGame);
+            _listener.Listen(_onWinEvent, HandleWin);
+            _listener.Listen(_onLoseEvent, HandleLose);
+            _listener.Listen(_onNextLevelEvent, NextLevel);
+            _listener.Listen(_onRestartLevelEvent, RestartLevel);
 
             // Rewards
-            if (_onClaimWinRewardEvent != null) _onClaimWinRewardEvent.OnRaised += HandleClaimWinReward;
-            if (_onClaimAdsRewardEvent != null) _onClaimAdsRewardEvent.OnRaised += HandleClaimAdsReward;
-            if (_onClaimDailyRewardEvent != null) _onClaimDailyRewardEvent.OnRaised += HandleClaimDailyReward;
+            _listener.Listen(_onClaimWinRewardEvent, HandleClaimWinReward);
+            _listener.Listen(_onClaimAdsRewardEvent, HandleClaimAdsReward);
+            _listener.Listen(_onClaimDailyRewardEvent, HandleClaimDailyReward);
 
             // Shop
-            if (_onBuyRemoveEvent != null) _onBuyRemoveEvent.OnRaised += HandleBuyRemove;
-            if (_onBuyUndoEvent != null) _onBuyUndoEvent.OnRaised += HandleBuyUndo;
-            if (_onBuyMoreMovesEvent != null) _onBuyMoreMovesEvent.OnRaised += HandleBuyMoreMoves;
+            _listener.Listen(_onBuyRemoveEvent, HandleBuyRemove);
+            _listener.Listen(_onBuyUndoEvent, HandleBuyUndo);
+            _listener.Listen(_onBuyMoreMovesEvent, HandleBuyMoreMoves);
         }
 
         private void OnDisable()
         {
-            // Game Flow
-            if (_onPlayGameEvent != null) _onPlayGameEvent.OnRaised -= HandlePlayGame;
-            if (_onWinEvent != null) _onWinEvent.OnRaised -= HandleWin;
-            if (_onLoseEvent != null) _onLoseEvent.OnRaised -= HandleLose;
-            if (_onNextLevelEvent != null) _onNextLevelEvent.OnRaised -= NextLevel;
-            if (_onRestartLevelEvent != null) _onRestartLevelEvent.OnRaised -= RestartLevel;
-
-            // Rewards
-            if (_onClaimWinRewardEvent != null) _onClaimWinRewardEvent.OnRaised -= HandleClaimWinReward;
-            if (_onClaimAdsRewardEvent != null) _onClaimAdsRewardEvent.OnRaised -= HandleClaimAdsReward;
-            if (_onClaimDailyRewardEvent != null) _onClaimDailyRewardEvent.OnRaised -= HandleClaimDailyReward;
-
-            // Shop
-            if (_onBuyRemoveEvent != null) _onBuyRemoveEvent.OnRaised -= HandleBuyRemove;
-            if (_onBuyUndoEvent != null) _onBuyUndoEvent.OnRaised -= HandleBuyUndo;
-            if (_onBuyMoreMovesEvent != null) _onBuyMoreMovesEvent.OnRaised -= HandleBuyMoreMoves;
+            _listener.UnbindAll();
         }
 
         // ── Game Flow ──────────────────────────────────────
