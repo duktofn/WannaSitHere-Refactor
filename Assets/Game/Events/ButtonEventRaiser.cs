@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Game.Events;
-using Cysharp.Threading.Tasks;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 
-namespace Game.View.UI
+namespace Game.Events
 {
     public class ButtonEventRaiser : MonoBehaviour
     {
@@ -59,4 +58,3 @@ namespace Game.View.UI
         }
     }
 }
-
