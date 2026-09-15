@@ -9,6 +9,11 @@ namespace Game.View.Effect
 {
     public class CurrencyFlyAnimation : MonoBehaviour
     {
+        [Header("Layering (Always on top)")]
+        [Tooltip("When true, coins are spawned under a top-level overlay canvas with the highest sorting order (32767) so they always render above everything.")]
+        [SerializeField] private bool alwaysOnTop = true;
+        [SerializeField] private int overlaySortingOrder = 32767;
+
         [Header("Visual Settings")]
         [SerializeField] private Sprite coinSprite;
         [SerializeField] private Vector2 coinSize;
@@ -34,6 +39,9 @@ namespace Game.View.Effect
         private readonly Queue<RectTransform> _pool = new();
         private bool _isInitialized;
 
+        private static Canvas s_overlayCanvas;
+        private static RectTransform s_overlayContainer;
+
         public event Action OnCoinArrived;
         public event Action OnAllCoinsArrived;
 
@@ -43,11 +51,71 @@ namespace Game.View.Effect
             PrewarmPool();
         }
 
+        public static RectTransform GetOrCreateOverlayContainer(int sortingOrder = 32767)
+        {
+            if (s_overlayContainer != null && s_overlayCanvas != null)
+            {
+                s_overlayCanvas.overrideSorting = true;
+                s_overlayCanvas.sortingOrder = sortingOrder;
+                return s_overlayContainer;
+            }
+
+            GameObject existing = GameObject.Find("[CurrencyFly_OverlayCanvas]");
+            if (existing != null)
+            {
+                s_overlayCanvas = existing.GetComponent<Canvas>();
+                s_overlayContainer = existing.GetComponent<RectTransform>();
+                if (s_overlayCanvas != null && s_overlayContainer != null)
+                {
+                    s_overlayCanvas.overrideSorting = true;
+                    s_overlayCanvas.sortingOrder = sortingOrder;
+                    return s_overlayContainer;
+                }
+            }
+
+            GameObject go = new GameObject("[CurrencyFly_OverlayCanvas]");
+            if (Application.isPlaying)
+            {
+                UnityEngine.Object.DontDestroyOnLoad(go);
+            }
+
+            s_overlayCanvas = go.AddComponent<Canvas>();
+            s_overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            s_overlayCanvas.overrideSorting = true;
+            s_overlayCanvas.sortingOrder = sortingOrder;
+
+            CanvasScaler scaler = go.AddComponent<CanvasScaler>();
+            CanvasScaler sceneScaler = UnityEngine.Object.FindFirstObjectByType<CanvasScaler>();
+            if (sceneScaler != null)
+            {
+                scaler.uiScaleMode = sceneScaler.uiScaleMode;
+                scaler.referenceResolution = sceneScaler.referenceResolution;
+                scaler.screenMatchMode = sceneScaler.screenMatchMode;
+                scaler.matchWidthOrHeight = sceneScaler.matchWidthOrHeight;
+                scaler.referencePixelsPerUnit = sceneScaler.referencePixelsPerUnit;
+            }
+            else
+            {
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(2778, 1284);
+                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                scaler.matchWidthOrHeight = 1f;
+                scaler.referencePixelsPerUnit = 100f;
+            }
+
+            s_overlayContainer = go.GetComponent<RectTransform>();
+            return s_overlayContainer;
+        }
+
         private void EnsureInitialized()
         {
             if (_isInitialized && container != null) return;
 
-            if (container == null)
+            if (alwaysOnTop)
+            {
+                container = GetOrCreateOverlayContainer(overlaySortingOrder);
+            }
+            else if (container == null)
             {
                 // Find top-level root Canvas so coins render freely on top of everything
                 Canvas rootCanvas = GetComponentInParent<Canvas>()?.rootCanvas;
@@ -72,21 +140,60 @@ namespace Game.View.Effect
             }
         }
 
-        private Vector2 GetLocalPosition(Vector3 screenOrWorldPos, bool isScreenPos)
+        private Vector2 GetEffectiveCoinSize()
         {
-            Canvas canvas = container != null ? container.GetComponentInParent<Canvas>() : null;
-            Camera cam = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-                ? canvas.worldCamera
-                : null;
+            if (coinSize.x > 0 && coinSize.y > 0)
+            {
+                return coinSize;
+            }
 
-            Vector2 screenPoint = isScreenPos
-                ? (Vector2)screenOrWorldPos
-                : (Vector2)RectTransformUtility.WorldToScreenPoint(cam, screenOrWorldPos);
+            if (coinSprite != null && coinSprite.rect.width > 0 && coinSprite.rect.height > 0)
+            {
+                return new Vector2(coinSprite.rect.width, coinSprite.rect.height);
+            }
+
+            return new Vector2(35f, 35f);
+        }
+
+        private Vector2 GetLocalPosition(Vector3 screenOrWorldPos, bool isScreenPos, Transform sourceTransform = null)
+        {
+            Vector2 screenPoint;
+            if (isScreenPos)
+            {
+                screenPoint = screenOrWorldPos;
+            }
+            else
+            {
+                Camera cam = null;
+                if (sourceTransform != null)
+                {
+                    Canvas sourceCanvas = sourceTransform.GetComponentInParent<Canvas>();
+                    if (sourceCanvas != null && sourceCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                    {
+                        cam = sourceCanvas.worldCamera;
+                    }
+                }
+                if (cam == null)
+                {
+                    Canvas anyCanvas = GetComponentInParent<Canvas>();
+                    if (anyCanvas != null && anyCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                    {
+                        cam = anyCanvas.worldCamera;
+                    }
+                }
+
+                screenPoint = RectTransformUtility.WorldToScreenPoint(cam, screenOrWorldPos);
+            }
+
+            Canvas containerCanvas = container != null ? container.GetComponentInParent<Canvas>() : null;
+            Camera containerCam = (containerCanvas != null && containerCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                ? containerCanvas.worldCamera
+                : null;
 
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 container,
                 screenPoint,
-                cam,
+                containerCam,
                 out Vector2 localPoint
             );
 
@@ -113,7 +220,7 @@ namespace Game.View.Effect
                 return;
             }
 
-            PlayAsync(source.position, null, isScreenPos: false).Forget();
+            PlayAsync(source.position, null, isScreenPos: false, sourceTransform: source).Forget();
         }
 
         /// <summary>
@@ -127,7 +234,7 @@ namespace Game.View.Effect
         /// <summary>
         /// Async method allowing callers to await full completion.
         /// </summary>
-        public async UniTask PlayAsync(Vector3 startPos, RectTransform target = null, bool isScreenPos = false)
+        public async UniTask PlayAsync(Vector3 startPos, RectTransform target = null, bool isScreenPos = false, Transform sourceTransform = null)
         {
             EnsureInitialized();
 
@@ -138,8 +245,8 @@ namespace Game.View.Effect
                 return;
             }
 
-            Vector2 startLocalPos = GetLocalPosition(startPos, isScreenPos);
-            Vector2 targetLocalPos = GetLocalPosition(targetTransform.position, false);
+            Vector2 startLocalPos = GetLocalPosition(startPos, isScreenPos, sourceTransform);
+            Vector2 targetLocalPos = GetLocalPosition(targetTransform.position, false, targetTransform);
 
             List<RectTransform> activeCoins = new List<RectTransform>(coinCount);
 
@@ -209,6 +316,10 @@ namespace Game.View.Effect
                 RectTransform pooled = _pool.Dequeue();
                 if (pooled != null)
                 {
+                    if (pooled.parent != container)
+                    {
+                        pooled.SetParent(container, false);
+                    }
                     pooled.SetAsLastSibling();
                     return pooled;
                 }
@@ -223,7 +334,7 @@ namespace Game.View.Effect
             GameObject go = new GameObject("CoinFx", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             RectTransform rect = go.GetComponent<RectTransform>();
             rect.SetParent(container != null ? container : transform, false);
-            rect.sizeDelta = coinSize;
+            rect.sizeDelta = GetEffectiveCoinSize();
 
             Image img = go.GetComponent<Image>();
             img.sprite = coinSprite;
