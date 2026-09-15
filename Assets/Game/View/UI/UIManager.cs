@@ -22,6 +22,7 @@ namespace Game.View.UI
         [SerializeField] private GameObject levelWinPanel;
         [SerializeField] private GameObject levelLosePanel;
         [SerializeField] private GameObject mainSettingPanel;
+        [SerializeField] private GameObject gameSettingPanel;
 
         [Header("Game Events")]
         [SerializeField] private VoidEventChannelSO OnPlayGameEvent;
@@ -59,7 +60,8 @@ namespace Game.View.UI
         {
             if (levelWinPanel != null) levelWinPanel.SetActive(false);
             if (levelLosePanel != null) levelLosePanel.SetActive(false);
-            mainSettingPanel?.SetActive(false);
+
+            HideSetting();
 
             if (transitionController == null)
             {
@@ -110,6 +112,8 @@ namespace Game.View.UI
             {
                 ApplyPlayGame();
             }
+
+            gameSettingPanel.SetActive(false);
         }
 
         private async UniTaskVoid PlayGameWithTransition()
@@ -160,6 +164,8 @@ namespace Game.View.UI
             {
                 ApplyRestartLevel();
             }
+
+            gameSettingPanel.SetActive(false);
         }
 
         private async UniTaskVoid RestartLevelWithTransition()
@@ -182,12 +188,28 @@ namespace Game.View.UI
 
         public void ShowSetting()
         {
-            mainSettingPanel.SetActive(true);
+            if (MainMenuCanvas.activeInHierarchy) {
+                mainSettingPanel.SetActive(true);
+                return;
+            }
+
+            if (InGameUICanvas.activeInHierarchy)
+            {
+                gameSettingPanel.SetActive(true);
+            }
         }
 
         public void HideSetting()
         {
-            mainSettingPanel.SetActive(false);
+            if (mainSettingPanel.activeInHierarchy) {
+                mainSettingPanel.SetActive(false);
+                return;
+            }
+
+            if (gameSettingPanel.activeInHierarchy)
+            {
+                gameSettingPanel.SetActive(false);
+            }
         }
 
         public void ShowLose()
