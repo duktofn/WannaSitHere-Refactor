@@ -148,5 +148,53 @@ namespace Game.Tests.EditMode
             level.ModifyMove(3);
             Assert.AreEqual(12, level.CurrentMove);
         }
+
+        [Test]
+        public void Inventory_SetAmountAndAddAmount_ClampsToZeroAndUpdatesValues()
+        {
+            var inv = new Game.Core.Economy.Inventory(100, 50, 5, 5, 5);
+            bool updated = false;
+            inv.OnInventoryUpdate += () => updated = true;
+
+            inv.SetAmount(Game.Core.Economy.ItemType.Gold, 500);
+            Assert.IsTrue(updated);
+            Assert.AreEqual(500, inv.Gold);
+
+            inv.SetAmount(Game.Core.Economy.ItemType.Gem, -50);
+            Assert.AreEqual(0, inv.Gem);
+
+            inv.AddAmount(Game.Core.Economy.ItemType.Remove, 3);
+            Assert.AreEqual(8, inv.Remove);
+        }
+
+        [Test]
+        public void EconomyManager_SimulateNextDay_AdvancesDayAndResetsClaimsAndShop()
+        {
+            var inv = new Game.Core.Economy.Inventory(0, 0, 0, 0, 0);
+            var eco = new Game.Core.Economy.EconomyManager(inv, 2, true, true, new int[] { 5, 5, 5 }, new int[] { 3, 2, 1 });
+
+            eco.SimulateNextDay();
+
+            Assert.AreEqual(3, eco.CurrentLoginDay);
+            Assert.IsFalse(eco.IsDailyRewardClaimed);
+            Assert.IsFalse(eco.IsWeeklyRewardClaimed);
+            Assert.AreEqual(0, eco.GetGoldShopPurchaseCount(0));
+            Assert.AreEqual(0, eco.GetGoldShopPurchaseCount(1));
+            Assert.AreEqual(0, eco.GetGoldShopPurchaseCount(2));
+        }
+
+        [Test]
+        public void EconomyManager_ResetLoginStreak_SetsDayZeroAndResetsAll()
+        {
+            var inv = new Game.Core.Economy.Inventory(0, 0, 0, 0, 0);
+            var eco = new Game.Core.Economy.EconomyManager(inv, 5, true, true, new int[] { 5, 5, 5 }, new int[] { 5, 5, 5 });
+
+            eco.ResetLoginStreak();
+
+            Assert.AreEqual(0, eco.CurrentLoginDay);
+            Assert.IsFalse(eco.IsDailyRewardClaimed);
+            Assert.IsFalse(eco.IsWeeklyRewardClaimed);
+            Assert.AreEqual(0, eco.GetGoldShopPurchaseCount(0));
+        }
     }
 }

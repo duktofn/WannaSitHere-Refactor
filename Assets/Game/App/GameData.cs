@@ -12,6 +12,8 @@ namespace Game.App.SaveAndLoad
         public int currentLoginDay;
         public bool isDailyRewardClaimed;
         public bool isWeeklyRewardClaimed;
+        public string lastLoginDateUtc;
+        public int[] goldShopPurchaseCountToday;
         public int currentSoundVolume;
         public bool isSoundMuted;
         public int currentMusicVolume;

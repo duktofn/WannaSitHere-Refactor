@@ -96,5 +96,38 @@ namespace Game.Core.Economy
             OnInventoryUpdate?.Invoke();
             return true;
         }
+
+        public void SetAmount(ItemType type, int amount)
+        {
+            amount = Math.Max(0, amount);
+
+            switch (type)
+            {
+                case ItemType.Gold:
+                    _currentGold = amount;
+                    break;
+                case ItemType.Gem:
+                    _currentGem = amount;
+                    break;
+                case ItemType.Remove:
+                    _currentRemove = amount;
+                    break;
+                case ItemType.Undo:
+                    _currentUndo = amount;
+                    break;
+                case ItemType.MoreMoves:
+                    _currentMoreMoves = amount;
+                    break;
+                default:
+                    return;
+            }
+
+            OnInventoryUpdate?.Invoke();
+        }
+
+        public void AddAmount(ItemType type, int delta)
+        {
+            SetAmount(type, GetAmount(type) + delta);
+        }
     }
 }
