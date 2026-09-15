@@ -268,6 +268,7 @@ MonoBehaviour:
   _uiManager: {fileID: 10276214}
   _gridManager: {fileID: 788058380}
   _levelView: {fileID: 284943829}
+  _weeklyLogin: {fileID: 275969737}
   _onPlayGameEvent: {fileID: 11400000, guid: d3f68d42fd245e0458e996461f1c99e5, type: 2}
   _onWinEvent: {fileID: 11400000, guid: e720f7945dc0bd74b808cc6edd387b9f, type: 2}
   _onLoseEvent: {fileID: 11400000, guid: 65ac03fb9c0e67c49a5b483f6f6fcf1d, type: 2}
@@ -276,6 +277,7 @@ MonoBehaviour:
   _onClaimWinRewardEvent: {fileID: 11400000, guid: 81026825805341b5a1524cfdf078ce52, type: 2}
   _onClaimAdsRewardEvent: {fileID: 11400000, guid: 93f14c42ac044d14bde7bfef242277a6, type: 2}
   _onClaimDailyRewardEvent: {fileID: 11400000, guid: 4ca717cacee34dbcab2ff93c416dd4f1, type: 2}
+  _onClaimWeeklyRewardEvent: {fileID: 11400000, guid: e7f21a48c9014b28a472910cbe6a11e8, type: 2}
   _onBuyRemoveEvent: {fileID: 11400000, guid: a1ade6841fcd4a78a25fbbad25d96021, type: 2}
   _onBuyUndoEvent: {fileID: 11400000, guid: 37600035e2dd49a9a5f52cfa2aa694f2, type: 2}
   _onBuyMoreMovesEvent: {fileID: 11400000, guid: b81ee51a78b247459e414b6924c09e1c, type: 2}
@@ -883,7 +885,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 118197602}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -943,7 +945,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: 4990bfa6a9efa8b4ea10951b55c4eeb4, type: 2}
   delay: 0
@@ -1050,7 +1052,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 138342408}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -1136,7 +1138,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: 93f14c42ac044d14bde7bfef242277a6, type: 2}
   - {fileID: 11400000, guid: 8020bbfaf8f351a4a894e01353e2b910, type: 2}
@@ -1155,8 +1157,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a5855abad3043e468821d1c7ab9ff97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyFlyAnimation
+  alwaysOnTop: 1
+  overlaySortingOrder: 32767
   coinSprite: {fileID: 7675826601332790545, guid: a0101473690b67b4e88b869f2b1389cf, type: 3}
-  coinSize: {x: 35, y: 35}
+  coinSize: {x: 50, y: 50}
   container: {fileID: 290189615}
   defaultTarget: {fileID: 1837397190}
   coinCount: 15
@@ -2281,23 +2285,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.UI.WeeklyLogin
   amountTexts:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 2017897835}
+  - {fileID: 990824426}
+  - {fileID: 2066715936}
+  - {fileID: 201391061}
+  - {fileID: 2057959976}
+  - {fileID: 248910491}
+  - {fileID: 1200077946}
   typeImg:
+  - {fileID: 745961468}
+  - {fileID: 236374533}
+  - {fileID: 937146798}
+  - {fileID: 260924852}
+  - {fileID: 2072861817}
+  - {fileID: 1721741007}
   - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  goldSprite: {fileID: 0}
-  gemSprite: {fileID: 0}
+  goldSprite: {fileID: 7675826601332790545, guid: a0101473690b67b4e88b869f2b1389cf, type: 3}
+  gemSprite: {fileID: -8707133783163546048, guid: 8ee19c190964e794885b57877b548319, type: 3}
+  claimedMarks: []
+  claimButton: {fileID: 668022242}
+  claimButtonSwap: {fileID: 668022248}
 --- !u!1 &284943824
 GameObject:
   m_ObjectHideFlags: 0
@@ -2769,7 +2776,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 364031355}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -2843,7 +2850,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: d3f68d42fd245e0458e996461f1c99e5, type: 2}
   delay: 0.25
@@ -3062,6 +3069,143 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 400352112}
+  m_CullTransparentMesh: 1
+--- !u!1 &431506410
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 431506411}
+  - component: {fileID: 431506413}
+  - component: {fileID: 431506412}
+  m_Layer: 5
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &431506411
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 431506410}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1735762119}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 200, y: 75}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &431506412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 431506410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: Retry
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 81e60fa4276af5b49818bc4d51945840, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 3f681791284649a4f81af5767d6c9816, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 36
+  m_fontSizeBase: 36
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &431506413
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 431506410}
   m_CullTransparentMesh: 1
 --- !u!1 &444186231
 GameObject:
@@ -3345,7 +3489,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: 7c2b62909bb3c1342b5413fccd3018a3, type: 2}
   delay: 0
@@ -3422,7 +3566,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 465519257}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -5223,6 +5367,10 @@ GameObject:
   - component: {fileID: 668022244}
   - component: {fileID: 668022243}
   - component: {fileID: 668022242}
+  - component: {fileID: 668022245}
+  - component: {fileID: 668022247}
+  - component: {fileID: 668022246}
+  - component: {fileID: 668022248}
   m_Layer: 5
   m_Name: ClaimButton
   m_TagString: Untagged
@@ -5246,7 +5394,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0, y: -300}
+  m_AnchoredPosition: {x: -0, y: -296}
   m_SizeDelta: {x: 118.5757, y: 50.8743}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &668022242
@@ -5292,7 +5440,43 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 668022243}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 668022245}
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
+        m_MethodName: RaiseAll
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 668022247}
+        m_TargetAssemblyTypeName: Game.View.Effect.ButtonPunchShake, Game.View
+        m_MethodName: OnButtonPressed
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 668022246}
+        m_TargetAssemblyTypeName: Game.View.Effect.CurrencyFlyAnimation, Game.View
+        m_MethodName: PlayFromTransform
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 668022241}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Transform, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &668022243
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5331,6 +5515,81 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 668022240}
   m_CullTransparentMesh: 1
+--- !u!114 &668022245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668022240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
+  eventChannels:
+  - {fileID: 11400000, guid: e7f21a48c9014b28a472910cbe6a11e8, type: 2}
+  delay: 0
+  isPressedOnce: 0
+  button: {fileID: 668022242}
+--- !u!114 &668022246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668022240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a5855abad3043e468821d1c7ab9ff97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyFlyAnimation
+  alwaysOnTop: 1
+  overlaySortingOrder: 32767
+  coinSprite: {fileID: 7675826601332790545, guid: a0101473690b67b4e88b869f2b1389cf, type: 3}
+  coinSize: {x: 50, y: 50}
+  container: {fileID: 1850756255}
+  defaultTarget: {fileID: 1837397190}
+  coinCount: 15
+  burstRadius: 160
+  burstDuration: 0.4
+  burstEase: 0
+  startFlyDelay: 0.08
+  flyDuration: 0.5
+  staggerInterval: 0.075
+  flyEase: 0
+  targetPunchScale: 0.2
+  targetPunchDuration: 0.15
+--- !u!114 &668022247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668022240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 254a7c99ef797914abedd1f3b0fbb71b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Effect.ButtonPunchShake
+  duration: 0.25
+  punchStrength: {x: -0.2, y: -0.2, z: -0.2}
+--- !u!114 &668022248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668022240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e86e90199546314782adc359a54db5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonSpriteSwap
+  enableSprite: {fileID: 4196436813206537823, guid: 71c3d2b17340492469c23c06113f0885, type: 3}
+  disableSprite: {fileID: -2015178674393205678, guid: 08855c16151e9d44d8b46f728851318a, type: 3}
+  button: {fileID: 668022242}
+  targetImage: {fileID: 668022243}
 --- !u!1 &670153918
 GameObject:
   m_ObjectHideFlags: 0
@@ -6291,7 +6550,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 783486710}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -6351,12 +6610,49 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: 09b229e9ff738ff4385a096a12b682f7, type: 2}
   delay: 0
   isPressedOnce: 1
   button: {fileID: 0}
+--- !u!1 &785531199
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 785531200}
+  m_Layer: 5
+  m_Name: Navigation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &785531200
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 785531199}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 874647979}
+  - {fileID: 1735762119}
+  m_Father: {fileID: 1963032962}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &788058377
 GameObject:
   m_ObjectHideFlags: 0
@@ -7491,6 +7787,184 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 850467086}
   m_CullTransparentMesh: 1
+--- !u!1 &874647978
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 874647979}
+  - component: {fileID: 874647982}
+  - component: {fileID: 874647981}
+  - component: {fileID: 874647980}
+  - component: {fileID: 874647983}
+  - component: {fileID: 874647984}
+  m_Layer: 5
+  m_Name: HomeButton
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &874647979
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 874647978}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1331597711}
+  m_Father: {fileID: 785531200}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -535}
+  m_SizeDelta: {x: 245.1971, y: 110.9925}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &874647980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 874647978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 874647981}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 874647983}
+        m_TargetAssemblyTypeName: Game.View.Effect.ButtonPunchShake, Game.View
+        m_MethodName: OnButtonPressed
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 874647984}
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
+        m_MethodName: RaiseAll
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &874647981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 874647978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 1983643713223007818, guid: 54a16c8b22be40247a465d3dcd3da0e2, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &874647982
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 874647978}
+  m_CullTransparentMesh: 1
+--- !u!114 &874647983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 874647978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 254a7c99ef797914abedd1f3b0fbb71b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Effect.ButtonPunchShake
+  duration: 0.25
+  punchStrength: {x: -0.2, y: -0.2, z: -0.2}
+--- !u!114 &874647984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 874647978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
+  eventChannels:
+  - {fileID: 11400000, guid: 09b229e9ff738ff4385a096a12b682f7, type: 2}
+  delay: 0.25
+  isPressedOnce: 1
+  button: {fileID: 0}
 --- !u!1 &898071667
 GameObject:
   m_ObjectHideFlags: 0
@@ -8599,7 +9073,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 1064699231}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -8685,7 +9159,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: 81026825805341b5a1524cfdf078ce52, type: 2}
   - {fileID: 11400000, guid: 8020bbfaf8f351a4a894e01353e2b910, type: 2}
@@ -8704,8 +9178,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a5855abad3043e468821d1c7ab9ff97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyFlyAnimation
+  alwaysOnTop: 1
+  overlaySortingOrder: 32767
   coinSprite: {fileID: 7675826601332790545, guid: a0101473690b67b4e88b869f2b1389cf, type: 3}
-  coinSize: {x: 35, y: 35}
+  coinSize: {x: 50, y: 50}
   container: {fileID: 290189615}
   defaultTarget: {fileID: 1837397190}
   coinCount: 10
@@ -8736,7 +9212,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1068739139
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10074,6 +10550,7 @@ GameObject:
   - component: {fileID: 1247947803}
   - component: {fileID: 1247947802}
   - component: {fileID: 1247947801}
+  - component: {fileID: 1247947805}
   m_Layer: 5
   m_Name: IgnoreButton
   m_TagString: Untagged
@@ -10170,6 +10647,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1247947805}
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
+        m_MethodName: RaiseAll
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1247947803
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10208,6 +10697,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1247947799}
   m_CullTransparentMesh: 1
+--- !u!114 &1247947805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1247947799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
+  eventChannels:
+  - {fileID: 11400000, guid: 8020bbfaf8f351a4a894e01353e2b910, type: 2}
+  delay: 0
+  isPressedOnce: 1
+  button: {fileID: 0}
 --- !u!1 &1258944088
 GameObject:
   m_ObjectHideFlags: 0
@@ -10241,9 +10747,9 @@ RectTransform:
   - {fileID: 1638260819}
   m_Father: {fileID: 1160875112}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 395.1015, y: -81}
   m_SizeDelta: {x: 70, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1258944090
@@ -10359,6 +10865,143 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1291116249}
   m_CullTransparentMesh: 1
+--- !u!1 &1331597710
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1331597711}
+  - component: {fileID: 1331597713}
+  - component: {fileID: 1331597712}
+  m_Layer: 5
+  m_Name: Text (TMP)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1331597711
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1331597710}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 874647979}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.000061035156, y: 0.000061035156}
+  m_SizeDelta: {x: 200, y: 75}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1331597712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1331597710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: Home
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 81e60fa4276af5b49818bc4d51945840, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 3f681791284649a4f81af5767d6c9816, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 36
+  m_fontSizeBase: 36
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1331597713
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1331597710}
+  m_CullTransparentMesh: 1
 --- !u!1 &1339047564
 GameObject:
   m_ObjectHideFlags: 0
@@ -10457,7 +11100,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 1339047570}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -10531,7 +11174,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: 47cb6e655a6896b4e9f986a7e6013db4, type: 2}
   delay: 0.25
@@ -11404,7 +12047,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 1546119240}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -11478,7 +12121,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: 09b229e9ff738ff4385a096a12b682f7, type: 2}
   delay: 0.25
@@ -12376,7 +13019,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: a56cff54178e8a64e987c35afe95c608, type: 2}
   delay: 0
@@ -12427,7 +13070,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1643909424}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -12727,6 +13370,184 @@ RectTransform:
   m_AnchoredPosition: {x: -190, y: -180}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1735762118
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1735762119}
+  - component: {fileID: 1735762124}
+  - component: {fileID: 1735762123}
+  - component: {fileID: 1735762122}
+  - component: {fileID: 1735762121}
+  - component: {fileID: 1735762120}
+  m_Layer: 5
+  m_Name: RetryButton
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1735762119
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735762118}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 431506411}
+  m_Father: {fileID: 785531200}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.000061035156, y: -400}
+  m_SizeDelta: {x: 245.1971, y: 110.9925}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1735762120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735762118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
+  eventChannels:
+  - {fileID: 11400000, guid: 4990bfa6a9efa8b4ea10951b55c4eeb4, type: 2}
+  delay: 0.25
+  isPressedOnce: 1
+  button: {fileID: 0}
+--- !u!114 &1735762121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735762118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 254a7c99ef797914abedd1f3b0fbb71b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Effect.ButtonPunchShake
+  duration: 0.25
+  punchStrength: {x: -0.2, y: -0.2, z: -0.2}
+--- !u!114 &1735762122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735762118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1735762123}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1735762121}
+        m_TargetAssemblyTypeName: Game.View.Effect.ButtonPunchShake, Game.View
+        m_MethodName: OnButtonPressed
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1735762120}
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
+        m_MethodName: RaiseAll
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &1735762123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735762118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 1983643713223007818, guid: 54a16c8b22be40247a465d3dcd3da0e2, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1735762124
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735762118}
+  m_CullTransparentMesh: 1
 --- !u!1 &1740132132
 GameObject:
   m_ObjectHideFlags: 0
@@ -12881,7 +13702,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1742598925
 RectTransform:
   m_ObjectHideFlags: 0
@@ -12951,6 +13772,10 @@ GameObject:
   - component: {fileID: 1819088845}
   - component: {fileID: 1819088844}
   - component: {fileID: 1819088843}
+  - component: {fileID: 1819088846}
+  - component: {fileID: 1819088847}
+  - component: {fileID: 1819088848}
+  - component: {fileID: 1819088849}
   m_Layer: 5
   m_Name: ClaimButton
   m_TagString: Untagged
@@ -13020,7 +13845,43 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1819088844}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1819088846}
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
+        m_MethodName: RaiseAll
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1819088847}
+        m_TargetAssemblyTypeName: Game.View.Effect.CurrencyFlyAnimation, Game.View
+        m_MethodName: PlayFromTransform
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 1819088842}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Transform, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1819088848}
+        m_TargetAssemblyTypeName: Game.View.Effect.ButtonPunchShake, Game.View
+        m_MethodName: OnButtonPressed
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1819088844
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13059,6 +13920,81 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1819088841}
   m_CullTransparentMesh: 1
+--- !u!114 &1819088846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819088841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
+  eventChannels:
+  - {fileID: 11400000, guid: 4ca717cacee34dbcab2ff93c416dd4f1, type: 2}
+  delay: 0
+  isPressedOnce: 0
+  button: {fileID: 1819088843}
+--- !u!114 &1819088847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819088841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a5855abad3043e468821d1c7ab9ff97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyFlyAnimation
+  alwaysOnTop: 1
+  overlaySortingOrder: 32767
+  coinSprite: {fileID: 7675826601332790545, guid: a0101473690b67b4e88b869f2b1389cf, type: 3}
+  coinSize: {x: 50, y: 50}
+  container: {fileID: 1850756255}
+  defaultTarget: {fileID: 1837397190}
+  coinCount: 15
+  burstRadius: 160
+  burstDuration: 0.4
+  burstEase: 0
+  startFlyDelay: 0.08
+  flyDuration: 0.5
+  staggerInterval: 0.075
+  flyEase: 0
+  targetPunchScale: 0.2
+  targetPunchDuration: 0.15
+--- !u!114 &1819088848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819088841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 254a7c99ef797914abedd1f3b0fbb71b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Effect.ButtonPunchShake
+  duration: 0.25
+  punchStrength: {x: -0.2, y: -0.2, z: -0.2}
+--- !u!114 &1819088849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819088841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e86e90199546314782adc359a54db5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonSpriteSwap
+  enableSprite: {fileID: 4196436813206537823, guid: 71c3d2b17340492469c23c06113f0885, type: 3}
+  disableSprite: {fileID: -2015178674393205678, guid: 08855c16151e9d44d8b46f728851318a, type: 3}
+  button: {fileID: 1819088843}
+  targetImage: {fileID: 1819088844}
 --- !u!1 &1829293105
 GameObject:
   m_ObjectHideFlags: 0
@@ -13394,9 +14330,9 @@ RectTransform:
   - {fileID: 400352113}
   m_Father: {fileID: 1160875112}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 198.36717, y: -81}
   m_SizeDelta: {x: 70, y: 22}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1837397191
@@ -13720,7 +14656,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1860108525
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13966,7 +14902,7 @@ GameObject:
   - component: {fileID: 1890145061}
   - component: {fileID: 1890145060}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: Reward
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14469,7 +15405,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1955982518}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -14529,7 +15465,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: a56cff54178e8a64e987c35afe95c608, type: 2}
   delay: 0
@@ -14567,6 +15503,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1890145059}
+  - {fileID: 785531200}
   m_Father: {fileID: 284943828}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -14633,12 +15570,12 @@ MonoBehaviour:
   - {fileID: 665140562}
   - {fileID: 750681751}
   - {fileID: 1247947803}
-  navigation: {fileID: 0}
-  reward: {fileID: 0}
+  navigation: {fileID: 785531199}
+  reward: {fileID: 1890145058}
   revealDuration: 0.5
   revealEase: 0
   revealDelay: 0.05
-  onNavigateRequest: {fileID: 0}
+  onNavigateRequest: {fileID: 11400000, guid: 8020bbfaf8f351a4a894e01353e2b910, type: 2}
   fadeOutDuration: 0.25
   fadeOutEase: 6
   fadeInDuration: 0.25
@@ -14877,7 +15814,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 2009583722}
-        m_TargetAssemblyTypeName: Game.View.UI.ButtonEventRaiser, Game.View
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
         m_MethodName: RaiseAll
         m_Mode: 1
         m_Arguments:
@@ -14951,7 +15888,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Game.View::Game.View.UI.ButtonEventRaiser
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
   eventChannels:
   - {fileID: 11400000, guid: 7c2b62909bb3c1342b5413fccd3018a3, type: 2}
   delay: 0.2
@@ -15535,7 +16472,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2113176203
 RectTransform:
   m_ObjectHideFlags: 0
