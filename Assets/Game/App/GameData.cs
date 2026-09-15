@@ -9,6 +9,9 @@ namespace Game.App.SaveAndLoad
         public int currentRemove;
         public int currentMoreMoves;
         public int currentUndo;
+        public int currentLoginDay;
+        public bool isDailyRewardClaimed;
+        public bool isWeeklyRewardClaimed;
         public int currentSoundVolume;
         public bool isSoundMuted;
         public int currentMusicVolume;
