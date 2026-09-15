@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: aaa8af07c744c50478f416bb5a5d47fe
+guid: 43d57d40cdc3ae04e87eeb1fe73509ee
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3394445777225679721
-    second: thanh_0
+      213: 7025651857757288288
+    second: Artboard 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 360
+  spritePixelsToUnits: 256
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: thanh_0
+      name: Artboard 1_0
       rect:
         serializedVersion: 2
-        x: 1378
-        y: 1481
-        width: 525
-        height: 66
+        x: 925
+        y: 755
+        width: 1348
+        height: 1552
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 79c7327dc8184e0d0800000000000000
-      internalID: -3394445777225679721
+      spriteID: 067bf212421208160800000000000000
+      internalID: 7025651857757288288
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      thanh_0: -3394445777225679721
+      Artboard 1_0: 7025651857757288288
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
