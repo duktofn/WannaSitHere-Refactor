@@ -12,6 +12,11 @@ namespace Game.Core.Conditions
         public readonly string Description;
         public readonly string AngryDescription;
 
+        public bool IsCanSitAnywhere =>
+            Type == ConditionType.Like &&
+            Target == ConditionTarget.Food &&
+            FoodTarget == Food.Any;
+
         public ConditionRuntimeData(ConditionType type, 
                                     ConditionTarget target, 
                                     PersonTrait targetTrait, 

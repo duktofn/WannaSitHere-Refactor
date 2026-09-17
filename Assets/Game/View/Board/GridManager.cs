@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Game.Core.Board;
+using Game.Core.Booster;
 using Game.Core.Conditions;
 using Game.Core.Levels;
 using Game.Core.People;
 using Game.View.People;
 using Game.Events;
 using Game.App;
+using Game.View.VFX;
 
 namespace Game.View.Board
 {
@@ -16,6 +18,7 @@ namespace Game.View.Board
         private Grid<CellRuntimeData> _wait;
         private LevelRuntimeData _currentLevel;
         private LevelManager _levelManager;
+        private readonly Dictionary<CellRuntimeData, CellView> _cellViewMap = new();
 
         [SerializeField] private PersonMover personMoveManager;
         [SerializeField] private GameObject cellPrefabs;
@@ -27,6 +30,9 @@ namespace Game.View.Board
             Vector2Int.down
         };
         [SerializeField] private Transform gridRoot;
+
+        [Header("Visual Effects")]
+        [SerializeField] private VfxPlayer _vfxPlayer;
 
         [Header("Events")]
         [SerializeField] private VoidEventChannelSO OnWinEvent;
@@ -50,6 +56,8 @@ namespace Game.View.Board
 
         public void ClearGrids()
         {
+            _vfxPlayer?.StopAll();
+            _cellViewMap.Clear();
             if (gridRoot == null) return;
             for (int i = gridRoot.childCount - 1; i >= 0; i--)
             {
@@ -73,7 +81,10 @@ namespace Game.View.Board
                                      + GetGridWorldPos(_main);
 
                 GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity, gridRoot);
-                tmpCell.GetComponent<CellView>().BindData(c, personMoveManager);
+                CellView cellView = tmpCell.GetComponent<CellView>();
+                cellView.BindData(c, personMoveManager);
+                cellView.CurrentPersonView?.BindVfxPlayer(_vfxPlayer);
+                _cellViewMap[c] = cellView;
 
                 if (c.CurrentPerson != null)
                     CheckPersonCondition(c, c.CurrentPerson, c.OwnGrid);
@@ -96,7 +107,10 @@ namespace Game.View.Board
                                      + GetGridWorldPos(_wait);
 
                 GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity, gridRoot);
-                tmpCell.GetComponent<CellView>().BindData(c, personMoveManager);
+                CellView cellView = tmpCell.GetComponent<CellView>();
+                cellView.BindData(c, personMoveManager);
+                cellView.CurrentPersonView?.BindVfxPlayer(_vfxPlayer);
+                _cellViewMap[c] = cellView;
 
                 if (c.CurrentPerson != null)
                     CheckPersonCondition(c, c.CurrentPerson, c.OwnGrid);
@@ -135,6 +149,45 @@ namespace Game.View.Board
         public void CheckPersonCondition(CellRuntimeData containCell, PersonRuntimeData person, GridId cellGrid)
         {
             _levelManager?.CheckPersonCondition(containCell, person, cellGrid);
+        }
+
+        /// <summary>
+        /// Visually reverts a move by looking up CellViews from domain data
+        /// and delegating the animation to <see cref="PersonMover.RevertMove"/>.
+        /// </summary>
+        public void RevertMoveView(MoveRecord record)
+        {
+            if (!_cellViewMap.TryGetValue(record.SourceCell, out CellView sourceCellView)) return;
+            if (!_cellViewMap.TryGetValue(record.TargetCell, out CellView targetCellView)) return;
+
+            personMoveManager.RevertMove(sourceCellView, targetCellView);
+        }
+
+        /// <summary>
+        /// Finds the <see cref="CellView"/> associated with a given <see cref="CellRuntimeData"/>.
+        /// Returns null if not found (e.g. cell from a previous level).
+        /// </summary>
+        public CellView FindCellView(CellRuntimeData cellData)
+        {
+            if (cellData == null) return null;
+            _cellViewMap.TryGetValue(cellData, out CellView view);
+            return view;
+        }
+
+        /// <summary>
+        /// Finds the current view for a person regardless of which grid cell contains them.
+        /// </summary>
+        public PersonView FindPersonView(PersonRuntimeData person)
+        {
+            if (person == null) return null;
+
+            foreach (KeyValuePair<CellRuntimeData, CellView> pair in _cellViewMap)
+            {
+                if (pair.Key?.CurrentPerson == person)
+                    return pair.Value?.CurrentPersonView;
+            }
+
+            return null;
         }
     }
 }
