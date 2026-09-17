@@ -313,4 +313,116 @@ Prefer solving the actual problem over maximizing abstraction.
 
 After modifying code, perform verification appropriate to the change when tooling is available.
 
-This may incl
+This may include:
+
+* compilation;
+* tests;
+* static analysis;
+* relevant project validation;
+* inspection of affected call sites.
+
+Do not claim a test or validation was performed unless it was actually performed.
+
+If verification cannot be performed, state that clearly.
+
+---
+
+# 12. Git Commits
+
+When creating, modifying, or preparing a Git commit, use the `commit-convention` skill.
+
+A commit should represent one logical change.
+
+Do not include unrelated modifications in the same commit.
+
+When an architectural decision is relevant to a commit, reference its decision ID when useful.
+
+Do not create a commit unless the user explicitly asks for one or the active workflow explicitly requires it.
+
+---
+
+# 13. Skill Usage
+
+Skills contain specialized procedures.
+
+Use a skill when the current task falls within its responsibility.
+
+Current core skills include:
+
+```text
+codebase
+decision-log
+commit-convention
+```
+
+Global repository behavior belongs in `AGENTS.md`.
+
+Detailed task-specific procedures belong in skills.
+
+Avoid duplicating full skill instructions inside this file.
+
+---
+
+# 14. Context Efficiency
+
+Do not load context indiscriminately.
+
+Prefer the smallest amount of information required to correctly perform the task.
+
+Use:
+
+```text
+high-level context
+→ subsystem context
+→ relevant classes
+→ relevant implementation
+```
+
+rather than:
+
+```text
+scan entire repository
+→ reconstruct everything
+→ begin task
+```
+
+When existing repository context is stale or insufficient, inspect the source as needed.
+
+Accuracy takes precedence over context efficiency.
+
+---
+
+# 15. Communication
+
+Keep responses focused on the user's actual request.
+
+When the user asks a question:
+
+> Answer the question.
+
+When the user asks for analysis:
+
+> Analyze and explain.
+
+When the user asks for implementation:
+
+> Implement the requested change.
+
+Do not turn an informational request into an implementation task.
+
+Do not modify code merely because a possible improvement was identified during discussion.
+
+---
+
+# 16. Core Rules
+
+The following rules take precedence during normal repository work:
+
+1. **Questions require answers, not code changes.**
+2. **Code is modified only when implementation is explicitly requested.**
+3. **Source code is the ultimate source of truth.**
+4. **Understand relevant context before making changes.**
+5. **Keep repository context synchronized with meaningful code changes.**
+6. **Preserve important technical reasoning through the decision log.**
+7. **Do not expand the scope beyond the requested task without a concrete reason.**
+8. **Use specialized skills for their respective procedures.**
