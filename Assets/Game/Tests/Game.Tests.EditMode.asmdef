@@ -2,9 +2,7 @@
     "name": "Game.Tests.EditMode",
     "rootNamespace": "Game.Tests.EditMode",
     "references": [
-        "Game.Core",
-        "Game.App",
-        "Game.Events"
+        "Game.Core"
     ],
     "includePlatforms": [
         "Editor"

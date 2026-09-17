@@ -10,9 +10,6 @@ namespace Game.Core.Conditions
             if (condition == null)
                 return true;
 
-            if (condition.IsCanSitAnywhere)
-                return true;
-
             if (adjacent == null)
                 return condition.Type == ConditionType.Hate;
 

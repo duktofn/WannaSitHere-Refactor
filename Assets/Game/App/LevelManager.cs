@@ -3,7 +3,6 @@ using UnityEngine;
 using Game.Core.Levels;
 using Game.Core.Conditions;
 using Game.Core.Board;
-using Game.Core.Booster;
 using Game.Core.People;
 using Game.Events;
 
@@ -13,13 +12,11 @@ namespace Game.App
     {
         private readonly LevelRuntimeData _currentLevel;
         private readonly LevelConditionEvaluator _conditionEvaluator;
-        private readonly MoveHistory _moveHistory;
         private readonly VoidEventChannelSO _onWinEvent;
         private readonly VoidEventChannelSO _onLoseEvent;
 
         public LevelRuntimeData CurrentLevel => _currentLevel;
         public LevelConditionEvaluator ConditionEvaluator => _conditionEvaluator;
-        public MoveHistory MoveHistory => _moveHistory;
 
         public LevelManager(
             LevelRuntimeData currentLevel,
@@ -29,7 +26,6 @@ namespace Game.App
         {
             _currentLevel = currentLevel;
             _conditionEvaluator = new LevelConditionEvaluator(adjacentOffsets);
-            _moveHistory = new MoveHistory();
             _onWinEvent = onWinEvent;
             _onLoseEvent = onLoseEvent;
         }
@@ -61,16 +57,6 @@ namespace Game.App
 
             targetCell.SetPerson(person);
             sourceCell?.SetPerson(targetPerson);
-
-            // Record the move for undo (skip only internal WaitLine-to-WaitLine moves)
-            bool isWaitLineToWaitLine = sourceCell != null &&
-                                        sourceCell.OwnGrid == GridId.WaitGrid &&
-                                        targetCell.OwnGrid == GridId.WaitGrid;
-
-            if (sourceCell != null && !isWaitLineToWaitLine)
-            {
-                _moveHistory.Record(new MoveRecord(sourceCell, targetCell, person, targetPerson));
-            }
 
             // Consume one move after a successful move operation.
             _currentLevel.ModifyMove(-1);

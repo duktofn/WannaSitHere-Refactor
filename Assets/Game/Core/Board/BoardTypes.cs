@@ -3,8 +3,7 @@ namespace Game.Core.Board
     public enum Food
     {
         Hamburger = 0,
-        FrenchFries = 1,
-        Any = 2
+        FrenchFries = 1
     }
 
     public enum CellType

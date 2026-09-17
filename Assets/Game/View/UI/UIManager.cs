@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using Game.Events;
 using Game.Core.Economy;
-using Game.View.VFX;
 using TMPro;
 using Cysharp.Threading.Tasks;
 
@@ -25,9 +24,6 @@ namespace Game.View.UI
         [SerializeField] private GameObject mainSettingPanel;
         [SerializeField] private GameObject gameSettingPanel;
 
-        [Header("Visual Effects")]
-        [SerializeField] private VfxPlayer _vfxPlayer;
-
         [Header("Game Events")]
         [SerializeField] private VoidEventChannelSO OnPlayGameEvent;
         [SerializeField] private VoidEventChannelSO OnWinEvent;
@@ -37,15 +33,11 @@ namespace Game.View.UI
         [SerializeField] private VoidEventChannelSO OnSettingShow;
         [SerializeField] private VoidEventChannelSO OnSettingHide;
         [SerializeField] private VoidEventChannelSO OnBackToHome;
-        [SerializeField] private IntEventChannelSO onLevelChangedEvent;
 
         [Header("UI Components")]
         [SerializeField] private InventoryView inventoryView;
-        [SerializeField] private TextMeshProUGUI levelText;
-        [SerializeField] private RectTransform winVFXAnchor;
 
         private readonly EventListener _listener = new();
-        private int _currentLevel = 1;
 
         private void OnEnable()
         {
@@ -57,7 +49,6 @@ namespace Game.View.UI
             _listener.Listen(OnSettingShow, ShowSetting);
             _listener.Listen(OnSettingHide, HideSetting);
             _listener.Listen(OnBackToHome, BackToHome);
-            _listener.Listen<int>(onLevelChangedEvent, UpdateLevelText);
         }
 
         private void OnDisable()
@@ -82,15 +73,6 @@ namespace Game.View.UI
         {
             if (inventoryView != null)
                 inventoryView.BindData(inventory);
-
-            UpdateLevelText(_currentLevel);
-        }
-
-        public void UpdateLevelText(int level)
-        {
-            _currentLevel = level;
-            if (levelText != null)
-                levelText.text = $"Level {level}";
         }
 
         private void BackToHome()
@@ -118,7 +100,6 @@ namespace Game.View.UI
 
             HideWin();
             HideLose();
-            UpdateLevelText(_currentLevel);
         }
 
         private void PlayGame()
@@ -171,7 +152,6 @@ namespace Game.View.UI
         {
             CurrencyCanvas?.SetActive(false);
             HideWin();
-            UpdateLevelText(_currentLevel);
         }
 
         private void RestartLevel()
@@ -204,9 +184,6 @@ namespace Game.View.UI
             Debug.Log("[UIManager] Win Event raised");
             levelWinPanel?.SetActive(true);
             CurrencyCanvas?.SetActive(true);
-
-            if (levelWinPanel != null)
-                _vfxPlayer?.PlayAtUI(VfxId.Win, winVFXAnchor);
         }
 
         public void ShowSetting()
@@ -244,7 +221,6 @@ namespace Game.View.UI
 
         private void HideWin()
         {
-            _vfxPlayer?.Stop(VfxId.Win);
             levelWinPanel?.SetActive(false);
         }
 
@@ -254,8 +230,3 @@ namespace Game.View.UI
         }
     }
 }
-
-// LL2Dumper
-// IESprite
-// EDRA
-// APK Tool

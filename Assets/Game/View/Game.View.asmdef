@@ -6,7 +6,6 @@
         "PrimeTween.Runtime",
         "Unity.TextMeshPro",
         "UnityEngine.UI",
-        "Coffee.UIParticle",
         "Game.Events",
         "UniTask",
         "Unity.InputSystem",
