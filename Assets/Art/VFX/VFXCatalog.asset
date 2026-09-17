@@ -24,7 +24,7 @@ MonoBehaviour:
     prewarmCount: 1
     fadeDelay: 2
     fadeDuration: 0.4
-    scaleMultiplier: 0.1
+    scaleMultiplier: 0.075
   - id: 2
     prefab: {fileID: 4938095755617958529, guid: 439613c7d8f818c4589c4214245991f6, type: 3}
     prewarmCount: 1
