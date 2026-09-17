@@ -236,6 +236,12 @@ namespace Game.View.Effect
         /// </summary>
         public async UniTask PlayAsync(Vector3 startPos, RectTransform target = null, bool isScreenPos = false, Transform sourceTransform = null)
         {
+            // Persistent UnityEvents can still target a disabled component.
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
             EnsureInitialized();
 
             RectTransform targetTransform = target != null ? target : defaultTarget;

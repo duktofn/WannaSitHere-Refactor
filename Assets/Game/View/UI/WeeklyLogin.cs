@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.Serialization;
 using TMPro;
 using Game.Core.Economy;
+using Game.View.Effect;
 
 namespace Game.View.UI
 {
@@ -27,6 +28,8 @@ namespace Game.View.UI
         [SerializeField] private GameObject[] claimedMarks;
         [SerializeField] private Button claimButton;
         [SerializeField] private ButtonSpriteSwap claimButtonSwap;
+        [SerializeField] private CurrencyFlyAnimation claimGoldCurrencyFly;
+        [SerializeField] private CurrencyFlyAnimation claimGemCurrencyFly;
 
         private Reward _dailyReward;
         private bool _hasDailyReward;
@@ -147,7 +150,18 @@ namespace Game.View.UI
             if (claimButton != null)
             {
                 bool canClaimWeekly = !_isWeeklyRewardClaimed;
+                bool isDaySeven = _currentLoginDay == 6;
                 claimButton.interactable = canClaimWeekly;
+
+                if (claimGoldCurrencyFly != null)
+                {
+                    claimGoldCurrencyFly.enabled = !isDaySeven;
+                }
+
+                if (claimGemCurrencyFly != null)
+                {
+                    claimGemCurrencyFly.enabled = isDaySeven;
+                }
 
                 if (claimButtonSwap != null)
                 {
