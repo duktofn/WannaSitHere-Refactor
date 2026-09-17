@@ -52,23 +52,37 @@ namespace Game.App
 
         public void InitializeLoginState(DateTime nowUtc)
         {
+            RefreshDailyState(nowUtc);
+        }
+
+        public bool RefreshDailyState(DateTime nowUtc)
+        {
             DateTime lastLoginUtc = DateTime.MinValue;
-            if (!string.IsNullOrEmpty(_gameData.lastLoginDateUtc) &&
+            DateTime parsedDate = DateTime.MinValue;
+            bool hasValidLastLogin = !string.IsNullOrEmpty(_gameData.lastLoginDateUtc) &&
                 DateTime.TryParse(
                     _gameData.lastLoginDateUtc,
                     null,
                     System.Globalization.DateTimeStyles.RoundtripKind,
-                    out DateTime parsedDate))
+                    out parsedDate);
+
+            if (hasValidLastLogin)
             {
                 lastLoginUtc = parsedDate;
             }
 
-            bool isNewDay = _economyManager.EvaluateLoginState(lastLoginUtc, nowUtc);
-            if (isNewDay || string.IsNullOrEmpty(_gameData.lastLoginDateUtc))
+            bool isNewDay = hasValidLastLogin && _economyManager.EvaluateLoginState(lastLoginUtc, nowUtc);
+            if (isNewDay || !hasValidLastLogin)
             {
+                if (!hasValidLastLogin)
+                    _economyManager.ResetShopPurchases();
+
                 _gameData.lastLoginDateUtc = nowUtc.ToString("o");
                 SaveGame();
+                return true;
             }
+
+            return false;
         }
 
         public void SetLevel(int level)

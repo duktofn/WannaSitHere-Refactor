@@ -43,7 +43,7 @@ MonoBehaviour:
     amount: 100
   - type: 0
     amount: 100
-  goldShopLimit: 050000000500000005000000
+  goldShopLimit: 030000000300000003000000
   gemShopPrice:
   - type: 1
     amount: 50

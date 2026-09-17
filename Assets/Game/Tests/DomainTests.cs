@@ -233,6 +233,30 @@ namespace Game.Tests.EditMode
         }
 
         [Test]
+        public void EconomyManager_EvaluateLoginState_NewCalendarDayResetsGoldShopCounts()
+        {
+            var inv = new Game.Core.Economy.Inventory(0, 0, 0, 0, 0);
+            var eco = new Game.Core.Economy.EconomyManager(
+                inv,
+                2,
+                true,
+                true,
+                new int[] { 5, 5, 5 },
+                new int[] { 5, 3, 1 }
+            );
+
+            bool changed = eco.EvaluateLoginState(
+                new System.DateTime(2026, 9, 16, 23, 59, 0, System.DateTimeKind.Utc),
+                new System.DateTime(2026, 9, 17, 0, 1, 0, System.DateTimeKind.Utc)
+            );
+
+            Assert.IsTrue(changed);
+            Assert.AreEqual(0, eco.GetGoldShopPurchaseCount(0));
+            Assert.AreEqual(0, eco.GetGoldShopPurchaseCount(1));
+            Assert.AreEqual(0, eco.GetGoldShopPurchaseCount(2));
+        }
+
+        [Test]
         public void EconomyManager_ResetLoginStreak_SetsDayZeroAndResetsAll()
         {
             var inv = new Game.Core.Economy.Inventory(0, 0, 0, 0, 0);

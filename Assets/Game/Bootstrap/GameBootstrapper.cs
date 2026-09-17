@@ -38,6 +38,7 @@ namespace Game.Bootstrap
         [SerializeField] private GridManager _gridManager;
         [SerializeField] private LevelView _levelView;
         [SerializeField] private WeeklyLogin _weeklyLogin;
+        [SerializeField] private ShopPanelView _shopPanel;
 
         [Header("Visual Effects")]
         [SerializeField] private VfxPlayer _vfxPlayer;
@@ -73,6 +74,7 @@ namespace Game.Bootstrap
         private readonly EventListener _listener = new();
         private GameManager _gameManager;
         private LevelBootstrapper _levelBootstrapper;
+        private DateTime _lastDailyCheckDateUtc = DateTime.MinValue;
 
         public Inventory Inventory => _gameManager?.Inventory;
         public EconomyManager EconomyManager => _gameManager?.EconomyManager;
@@ -129,21 +131,24 @@ namespace Game.Bootstrap
 
         public void UpdateWeeklyLoginUI()
         {
-            if (_weeklyLogin == null || _economyConfig == null || _economyConfig.weeklyReward == null || EconomyManager == null)
-                return;
+            if (_weeklyLogin != null && _economyConfig != null && _economyConfig.weeklyReward != null && EconomyManager != null)
+            {
+                _weeklyLogin.SetRewardData(
+                    _economyConfig.weeklyReward.ToList(),
+                    EconomyManager.CurrentLoginDay,
+                    EconomyManager.IsWeeklyRewardClaimed,
+                    _economyConfig.dailyReward,
+                    EconomyManager.IsDailyRewardClaimed
+                );
+            }
 
-            _weeklyLogin.SetRewardData(
-                _economyConfig.weeklyReward.ToList(),
-                EconomyManager.CurrentLoginDay,
-                EconomyManager.IsWeeklyRewardClaimed,
-                _economyConfig.dailyReward,
-                EconomyManager.IsDailyRewardClaimed
-            );
+            _shopPanel?.Refresh();
         }
 
         public void SaveGame()
         {
             _gameManager?.SaveGame();
+            _shopPanel?.Refresh();
         }
 
         private void Awake()
@@ -152,12 +157,27 @@ namespace Game.Bootstrap
                 ? _economyConfig.goldShopLimit
                 : new[] { 5, 5, 5 };
 
+            DateTime nowUtc = DateTime.UtcNow;
             _gameManager = new GameManager(goldShopLimits);
-            _gameManager.InitializeLoginState(DateTime.UtcNow);
+            _gameManager.InitializeLoginState(nowUtc);
+            _lastDailyCheckDateUtc = nowUtc.Date;
             _levelBootstrapper = new LevelBootstrapper(_levelData, _gridManager, _levelView);
+            _shopPanel = ResolveShopPanel();
 
             _uiManager?.Initialize(Inventory);
+            _shopPanel?.Bind(
+                _economyConfig?.goldShopPrice,
+                _economyConfig?.goldShopLimit,
+                _economyConfig?.gemShopPrice,
+                EconomyManager,
+                HandleShopPurchase
+            );
             UpdateWeeklyLoginUI();
+        }
+
+        private void Update()
+        {
+            RefreshDailyStateIfNeeded();
         }
 
         private void Start()
@@ -304,8 +324,55 @@ namespace Game.Bootstrap
             }
 
             _onItemReceive?.Raise(item);
+            _shopPanel?.Refresh();
             Debug.Log($"[GameBootstrapper] Purchased {item.amount} {item.type} for {cost.amount} {cost.type}");
             return true;
+        }
+
+        private void HandleShopPurchase(ShopPurchaseRequest request)
+        {
+            if (_economyConfig == null || request.SlotIndex < 0)
+                return;
+
+            Reward[] prices = request.UsesGold
+                ? _economyConfig.goldShopPrice
+                : _economyConfig.gemShopPrice;
+
+            if (prices == null || request.SlotIndex >= prices.Length)
+                return;
+
+            Reward item = request.ItemType switch
+            {
+                ItemType.MoreMoves => new Reward { type = ItemType.MoreMoves, amount = GameConfig.MORE_MOVE_AMOUNT },
+                ItemType.Remove => new Reward { type = ItemType.Remove, amount = 1 },
+                ItemType.Undo => new Reward { type = ItemType.Undo, amount = 1 },
+                _ => default
+            };
+
+            if (item.amount <= 0)
+                return;
+
+            TryPurchase(
+                prices[request.SlotIndex],
+                item,
+                request.UsesGold ? request.SlotIndex : -1
+            );
+        }
+
+        private ShopPanelView ResolveShopPanel()
+        {
+            if (_shopPanel != null)
+                return _shopPanel;
+
+            GameObject shopPanelObject = GameObject.Find("ShopPanel");
+            if (shopPanelObject == null)
+                return null;
+
+            ShopPanelView resolved = shopPanelObject.GetComponent<ShopPanelView>();
+            if (resolved == null)
+                resolved = shopPanelObject.AddComponent<ShopPanelView>();
+
+            return resolved;
         }
 
         private void HandleBuyRemove()
@@ -391,6 +458,26 @@ namespace Game.Bootstrap
         private void OnApplicationQuit()
         {
             SaveGame();
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus)
+                RefreshDailyStateIfNeeded();
+        }
+
+        private void RefreshDailyStateIfNeeded()
+        {
+            if (_gameManager == null)
+                return;
+
+            DateTime nowUtc = DateTime.UtcNow;
+            if (_lastDailyCheckDateUtc.Date == nowUtc.Date)
+                return;
+
+            _lastDailyCheckDateUtc = nowUtc.Date;
+            if (_gameManager.RefreshDailyState(nowUtc))
+                UpdateWeeklyLoginUI();
         }
     }
 }
