@@ -1,7 +1,7 @@
 # Codebase Context
 
-Last Updated: 2026-09-16
-Last Reviewed Commit: a6509a7a397d3b241ccb469132141ad342b0bbf0
+Last Updated: 2026-09-17
+Last Reviewed Commit: d771672bb7b574980f573c10646aea23ffe9a701
 
 ---
 
@@ -173,7 +173,7 @@ Communication:
 
 Responsibility:
 
-Level gameplay coordination (`LevelManager`), persistence (`SaveLoadManager`), and save data model (`GameData`).
+Application state and game operations: level gameplay coordination (`LevelManager`), persisted progress (`GameManager`, `SaveLoadManager`, `GameData`), economy transactions, and core booster execution.
 
 Depends On:
 
@@ -186,6 +186,7 @@ Used By:
 Communication:
 
 - `LevelManager` validates moves, records history, evaluates conditions, and raises win/lose via `VoidEventChannelSO`.
+- `GameManager` owns `GameData`, `Inventory`, and `EconomyManager`; it persists successful state changes through `SaveLoadManager` without referencing authoring data or presentation components.
 - `SaveLoadManager` serializes `GameData` to `data.json` at `Application.persistentDataPath`.
 
 ---
@@ -230,7 +231,7 @@ Used By:
 
 Communication:
 
-- `GameManager` listens to 15+ ScriptableObject event channels and dispatches to domain logic, persistence, and UI.
+- `GameBootstrapper` holds all serialized Data/View/Event references, listens to 15+ ScriptableObject event channels, and delegates application state changes to `Game.App.GameManager`.
 - `LevelBootstrapper` converts `LevelDataSO` → `LevelRuntimeData` and initializes `GridManager`.
 
 ---
@@ -977,11 +978,49 @@ Serializable DTO for player progression, currencies, boosters, login state, shop
 ## GameManager
 
 Path:
-`Assets/Game/Bootstrap/GameManager.cs`
+`Assets/Game/App/GameManager.cs`
 
 Responsibility:
 
-Central MonoBehaviour runtime coordinator. Bridges views, domain models, persistence, and ScriptableObject event channels. Manages full game lifecycle: initialization, level loading, rewards, shop, boosters, and save.
+Plain C# application service that owns loaded progress, inventory, economy state, persistence, reward/shop transactions, and core booster execution. It has no `Game.Data` or `Game.View` dependency.
+
+Dependencies:
+
+- `SaveLoadManager`, `GameData`, `Inventory`, `EconomyManager`
+- `LevelManager`, `MoreMoveBooster`, `UndoBooster`, `RemoveBooster`
+- Core `Reward`, `ItemType`, `ConditionRuntimeData`, and `PersonRuntimeData`
+
+### Fields
+
+| Name | Type | Purpose |
+|---|---|---|
+| `_saveLoad` | `SaveLoadManager` | Persistence controller |
+| `_inventory` | `Inventory` | Runtime inventory |
+| `_economyManager` | `EconomyManager` | Login/shop manager |
+| `_gameData` | `GameData` | Runtime save data copy |
+
+### Key Methods
+
+| Method | Parameters | Return Type | Purpose |
+|---|---|---|---|
+| `InitializeLoginState` | `DateTime nowUtc` | `void` | Evaluates daily login state and persists a new login timestamp when required |
+| `SetLevel` | `int level` | `void` | Updates and persists the current level |
+| `GrantReward` | `Reward reward` | `void` | Applies and persists a configured reward |
+| `TryClaimDailyReward` / `TryClaimWeeklyReward` | `Reward reward` | `bool` | Claims a reward through `EconomyManager` and persists only on success |
+| `TryPurchase` | `Reward cost, Reward item, int goldShopSlotIndex = -1` | `bool` | Shop transaction via EconomyManager |
+| `TryUseMoreMoves` / `TryUseUndo` / `TryUseRemove` | `LevelManager, ...` | `bool` | Executes core booster behavior and persists the consumed inventory item |
+| `SaveGame` | — | `void` | Serializes state to GameData and persists |
+
+---
+
+## GameBootstrapper
+
+Path:
+`Assets/Game/Bootstrap/GameBootstrapper.cs`
+
+Responsibility:
+
+Scene MonoBehaviour composition root. Owns serialized authoring, scene, VFX, and event-channel references; creates `GameManager`; wires lifecycle/event handlers; and performs level/UI/VFX orchestration around application operations.
 
 Inherits / Implements:
 
@@ -989,43 +1028,21 @@ Inherits / Implements:
 
 Dependencies:
 
-- `LevelBootstrapper`, `SaveLoadManager`, `Inventory`, `EconomyManager`, `MoreMoveBooster`, `UndoBooster`, `RemoveBooster`
-- `UIManager`, `GridManager`, `LevelView`, `WeeklyLogin`
-- `VfxPlayer`
+- `GameManager`, `LevelBootstrapper`, `EventListener`
 - `EconomyConfigSO`, `ConditionDataSO`, `LevelDataSO`, `GameConfig`
-- 15+ `VoidEventChannelSO`, `IntEventChannelSO`, `OnItemReceiveSO`, `OnItemSpendSO`
-
-### Fields
-
-| Name | Type | Purpose |
-|---|---|---|
-| `_levelData` | `List<LevelDataSO>` | Ordered level configurations |
-| `_economyConfig` | `EconomyConfigSO` | Economy parameters |
-| `_canSitAnywhereCondition` | `ConditionDataSO` | Authoring asset converted into the Remove Booster replacement condition |
-| `_uiManager` | `UIManager` | UI root reference |
-| `_gridManager` | `GridManager` | Board view reference |
-| `_levelView` | `LevelView` | Level HUD reference |
-| `_weeklyLogin` | `WeeklyLogin` | Weekly login UI reference |
-| `_vfxPlayer` | `VfxPlayer` | Presentation VFX player used for the Remove Booster effect |
-| `_levelBootstrapper` | `LevelBootstrapper` | Level loading helper |
-| `_saveLoad` | `SaveLoadManager` | Persistence controller |
-| `_inventory` | `Inventory` | Runtime inventory |
-| `_economyManager` | `EconomyManager` | Login/shop manager |
-| `_gameData` | `GameData` | Runtime save data copy |
-| `_listener` | `EventListener` | Channel subscription tracker |
+- `UIManager`, `GridManager`, `LevelView`, `WeeklyLogin`, `VfxPlayer`
+- Game-flow, reward, shop, booster, and economy-feedback channels
 
 ### Key Methods
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
-| `Awake` | — | `void` | Loads save, creates Inventory/EconomyManager, initializes UI |
-| `HandlePlayGame` | — | `void` | Loads level, binds boosters |
-| `HandleWin` | — | `void` | Increments level, saves |
-| `HandleUseMoreMoves` | — | `void` | Creates and executes MoreMoveBooster |
-| `HandleUseUndo` | — | `void` | Creates UndoBooster, reverts view, rechecks conditions |
-| `HandleUseRemove` | — | `void` | Creates RemoveBooster, plays VFX at the selected PersonView, rechecks conditions |
-| `TryPurchase` | `Reward cost, Reward item, int goldShopSlotIndex = -1` | `bool` | Shop transaction via EconomyManager |
-| `SaveGame` | — | `void` | Serializes state to GameData and persists |
+| `Awake` | — | `void` | Converts authoring limits into application input, creates `GameManager`, initializes presentation, and creates `LevelBootstrapper` |
+| `OnEnable` / `OnDisable` | — | `void` | Binds and unbinds all event-channel callbacks |
+| `HandlePlayGame` | — | `void` | Loads the active level and binds the in-game booster HUD |
+| `HandleUseUndo` | — | `void` | Delegates undo to `GameManager`, then performs the view revert and condition refresh |
+| `HandleUseRemove` | — | `void` | Converts `CanSitAnywhere` data, delegates condition replacement, then plays presentation VFX and refreshes conditions |
+| `UpdateWeeklyLoginUI` | — | `void` | Projects application economy state and authoring rewards onto `WeeklyLogin` |
 
 ---
 
@@ -1541,19 +1558,19 @@ Responsibility: Custom inspector providing a visual 2D matrix editor for `LevelD
 
 ## App Start & Initialization
 
-`GameManager.Awake()`
-→ `SaveLoadManager.GetGameData()` loads `GameData` from disk
-→ Creates `Inventory` from saved balances
-→ Creates `EconomyManager` with saved state
-→ `EconomyManager.EvaluateLoginState()` resets daily claims if new day
-→ `UIManager.Initialize(_inventory)` → `InventoryView.BindData()`
-→ Updates `WeeklyLogin` UI
-→ Creates `LevelBootstrapper`
+`GameBootstrapper.Awake()`
+→ creates `GameManager`
+  → `SaveLoadManager.GetGameData()` loads `GameData` from disk
+  → creates `Inventory` and `EconomyManager` from saved state
+  → `GameManager.InitializeLoginState(DateTime.UtcNow)` updates daily state and persists when needed
+→ creates `LevelBootstrapper`
+→ `UIManager.Initialize(Inventory)` → `InventoryView.BindData()`
+→ updates `WeeklyLogin` UI
 
-`GameManager.OnEnable()`
+`GameBootstrapper.OnEnable()`
 → Registers 15+ event channel listeners via `_listener`
 
-`GameManager.Start()`
+`GameBootstrapper.Start()`
 → Raises `_onLevelChangedEvent` with initial level
 
 ---
@@ -1564,7 +1581,7 @@ User taps Play button
 → `ButtonPunchShake.OnButtonPressed()` (visual only)
 → `ButtonEventRaiser.RaiseAll()` waits delay → raises `OnPlayGameEvent`
 → `UIManager.PlayGame()` transitions MainMenu → InGame
-→ `GameManager.HandlePlayGame()`
+→ `GameBootstrapper.HandlePlayGame()`
   → `LevelBootstrapper.LoadLevel(currentLevel)`
     → `LevelDataSO.ToRuntimeData()` → `LevelRuntimeData`
     → `GridManager.ClearGrids()`
@@ -1602,20 +1619,19 @@ User drags `PersonView`
 
 User taps Undo slot
 → `BoosterSlotView.OnClick()` raises `_onUseUndoEvent`
-→ `GameManager.HandleUseUndo()`
-  → Checks level active, moves remaining, inventory ≥ 1
-  → Creates `UndoBooster(moveHistory, levelData)`
+→ `GameBootstrapper.HandleUseUndo()`
+  → `GameManager.TryUseUndo(levelManager, out record)` checks active level, inventory, and executes core undo
   → `UndoBooster.TryUse()`
     → Pops `MoveRecord`, restores cells, refunds move
   → `GridManager.RevertMoveView(record)` → `PersonMover.RevertMove()` (tween animation)
   → `LevelManager.CheckAllPersonConditions()`
-  → `Inventory.TrySpendItem(Undo, 1)`
-  → `SaveGame()`
+  → `GameManager.SaveGame()` persists the spent Undo item
 
 ## Remove Booster VFX
 
 `BoosterSlotView.OnClick()` raises `_onUseRemoveEvent`
-→ `GameManager.HandleUseRemove()` converts `_canSitAnywhereCondition` and executes `RemoveBooster`
+→ `GameBootstrapper.HandleUseRemove()` converts `_canSitAnywhereCondition`
+→ `GameManager.TryUseRemove()` executes `RemoveBooster` and persists the spent item
 → `RemoveBooster` skips persons already carrying `CanSitAnywhere`
 → selected person receives a single `CanSitAnywhere` condition
 → `GridManager.FindPersonView(TargetPerson)` resolves the selected presentation object
@@ -1631,14 +1647,13 @@ User taps Undo slot
 → `UIManager.ShowWin()` activates `levelWinPanel`
 → `VfxPlayer.PlayAtUI(Win, levelWinPanel RectTransform)` places Win VFX at its center
 → `LevelEndPanel` reveals graphics sequentially
-→ `GameManager.HandleWin()` increments level, saves
+→ `GameBootstrapper.HandleWin()` → `GameManager.AdvanceLevel()` increments level and saves
 
 User taps claim reward
 → `ButtonEventRaiser` raises `OnClaimWinRewardEvent`
-→ `GameManager.HandleClaimWinReward()`
-  → Gets reward from `EconomyConfigSO.levelWinReward`
-  → `Inventory.UpdateInventory(reward)` → `OnInventoryUpdate` → `InventoryView` animates
-  → Raises `_onItemReceive` with reward
+→ `GameBootstrapper.HandleClaimWinReward()` gets reward from `EconomyConfigSO.levelWinReward`
+  → `GameManager.GrantReward(reward)` → `Inventory.UpdateInventory(reward)` → `OnInventoryUpdate` → `InventoryView` animates
+  → `GameBootstrapper` raises `_onItemReceive` with reward
   → `SaveGame()`
 
 ---
@@ -1647,12 +1662,11 @@ User taps claim reward
 
 User taps buy button
 → Event channel raised (e.g. `OnBuyRemove`)
-→ `GameManager.HandleBuyRemove()`
-  → `TryPurchase(cost, item, slotIndex)`
+→ `GameBootstrapper.HandleBuyRemove()`
+  → `GameManager.TryPurchase(cost, item, slotIndex)`
     → `EconomyManager.TryPurchase()` checks daily cap and balance
-    → If success: `Inventory.TrySpendItem(cost)`, `Inventory.UpdateInventory(item)`, raises `_onItemReceive`
-    → If fail: raises `_onItemSpend` signaling failure
-    → `SaveGame()`
+    → If success: `Inventory.TrySpendItem(cost)`, `Inventory.UpdateInventory(item)`, `GameManager.SaveGame()`, then Bootstrap raises `_onItemReceive`
+    → If fail: Bootstrap raises `_onItemSpend` signaling failure
 
 ---
 
@@ -1686,6 +1700,6 @@ User taps buy button
 - `Game.View` does **not** reference `Game.Data`. Config-to-runtime conversion is done exclusively by `Game.Bootstrap`.
 - Move recording skips WaitGrid→WaitGrid moves to prevent cluttering undo history.
 - `CurrencyFlyAnimation` provides pooled coin burst-and-fly animations with `OnCoinArrived` / `OnAllCoinsArrived` events.
-- `VFXCatalog.asset` maps `RemoveBooster` to `VFX_RemoveBooster`, `Happy` to `VFX_Happy` with a 2-second delay, 0.4-second fade, and `0.01` runtime scale multiplier, and `Win` to `VFX_Win`.
+- `VFXCatalog.asset` maps `RemoveBooster`, `Happy`, and `Win` IDs to their configured prefabs; each entry owns its prewarm, fade, and scale settings.
 - `VfxPlayer` is a scene-owned presentation service; gameplay code triggers it only after successful domain operations, while `PersonView` reacts to the domain state event for Happy.
 - `UIAlphaExtensions` is a static extension class providing fluent alpha get/set and PrimeTween alpha tweening for `Graphic` and `CanvasGroup`.

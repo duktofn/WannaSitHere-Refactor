@@ -22,7 +22,7 @@ namespace Game.Editor
         private int _inputMoreMoves = 5;
         private int _inputLevel = 1;
 
-        private GameManager _cachedGameManager;
+        private GameBootstrapper _cachedGameBootstrapper;
 
         [MenuItem("Tools/Cheat Tool")]
         [MenuItem("Window/Cheat Tool")]
@@ -71,11 +71,11 @@ namespace Game.Editor
 
             if (Application.isPlaying)
             {
-                _cachedGameManager = UnityEngine.Object.FindFirstObjectByType<GameManager>();
+                _cachedGameBootstrapper = UnityEngine.Object.FindFirstObjectByType<GameBootstrapper>();
             }
             else
             {
-                _cachedGameManager = null;
+                _cachedGameBootstrapper = null;
             }
         }
 
@@ -87,13 +87,13 @@ namespace Game.Editor
             }
         }
 
-        private bool IsPlayingWithGameManager => Application.isPlaying && _cachedGameManager != null;
+        private bool IsPlayingWithGameBootstrapper => Application.isPlaying && _cachedGameBootstrapper != null;
 
         private void OnGUI()
         {
-            if (Application.isPlaying && _cachedGameManager == null)
+            if (Application.isPlaying && _cachedGameBootstrapper == null)
             {
-                _cachedGameManager = UnityEngine.Object.FindFirstObjectByType<GameManager>();
+                _cachedGameBootstrapper = UnityEngine.Object.FindFirstObjectByType<GameBootstrapper>();
             }
 
             _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos);
@@ -128,11 +128,11 @@ namespace Game.Editor
         {
             Color defaultBg = GUI.backgroundColor;
 
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
                 GUI.backgroundColor = new Color(0.3f, 0.85f, 0.4f);
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                EditorGUILayout.LabelField("MODE: PLAY MODE (Live GameManager)", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("MODE: PLAY MODE (Live GameBootstrapper)", EditorStyles.boldLabel);
                 EditorGUILayout.LabelField("Edits take effect instantly in-game, update UI, and persist to data.json.", EditorStyles.miniLabel);
                 EditorGUILayout.EndVertical();
             }
@@ -346,7 +346,7 @@ namespace Game.Editor
             EditorGUILayout.LabelField("Level Progression & Bypass", EditorStyles.boldLabel);
 
             int currentLevel = GetLevel();
-            int totalLevels = IsPlayingWithGameManager ? _cachedGameManager.TotalLevels : 0;
+            int totalLevels = IsPlayingWithGameBootstrapper ? _cachedGameBootstrapper.TotalLevels : 0;
             string levelInfo = totalLevels > 0 ? $"Current Level: {currentLevel} / {totalLevels}" : $"Current Level: {currentLevel}";
 
             EditorGUILayout.BeginHorizontal();
@@ -356,11 +356,11 @@ namespace Game.Editor
             {
                 SetLevel(_inputLevel);
             }
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
                 if (GUILayout.Button("Set & Load", GUILayout.Width(80)))
                 {
-                    _cachedGameManager.PlayLevel(_inputLevel);
+                    _cachedGameBootstrapper.PlayLevel(_inputLevel);
                 }
             }
             if (GUILayout.Button("+1", GUILayout.Width(35))) SetLevel(currentLevel + 1);
@@ -375,35 +375,35 @@ namespace Game.Editor
             EditorGUILayout.BeginHorizontal();
 
             Color defaultBg = GUI.backgroundColor;
-            GUI.enabled = IsPlayingWithGameManager;
+            GUI.enabled = IsPlayingWithGameBootstrapper;
 
             GUI.backgroundColor = new Color(0.4f, 0.9f, 0.4f);
             if (GUILayout.Button("★ Bypass Win (Trigger Win)", GUILayout.Height(26)))
             {
-                _cachedGameManager.TriggerWin();
+                _cachedGameBootstrapper.TriggerWin();
             }
 
             GUI.backgroundColor = new Color(1f, 0.5f, 0.3f);
             if (GUILayout.Button("✕ Bypass Lose (Trigger Lose)", GUILayout.Height(26)))
             {
-                _cachedGameManager.TriggerLose();
+                _cachedGameBootstrapper.TriggerLose();
             }
 
             GUI.backgroundColor = defaultBg;
             GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
 
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
                 EditorGUILayout.Space(2);
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Skip to Next Level (+1)", GUILayout.Height(22)))
                 {
-                    _cachedGameManager.PlayLevel(currentLevel + 1);
+                    _cachedGameBootstrapper.PlayLevel(currentLevel + 1);
                 }
                 if (GUILayout.Button("Restart Level", GUILayout.Height(22)))
                 {
-                    _cachedGameManager.RestartCurrentLevel();
+                    _cachedGameBootstrapper.RestartCurrentLevel();
                 }
                 EditorGUILayout.EndHorizontal();
             }
@@ -428,9 +428,9 @@ namespace Game.Editor
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Save to Disk", GUILayout.Height(24)))
             {
-                if (IsPlayingWithGameManager)
+                if (IsPlayingWithGameBootstrapper)
                 {
-                    _cachedGameManager.SaveGame();
+                    _cachedGameBootstrapper.SaveGame();
                 }
                 else
                 {
@@ -476,17 +476,17 @@ namespace Game.Editor
                         Debug.Log("[CheatTool] Deleted data.json.");
                     }
                     LoadData();
-                    if (IsPlayingWithGameManager)
+                    if (IsPlayingWithGameBootstrapper)
                     {
-                        _cachedGameManager.Inventory.SetAmount(ItemType.Gold, 0);
-                        _cachedGameManager.Inventory.SetAmount(ItemType.Gem, 0);
-                        _cachedGameManager.Inventory.SetAmount(ItemType.Remove, 0);
-                        _cachedGameManager.Inventory.SetAmount(ItemType.Undo, 0);
-                        _cachedGameManager.Inventory.SetAmount(ItemType.MoreMoves, 0);
-                        _cachedGameManager.EconomyManager.ResetLoginStreak();
-                        _cachedGameManager.SetLevel(1);
-                        _cachedGameManager.SaveGame();
-                        _cachedGameManager.UpdateWeeklyLoginUI();
+                        _cachedGameBootstrapper.Inventory.SetAmount(ItemType.Gold, 0);
+                        _cachedGameBootstrapper.Inventory.SetAmount(ItemType.Gem, 0);
+                        _cachedGameBootstrapper.Inventory.SetAmount(ItemType.Remove, 0);
+                        _cachedGameBootstrapper.Inventory.SetAmount(ItemType.Undo, 0);
+                        _cachedGameBootstrapper.Inventory.SetAmount(ItemType.MoreMoves, 0);
+                        _cachedGameBootstrapper.EconomyManager.ResetLoginStreak();
+                        _cachedGameBootstrapper.SetLevel(1);
+                        _cachedGameBootstrapper.SaveGame();
+                        _cachedGameBootstrapper.UpdateWeeklyLoginUI();
                     }
                 }
             }
@@ -499,17 +499,17 @@ namespace Game.Editor
 
         private int GetGold()
         {
-            if (IsPlayingWithGameManager) return _cachedGameManager.Inventory.Gold;
+            if (IsPlayingWithGameBootstrapper) return _cachedGameBootstrapper.Inventory.Gold;
             return _editData.currentGold;
         }
 
         private void SetGold(int amount)
         {
             amount = Math.Max(0, amount);
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.Inventory.SetAmount(ItemType.Gold, amount);
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.Inventory.SetAmount(ItemType.Gold, amount);
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -520,17 +520,17 @@ namespace Game.Editor
 
         private int GetGem()
         {
-            if (IsPlayingWithGameManager) return _cachedGameManager.Inventory.Gem;
+            if (IsPlayingWithGameBootstrapper) return _cachedGameBootstrapper.Inventory.Gem;
             return _editData.currentGem;
         }
 
         private void SetGem(int amount)
         {
             amount = Math.Max(0, amount);
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.Inventory.SetAmount(ItemType.Gem, amount);
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.Inventory.SetAmount(ItemType.Gem, amount);
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -541,7 +541,7 @@ namespace Game.Editor
 
         private int GetBooster(ItemType type)
         {
-            if (IsPlayingWithGameManager) return _cachedGameManager.Inventory.GetAmount(type);
+            if (IsPlayingWithGameBootstrapper) return _cachedGameBootstrapper.Inventory.GetAmount(type);
             return type switch
             {
                 ItemType.Remove => _editData.currentRemove,
@@ -554,10 +554,10 @@ namespace Game.Editor
         private void SetBooster(ItemType type, int amount)
         {
             amount = Math.Max(0, amount);
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.Inventory.SetAmount(type, amount);
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.Inventory.SetAmount(type, amount);
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -573,18 +573,18 @@ namespace Game.Editor
 
         private int GetLoginDay()
         {
-            if (IsPlayingWithGameManager) return _cachedGameManager.EconomyManager.CurrentLoginDay;
+            if (IsPlayingWithGameBootstrapper) return _cachedGameBootstrapper.EconomyManager.CurrentLoginDay;
             return _editData.currentLoginDay;
         }
 
         private void SetLoginDay(int day)
         {
             day = Math.Max(0, day % 7);
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.EconomyManager.SetLoginDay(day);
-                _cachedGameManager.UpdateWeeklyLoginUI();
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.EconomyManager.SetLoginDay(day);
+                _cachedGameBootstrapper.UpdateWeeklyLoginUI();
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -595,16 +595,16 @@ namespace Game.Editor
 
         private bool GetDailyClaimed()
         {
-            if (IsPlayingWithGameManager) return _cachedGameManager.EconomyManager.IsDailyRewardClaimed;
+            if (IsPlayingWithGameBootstrapper) return _cachedGameBootstrapper.EconomyManager.IsDailyRewardClaimed;
             return _editData.isDailyRewardClaimed;
         }
 
         private void SetDailyClaimed(bool claimed)
         {
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.EconomyManager.SetDailyRewardClaimed(claimed);
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.EconomyManager.SetDailyRewardClaimed(claimed);
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -615,17 +615,17 @@ namespace Game.Editor
 
         private bool GetWeeklyClaimed()
         {
-            if (IsPlayingWithGameManager) return _cachedGameManager.EconomyManager.IsWeeklyRewardClaimed;
+            if (IsPlayingWithGameBootstrapper) return _cachedGameBootstrapper.EconomyManager.IsWeeklyRewardClaimed;
             return _editData.isWeeklyRewardClaimed;
         }
 
         private void SetWeeklyClaimed(bool claimed)
         {
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.EconomyManager.SetWeeklyRewardClaimed(claimed);
-                _cachedGameManager.UpdateWeeklyLoginUI();
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.EconomyManager.SetWeeklyRewardClaimed(claimed);
+                _cachedGameBootstrapper.UpdateWeeklyLoginUI();
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -636,13 +636,13 @@ namespace Game.Editor
 
         private void ResetTodayClaims()
         {
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.EconomyManager.SetDailyRewardClaimed(false);
-                _cachedGameManager.EconomyManager.SetWeeklyRewardClaimed(false);
-                _cachedGameManager.EconomyManager.ResetShopPurchases();
-                _cachedGameManager.UpdateWeeklyLoginUI();
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.EconomyManager.SetDailyRewardClaimed(false);
+                _cachedGameBootstrapper.EconomyManager.SetWeeklyRewardClaimed(false);
+                _cachedGameBootstrapper.EconomyManager.ResetShopPurchases();
+                _cachedGameBootstrapper.UpdateWeeklyLoginUI();
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -659,11 +659,11 @@ namespace Game.Editor
 
         private void SimulateNextDay()
         {
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.EconomyManager.SimulateNextDay();
-                _cachedGameManager.UpdateWeeklyLoginUI();
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.EconomyManager.SimulateNextDay();
+                _cachedGameBootstrapper.UpdateWeeklyLoginUI();
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -681,11 +681,11 @@ namespace Game.Editor
 
         private void ResetLoginStreak()
         {
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.EconomyManager.ResetLoginStreak();
-                _cachedGameManager.UpdateWeeklyLoginUI();
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.EconomyManager.ResetLoginStreak();
+                _cachedGameBootstrapper.UpdateWeeklyLoginUI();
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -703,7 +703,7 @@ namespace Game.Editor
 
         private int GetShopPurchaseCount(int slot)
         {
-            if (IsPlayingWithGameManager) return _cachedGameManager.EconomyManager.GetGoldShopPurchaseCount(slot);
+            if (IsPlayingWithGameBootstrapper) return _cachedGameBootstrapper.EconomyManager.GetGoldShopPurchaseCount(slot);
             if (_editData.goldShopPurchaseCountToday != null && slot >= 0 && slot < _editData.goldShopPurchaseCountToday.Length)
                 return _editData.goldShopPurchaseCountToday[slot];
             return 0;
@@ -711,10 +711,10 @@ namespace Game.Editor
 
         private void ResetShopPurchases()
         {
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.EconomyManager.ResetShopPurchases();
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.EconomyManager.ResetShopPurchases();
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -730,10 +730,10 @@ namespace Game.Editor
         private void SetShopPurchaseCount(int slot, int count)
         {
             count = Math.Max(0, count);
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.EconomyManager.SetShopPurchaseCount(slot, count);
-                _cachedGameManager.SaveGame();
+                _cachedGameBootstrapper.EconomyManager.SetShopPurchaseCount(slot, count);
+                _cachedGameBootstrapper.SaveGame();
             }
             else
             {
@@ -749,16 +749,16 @@ namespace Game.Editor
 
         private int GetLevel()
         {
-            if (IsPlayingWithGameManager) return _cachedGameManager.CurrentLevel;
+            if (IsPlayingWithGameBootstrapper) return _cachedGameBootstrapper.CurrentLevel;
             return _editData.currentLevel > 0 ? _editData.currentLevel : 1;
         }
 
         private void SetLevel(int level)
         {
             level = Math.Max(1, level);
-            if (IsPlayingWithGameManager)
+            if (IsPlayingWithGameBootstrapper)
             {
-                _cachedGameManager.SetLevel(level);
+                _cachedGameBootstrapper.SetLevel(level);
             }
             else
             {

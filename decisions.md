@@ -282,3 +282,81 @@ Preserving the serialized meaning of existing level and condition assets is safe
 - `Game.Core.Board.Food`
 - `Game.Data.Conditions.ConditionDataSO`
 - `Assets/Data/Condition/CanSitAnywhere.asset`
+
+## DEC-005 — Keep application state in Game.App and Unity composition in Game.Bootstrap
+
+Date: 2026-09-17
+
+Status: Accepted
+
+### Problem
+
+The previous `Game.Bootstrap.GameManager` combined persistent application state, economy and booster execution, Unity lifecycle, serialized authoring data, scene references, event-channel subscriptions, UI updates, and VFX calls. Keeping that class in Bootstrap made the application owner inaccessible as a clean `Game.App` service and coupled its responsibilities to Data and View.
+
+### Context
+
+`Game.App` already depends only on `Game.Core` and `Game.Events`, while `Game.Bootstrap` is the sole layer allowed to reference all runtime layers. `Game.View` depends on `Game.App`, so moving the existing MonoBehaviour unchanged into `Game.App` would introduce an invalid App-to-View dependency cycle.
+
+### Options
+
+#### Option A — Keep the combined GameManager in Game.Bootstrap
+
+Pros:
+
+- No class split or scene migration is needed.
+- Existing serialized references remain on the same component.
+
+Cons:
+
+- Application state and Unity composition remain coupled.
+- `Game.App` has no owner for persisted progress, economy transactions, and booster execution.
+
+#### Option B — Move the existing MonoBehaviour unchanged into Game.App
+
+Pros:
+
+- `GameManager` would be physically located in the application folder.
+
+Cons:
+
+- It would require `Game.App` to reference `Game.Data` and `Game.View`.
+- `Game.View` already references `Game.App`, creating a circular assembly dependency.
+
+#### Option C — Split application ownership from the composition root
+
+Pros:
+
+- `Game.App.GameManager` can own progress, inventory, economy, persistence, and core booster operations without View/Data dependencies.
+- `Game.Bootstrap.GameBootstrapper` can keep Unity lifecycle, serialized references, event wiring, level loading, UI binding, and VFX orchestration.
+- The existing Bootstrap assembly remains the only composition root.
+
+Cons:
+
+- Event handlers must delegate across the new application/bootstrap boundary.
+- The scene component class changes from `GameManager` to `GameBootstrapper` and needs Unity import validation.
+
+### Decision
+
+Use `Game.App.GameManager` as a plain C# application service. It owns `GameData`, `Inventory`, `EconomyManager`, save/load synchronization, reward/shop transactions, and core booster execution.
+
+Use `Game.Bootstrap.GameBootstrapper` as the scene MonoBehaviour. It keeps the existing serialized field names and script GUID, constructs `GameManager`, subscribes to event channels, converts ScriptableObject configuration into application input, loads levels, binds UI, and performs view/VFX-only follow-up work.
+
+### Reason
+
+This preserves the current assembly dependency direction: App stays independent of authoring and presentation, while Bootstrap remains the explicit place where all layers are wired together. It also keeps Unity-only state and lifecycle callbacks out of the application service without introducing a new framework or event abstraction.
+
+### Consequences
+
+- Editor and scene tooling must find `GameBootstrapper` rather than a MonoBehaviour `GameManager`.
+- `GameBootstrapper` retains the serialized field names from the previous component so existing scene assignments remain compatible through the preserved script GUID.
+- VFX and `ConditionDataSO` conversion formerly attributed to `GameManager` are now Bootstrap responsibilities; DEC-001 and DEC-002 remain valid about their dependency boundaries.
+- New application behavior should be added to `Game.App.GameManager` when it does not require Unity authoring or presentation references.
+
+### Related
+
+- `Game.App.GameManager`
+- `Game.Bootstrap.GameBootstrapper`
+- `Game.Bootstrap.LevelBootstrapper`
+- `Game.Editor.CheatToolWindow`
+- DEC-001
+- DEC-002

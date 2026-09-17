@@ -15,9 +15,9 @@ Assets/Game/
 ├── Core/            (Game.Core)        Rule gameplay, dữ liệu runtime, logic thuần C# (Không phụ thuộc ai)
 ├── Events/          (Game.Events)      ScriptableObject Event Channels để decouple giao tiếp
 ├── Data/            (Game.Data)        ScriptableObjects cấu hình level, nhân vật và kinh tế (Data Authoring)
-├── App/             (Game.App)         Điều phối game (LevelManager), lưu/tải dữ liệu (SaveLoadManager)
+├── App/             (Game.App)         Điều phối ứng dụng, level và lưu/tải dữ liệu
 ├── View/            (Game.View)        MonoBehaviour, UI, VFX, Audio, Input, Render và Animation
-├── Bootstrap/       (Game.Bootstrap)   Composition Root (GameManager, LevelBootstrapper)
+├── Bootstrap/       (Game.Bootstrap)   Composition Root (GameBootstrapper, LevelBootstrapper)
 ├── Editor/          (Game.Editor)      Custom Inspector, Cheat Tool và Tooling editor
 └── Tests/           (Game.Tests.*)     Unit tests (EditMode)
 ```
@@ -79,6 +79,7 @@ ScriptableObject dành cho Game Designer cấu hình trên Inspector:
 - `GameConfig`: Chứa các hằng số game như `MORE_MOVE_AMOUNT = 3`, `MAX_CONDITION_PER_PERSON = 2`.
 
 ### 4. `Game.App` (Application Layer)
+- **`GameManager`**: Service thuần C# sở hữu `GameData`, `Inventory`, `EconomyManager`, persistence, reward/shop transaction và thực thi core booster. Không tham chiếu `Game.Data` hoặc `Game.View`; cấu hình và presentation được nhận/xử lý từ Bootstrap.
 - **`LevelManager`**:
   - Quản lý logic điều phối di chuyển của người trong level (`TryMovePerson`).
   - Ghi nhận lịch sử di chuyển vào `MoveHistory`: **chỉ bỏ qua (skip) khi di chuyển nội bộ trong hàng chờ** (`WaitGrid -> WaitGrid`); các lượt đi từ hàng chờ lên bàn cờ (`WaitGrid -> MainGrid`) hoặc giữa các ghế bàn cờ đều được lưu lại để hỗ trợ hoàn tác.
@@ -106,10 +107,10 @@ ScriptableObject dành cho Game Designer cấu hình trên Inspector:
   - `TransitionController`: Hiệu ứng chuyển cảnh Circle Cutout Wipe giữa các màn chơi.
 
 ### 6. `Game.Bootstrap` (Composition Root)
-- **`GameManager`**: MonoBehaviour điều phối vòng đời chính:
-  - Lắng nghe các event Game Flow (Play, Win, Lose, Next, Restart), Rewards, Shop.
-  - Lắng nghe 3 sự kiện sử dụng booster in-game (`HandleUseMoreMoves`, `HandleUseUndo`, `HandleUseRemove`).
-  - Quản lý việc lưu game (`SaveGame`) và đồng bộ `Inventory`.
+- **`GameBootstrapper`**: MonoBehaviour composition root giữ toàn bộ serialized scene/config/event reference, điều phối lifecycle và UI/VFX:
+  - Khởi tạo `Game.App.GameManager` với dữ liệu cấu hình đã chuyển đổi.
+  - Lắng nghe Game Flow, Rewards, Shop và 3 event sử dụng booster in-game.
+  - Gọi service `GameManager` cho state, persistence và transaction; giữ load level, UI binding, event-channel dispatch và VFX ở Bootstrap.
 - **`LevelBootstrapper`**: POCO class hỗ trợ nạp level theo index, reset grid cũ (`ClearGrids()`), khởi tạo data runtime và kết nối `LevelView`.
 
 ### 7. `Game.Editor` (Editor Tooling)
@@ -132,20 +133,18 @@ Hệ thống Booster hỗ trợ người chơi giải quyết các tình huống
 ## 🔄 Các Luồng Hoạt Động Chính (Game Flows)
 
 ### 1. Khởi động Game (App Start & Initialization)
-1. `GameManager.Awake()` nạp `GameData` từ `SaveLoadManager`.
-2. Tạo mới đối tượng `Inventory` từ dữ liệu đã lưu.
-3. Gọi `UIManager.Initialize(_inventory)` để truyền dữ liệu xuống `InventoryView` hiển thị số tiền/gem ban đầu.
-4. Tạo `LevelBootstrapper`.
-5. Đăng ký lắng nghe toàn bộ các kênh Event Channel trong `OnEnable()`.
+1. `GameBootstrapper.Awake()` tạo `Game.App.GameManager`, nơi nạp `GameData`, tạo `Inventory`/`EconomyManager` và đồng bộ trạng thái login.
+2. Bootstrap tạo `LevelBootstrapper`, gọi `UIManager.Initialize(Inventory)` và đồng bộ `WeeklyLogin`.
+3. `GameBootstrapper.OnEnable()` đăng ký toàn bộ Event Channel.
 
 ### 2. Bắt đầu màn chơi (Main Menu → In-Game)
 1. Người chơi bấm nút **Play**:
    - `ButtonPunchShake` thực hiện hiệu ứng rung nảy nút.
    - `ButtonEventRaiser` chờ 0.25s rồi bắn event `OnPlayGame`.
 2. `UIManager` ẩn `MainMenu`, hiển thị `InGameUI`.
-3. `GameManager.HandlePlayGame()`:
+3. `GameBootstrapper.HandlePlayGame()`:
    - Gọi `LevelBootstrapper.LoadLevel()` dọn sạch grid cũ, sinh ghế và người, kết nối `LevelView.BindData()`.
-   - Gọi `LevelView.BindBoosters(_inventory)` để liên kết số lượng booster hiện có và cập nhật trạng thái các nút booster.
+   - Gọi `LevelView.BindBoosters(Inventory)` để liên kết số lượng booster hiện có và cập nhật trạng thái các nút booster.
 
 ### 3. Kéo thả nhân vật & Đánh giá luật chơi
 1. Người chơi kéo `PersonView` $\rightarrow$ `PersonDragManager` gọi `PersonMover`.
@@ -160,7 +159,7 @@ Hệ thống Booster hỗ trợ người chơi giải quyết các tình huống
 ### 4. Sử dụng Booster trong màn chơi
 1. Người chơi bấm nút booster bất kỳ (`BoosterSlotView`):
    - Nút phát sự kiện tương ứng (`OnUseMoreMoves`, `OnUseUndo`, hoặc `OnUseRemove`).
-2. `GameManager` tiếp nhận xử lý:
+2. `GameBootstrapper` tiếp nhận event, sau đó ủy quyền logic item/booster cho `Game.App.GameManager`:
    - Kiểm tra xem người chơi có đang trong level và còn lượt đi hay không.
    - Kiểm tra xem số dư booster trong `Inventory` có đủ $\ge 1$ không.
    - Khởi tạo instance booster tương ứng và gọi `TryUse()`.
@@ -168,9 +167,9 @@ Hệ thống Booster hỗ trợ người chơi giải quyết các tình huống
 
 ### 5. Thắng / Thua & Nhận thưởng
 - **Thắng (`OnWinLevelEvent`)**:
-  - `GameManager` tăng `currentLevel++` và lưu game.
+  - `GameBootstrapper` yêu cầu `GameManager` tăng `currentLevel++` và lưu game.
   - `UIManager` hiển thị `LevelWinPanel` với animation chữ và hiệu ứng mở dần.
-  - Người chơi bấm **Nhận thưởng (40 Gold)** $\rightarrow$ bắn `OnClaimWinReward` $\rightarrow$ `GameManager` lấy thưởng từ `EconomyConfigSO.levelWinReward`, cộng vào `Inventory`, bắn `OnItemReceive` để UI nhảy số và lưu game.
+  - Người chơi bấm **Nhận thưởng (40 Gold)** $\rightarrow$ bắn `OnClaimWinReward` $\rightarrow$ `GameBootstrapper` lấy cấu hình thưởng, `GameManager` cộng vào `Inventory` và lưu game, sau đó Bootstrap bắn `OnItemReceive` để UI nhảy số.
   - Người chơi bấm **Màn tiếp theo** $\rightarrow$ bắn `OnNextLevel` $\rightarrow$ load màn chơi mới.
 - **Thua (`OnLoseLevelEvent`)**:
   - `UIManager` hiển thị `LevelLosePanel`.
@@ -179,7 +178,7 @@ Hệ thống Booster hỗ trợ người chơi giải quyết các tình huống
 ### 6. Kinh tế & Cửa hàng (Shop Transaction)
 - Khi bấm mua vật phẩm (búa gỡ ghế, lượt đi, hoàn tác):
   - Nút bấm phát các Void Event như `OnBuyRemove`, `OnBuyUndo`, `OnBuyMoreMoves`.
-  - `GameManager` chạy giao dịch an toàn qua `TryPurchase(cost, item)`:
+  - `GameBootstrapper` chuyển transaction sang `GameManager.TryPurchase(cost, item)`:
     - Nếu đủ tiền trong `Inventory`: Trừ chi phí $\rightarrow$ Cộng vật phẩm $\rightarrow$ Bắn `OnItemReceive` $\rightarrow$ Lưu game.
     - Nếu không đủ tiền: Không cộng vật phẩm $\rightarrow$ Bắn `OnItemSpend` thông báo thất bại.
 
