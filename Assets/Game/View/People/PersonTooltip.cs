@@ -40,6 +40,7 @@ namespace Game.View.People
         private float _botAnchorY;
         private bool _hasBotAnchor;
         private float _midBaseScaleY = 1f;
+        private PersonRuntimeData _boundPerson;
 
         private void Awake()
         {
@@ -76,6 +77,8 @@ namespace Game.View.People
         private void OnDisable()
         {
             StopListeningForOutsideClick();
+            if (_boundPerson != null)
+                _boundPerson.OnConditionsCleared -= RefreshConditions;
         }
 
         private void StartListeningForOutsideClick()
@@ -108,11 +111,31 @@ namespace Game.View.People
 
         public void BindData(PersonRuntimeData person)
         {
+            if (_boundPerson != null)
+                _boundPerson.OnConditionsCleared -= RefreshConditions;
+
+            _boundPerson = person;
+
             if (person == null) return;
+
+            person.OnConditionsCleared += RefreshConditions;
 
             nameText.text = person.PersonName;
             traitText.text = person.Trait.ToString();
 
+            UpdateConditionText(person);
+            ResizeToFitConditionText();
+        }
+
+        private void RefreshConditions()
+        {
+            if (_boundPerson == null) return;
+            UpdateConditionText(_boundPerson);
+            ResizeToFitConditionText();
+        }
+
+        private void UpdateConditionText(PersonRuntimeData person)
+        {
             if (person.Conditions != null && person.Conditions.Count > 0)
             {
                 int count = Math.Min(person.Conditions.Count, MaxConditions);
@@ -129,8 +152,6 @@ namespace Game.View.People
             {
                 conditionText.text = string.Empty;
             }
-
-            ResizeToFitConditionText();
         }
 
         private void ResizeToFitConditionText()

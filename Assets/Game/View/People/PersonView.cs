@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Game.Core.People;
+using Game.View.VFX;
 
 namespace Game.View.People
 {
@@ -19,6 +20,7 @@ namespace Game.View.People
         [SerializeField] private PersonTooltip personTooltip;
 
         private PersonRuntimeData _person;
+        private VfxPlayer _vfxPlayer;
         private bool _isSubscribed;
 
         private void Awake()
@@ -61,6 +63,17 @@ namespace Game.View.People
                 personTooltip.BindData(_person);
         }
 
+        public void BindVfxPlayer(VfxPlayer vfxPlayer)
+        {
+            if (_vfxPlayer == vfxPlayer)
+                return;
+
+            _vfxPlayer = vfxPlayer;
+
+            if (_person != null && _person.State == PersonState.Happy)
+                _vfxPlayer?.PlayAtWorld(VfxId.Happy, transform);
+        }
+
         private void SubscribeToStateChanges()
         {
             if (_person == null || _isSubscribed)
@@ -87,6 +100,9 @@ namespace Game.View.People
                 personFace.sprite = happyFace;
             else if (state == PersonState.Angry)
                 personFace.sprite = angryFace;
+
+            if (state == PersonState.Happy)
+                _vfxPlayer?.PlayAtWorld(VfxId.Happy, transform);
         }
     }
 }

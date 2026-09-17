@@ -20,22 +20,22 @@ MonoBehaviour:
     amount: 40
   dailyReward:
     type: 0
-    amount: 20
+    amount: 10
   weeklyReward:
   - type: 0
-    amount: 20
-  - type: 0
-    amount: 20
-  - type: 1
     amount: 10
   - type: 0
-    amount: 20
+    amount: 10
   - type: 0
-    amount: 20
-  - type: 1
+    amount: 10
+  - type: 0
+    amount: 10
+  - type: 0
+    amount: 10
+  - type: 0
     amount: 10
   - type: 1
-    amount: 20
+    amount: 10
   goldShopPrice:
   - type: 0
     amount: 100

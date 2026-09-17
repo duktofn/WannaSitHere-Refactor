@@ -2,12 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Game.Core.Booster;
 using Game.Core.Economy;
+using Game.App;
 using Game.App.SaveAndLoad;
 using Game.Data.Economy;
+using Game.Data.Conditions;
 using Game.Data.Levels;
 using Game.View.Board;
+using Game.View.People;
 using Game.View.UI;
+using Game.View.VFX;
 using Game.Events;
 using Game.Data.People;
 
@@ -21,11 +26,17 @@ namespace Game.Bootstrap
         [Header("Economy")]
         [SerializeField] private EconomyConfigSO _economyConfig;
 
+        [Header("Conditions")]
+        [SerializeField] private ConditionDataSO _canSitAnywhereCondition;
+
         [Header("Scene References")]
         [SerializeField] private UIManager _uiManager;
         [SerializeField] private GridManager _gridManager;
         [SerializeField] private LevelView _levelView;
         [SerializeField] private WeeklyLogin _weeklyLogin;
+
+        [Header("Visual Effects")]
+        [SerializeField] private VfxPlayer _vfxPlayer;
 
         [Header("Events - Game Flow")]
         [SerializeField] private VoidEventChannelSO _onPlayGameEvent;
@@ -33,6 +44,7 @@ namespace Game.Bootstrap
         [SerializeField] private VoidEventChannelSO _onLoseEvent;
         [SerializeField] private VoidEventChannelSO _onNextLevelEvent;
         [SerializeField] private VoidEventChannelSO _onRestartLevelEvent;
+        [SerializeField] private IntEventChannelSO _onLevelChangedEvent;
 
         [Header("Events - Rewards")]
         [SerializeField] private VoidEventChannelSO _onClaimWinRewardEvent;
@@ -44,6 +56,11 @@ namespace Game.Bootstrap
         [SerializeField] private VoidEventChannelSO _onBuyRemoveEvent;
         [SerializeField] private VoidEventChannelSO _onBuyUndoEvent;
         [SerializeField] private VoidEventChannelSO _onBuyMoreMovesEvent;
+
+        [Header("Events - Booster Use (In-Game)")]
+        [SerializeField] private VoidEventChannelSO _onUseMoreMovesEvent;
+        [SerializeField] private VoidEventChannelSO _onUseUndoEvent;
+        [SerializeField] private VoidEventChannelSO _onUseRemoveEvent;
 
         [Header("Events - Economy Feedback")]
         [SerializeField] private OnItemReceiveSO _onItemReceive;
@@ -65,6 +82,7 @@ namespace Game.Bootstrap
         {
             _gameData.currentLevel = Math.Max(1, level);
             SaveGame();
+            _onLevelChangedEvent?.Raise(_gameData.currentLevel);
         }
 
         public void TriggerWin()
@@ -82,12 +100,14 @@ namespace Game.Bootstrap
             _gameData.currentLevel = Math.Max(1, level);
             SaveGame();
             _levelBootstrapper?.LoadLevel(_gameData.currentLevel);
+            _onLevelChangedEvent?.Raise(_gameData.currentLevel);
         }
 
         public void PlayLevel(int level)
         {
             _gameData.currentLevel = Math.Max(1, level);
             SaveGame();
+            _onLevelChangedEvent?.Raise(_gameData.currentLevel);
             if (_onPlayGameEvent != null)
             {
                 _onPlayGameEvent.Raise();
@@ -164,6 +184,11 @@ namespace Game.Bootstrap
             _levelBootstrapper = new LevelBootstrapper(_levelData, _gridManager, _levelView);
         }
 
+        private void Start()
+        {
+            _onLevelChangedEvent?.Raise(CurrentLevel);
+        }
+
         private void OnEnable()
         {
             // Game Flow
@@ -183,6 +208,11 @@ namespace Game.Bootstrap
             _listener.Listen(_onBuyRemoveEvent, HandleBuyRemove);
             _listener.Listen(_onBuyUndoEvent, HandleBuyUndo);
             _listener.Listen(_onBuyMoreMovesEvent, HandleBuyMoreMoves);
+
+            // Booster Use (In-Game)
+            _listener.Listen(_onUseMoreMovesEvent, HandleUseMoreMoves);
+            _listener.Listen(_onUseUndoEvent, HandleUseUndo);
+            _listener.Listen(_onUseRemoveEvent, HandleUseRemove);
         }
 
         private void OnDisable()
@@ -192,12 +222,14 @@ namespace Game.Bootstrap
 
         public void UpdateWeeklyLoginUI()
         {
-            if (_weeklyLogin != null && _economyConfig != null && _economyConfig.weeklyReward != null)
+            if (_weeklyLogin != null && _economyConfig != null && _economyConfig.weeklyReward != null && _economyManager != null)
             {
                 _weeklyLogin.SetRewardData(
                     _economyConfig.weeklyReward.ToList(),
                     _economyManager.CurrentLoginDay,
-                    _economyManager.IsWeeklyRewardClaimed
+                    _economyManager.IsWeeklyRewardClaimed,
+                    _economyConfig.dailyReward,
+                    _economyManager.IsDailyRewardClaimed
                 );
             }
         }
@@ -208,6 +240,11 @@ namespace Game.Bootstrap
         {
             int levelToLoad = _gameData.currentLevel > 0 ? _gameData.currentLevel : 1;
             _levelBootstrapper.LoadLevel(levelToLoad);
+
+            if (_levelView != null)
+                _levelView.BindBoosters(_inventory);
+
+            _onLevelChangedEvent?.Raise(levelToLoad);
             Debug.Log($"[GameManager] Started Level: {levelToLoad}");
         }
 
@@ -215,6 +252,7 @@ namespace Game.Bootstrap
         {
             _gameData.currentLevel++;
             SaveGame();
+            _onLevelChangedEvent?.Raise(_gameData.currentLevel);
             Debug.Log($"[GameManager] Win! Next level: {_gameData.currentLevel}");
         }
 
@@ -226,12 +264,14 @@ namespace Game.Bootstrap
         public void NextLevel()
         {
             _levelBootstrapper.LoadLevel(_gameData.currentLevel);
+            _onLevelChangedEvent?.Raise(_gameData.currentLevel);
         }
 
         public void RestartLevel()
         {
             int levelToLoad = _gameData.currentLevel > 0 ? _gameData.currentLevel : 1;
             _levelBootstrapper.LoadLevel(levelToLoad);
+            _onLevelChangedEvent?.Raise(levelToLoad);
         }
 
         // ── Rewards ────────────────────────────────────────
@@ -268,6 +308,7 @@ namespace Game.Bootstrap
             if (_economyManager.ClaimDailyReward(reward))
             {
                 _onItemReceive?.Raise(reward);
+                UpdateWeeklyLoginUI();
                 SaveGame();
                 Debug.Log($"[GameManager] Claimed daily reward: {reward.amount} {reward.type}");
             }
@@ -361,6 +402,78 @@ namespace Game.Bootstrap
                 item: new Reward { type = ItemType.MoreMoves, amount = GameConfig.MORE_MOVE_AMOUNT },
                 goldShopSlotIndex: 2
             );
+        }
+
+        // ── Booster Use (In-Game) ─────────────────────────────
+
+        private void HandleUseMoreMoves()
+        {
+            LevelManager levelManager = _gridManager?.LevelManager;
+            if (levelManager?.CurrentLevel == null) return;
+            if (levelManager.CurrentLevel.IsOutOfMove) return;
+            if (!_inventory.HasEnough(ItemType.MoreMoves, 1)) return;
+
+            var booster = new MoreMoveBooster(levelManager.CurrentLevel, GameConfig.MORE_MOVE_AMOUNT);
+            if (!booster.TryUse()) return;
+
+            _inventory.TrySpendItem(ItemType.MoreMoves);
+            SaveGame();
+            Debug.Log($"[GameManager] Used MoreMoves booster: +{GameConfig.MORE_MOVE_AMOUNT} moves");
+        }
+
+        private void HandleUseUndo()
+        {
+            LevelManager levelManager = _gridManager?.LevelManager;
+            if (levelManager?.CurrentLevel == null) return;
+            if (levelManager.CurrentLevel.IsOutOfMove) return;
+            if (!_inventory.HasEnough(ItemType.Undo, 1)) return;
+
+            var booster = new UndoBooster(levelManager.MoveHistory, levelManager.CurrentLevel);
+            if (!booster.TryUse()) return;
+
+            _inventory.TrySpendItem(ItemType.Undo);
+
+            // Sync view: animate persons back to their previous cells
+            if (booster.LastUndoneRecord.HasValue)
+            {
+                _gridManager.RevertMoveView(booster.LastUndoneRecord.Value);
+            }
+
+            // Re-evaluate all conditions after the revert
+            levelManager.CheckAllPersonConditions();
+
+            SaveGame();
+            Debug.Log("[GameManager] Used Undo booster: reverted last move");
+        }
+
+        private void HandleUseRemove()
+        {
+            LevelManager levelManager = _gridManager?.LevelManager;
+            if (levelManager?.CurrentLevel == null) return;
+            if (levelManager.CurrentLevel.IsOutOfMove) return;
+            if (!_inventory.HasEnough(ItemType.Remove, 1)) return;
+            if (_canSitAnywhereCondition == null)
+            {
+                Debug.LogError("[GameManager] CanSitAnywhere condition is not configured.", this);
+                return;
+            }
+
+            var booster = new RemoveBooster(
+                levelManager.CurrentLevel,
+                _canSitAnywhereCondition.ToRuntimeData()
+            );
+            if (!booster.TryUse()) return;
+
+            PersonView targetPersonView = _gridManager?.FindPersonView(booster.TargetPerson);
+            _vfxPlayer?.PlayAtWorld(VfxId.RemoveBooster, targetPersonView?.transform);
+
+            _inventory.TrySpendItem(ItemType.Remove);
+
+            // Re-evaluate all conditions — the cleared person should now be Happy
+            levelManager.CheckAllPersonConditions();
+
+            SaveGame();
+            Debug.Log($"[GameManager] Used Remove booster: replaced conditions with CanSitAnywhere for {booster.TargetPerson?.PersonName}");
         }
 
         // ── Save/Load ──────────────────────────────────────

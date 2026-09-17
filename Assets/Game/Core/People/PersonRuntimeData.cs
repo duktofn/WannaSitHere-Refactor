@@ -9,11 +9,13 @@ namespace Game.Core.People
     {
         public readonly string PersonName;
         public readonly PersonTrait Trait;
-        public readonly IReadOnlyList<ConditionRuntimeData> Conditions;
+        private readonly List<ConditionRuntimeData> _conditions;
+        public IReadOnlyList<ConditionRuntimeData> Conditions => _conditions;
         public readonly Sprite BaseSprite;
         public PersonState State { get; private set; }
 
         public event Action<PersonState> OnPersonStateChanged;
+        public event Action OnConditionsCleared;
         
         public PersonRuntimeData(string personName, 
                                 PersonTrait trait, 
@@ -22,9 +24,30 @@ namespace Game.Core.People
         {
             PersonName = personName;
             Trait = trait;
-            Conditions = conditions;
+            _conditions = new List<ConditionRuntimeData>(conditions);
             BaseSprite = baseSprite;
             SetState(PersonState.Normal);
+        }
+
+        /// <summary>
+        /// Removes all conditions from this person and notifies presentation listeners.
+        /// </summary>
+        public void ClearConditions()
+        {
+            _conditions.Clear();
+            OnConditionsCleared?.Invoke();
+        }
+
+        /// <summary>
+        /// Replaces the current condition list with one condition and notifies presentation listeners.
+        /// </summary>
+        public void ReplaceConditions(ConditionRuntimeData condition)
+        {
+            _conditions.Clear();
+            if (condition != null)
+                _conditions.Add(condition);
+
+            OnConditionsCleared?.Invoke();
         }
 
         public void SetState(PersonState state)

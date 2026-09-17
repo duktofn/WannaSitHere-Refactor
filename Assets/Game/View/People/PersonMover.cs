@@ -159,5 +159,37 @@ namespace Game.View.People
             dragContexts.Remove(personTransform);
             return true;
         }
+
+        /// <summary>
+        /// Visually reverts a move by swapping PersonViews between the source and target cells
+        /// and animating them back to their original positions.
+        /// Called by <see cref="GridManager.RevertMoveView"/> during an Undo booster.
+        /// </summary>
+        public void RevertMove(CellView sourceCell, CellView targetCell)
+        {
+            if (sourceCell == null || targetCell == null) return;
+
+            // The moved person is now at targetCell, needs to go back to sourceCell
+            PersonView movedView = targetCell.CurrentPersonView;
+            // The displaced person (if any) is now at sourceCell, needs to go back to targetCell
+            PersonView displacedView = sourceCell.CurrentPersonView;
+
+            // Swap the PersonView references on the cells
+            sourceCell.SetPersonView(movedView);
+            targetCell.SetPersonView(displacedView);
+
+            // Animate and update drag references
+            if (movedView != null)
+            {
+                Tween.Position(movedView.transform, sourceCell.transform.position, snapTime, moveEase);
+                movedView.GetComponent<PersonDragManager>()?.SetCurrentCell(sourceCell);
+            }
+
+            if (displacedView != null)
+            {
+                Tween.Position(displacedView.transform, targetCell.transform.position, snapTime, moveEase);
+                displacedView.GetComponent<PersonDragManager>()?.SetCurrentCell(targetCell);
+            }
+        }
     }
 }
