@@ -14,6 +14,7 @@ using Game.View.Board;
 using Game.View.People;
 using Game.View.UI;
 using Game.View.VFX;
+using Game.View.Audio;
 
 namespace Game.Bootstrap
 {
@@ -43,6 +44,10 @@ namespace Game.Bootstrap
         [Header("Visual Effects")]
         [SerializeField] private VfxPlayer _vfxPlayer;
 
+        [Header("Audio")]
+        [SerializeField] private AudioPlayer _audioPlayer;
+        [SerializeField] private AudioSettingsView[] _audioSettingsViews;
+
         [Header("Events - Game Flow")]
         [SerializeField] private VoidEventChannelSO _onPlayGameEvent;
         [SerializeField] private VoidEventChannelSO _onWinEvent;
@@ -70,6 +75,9 @@ namespace Game.Bootstrap
         [Header("Events - Economy Feedback")]
         [SerializeField] private OnItemReceiveSO _onItemReceive;
         [SerializeField] private OnItemSpendSO _onItemSpend;
+
+        [Header("Events - Audio")]
+        [SerializeField] private AudioCueEventChannelSO _onAudioCue;
 
         private readonly EventListener _listener = new();
         private GameManager _gameManager;
@@ -161,6 +169,8 @@ namespace Game.Bootstrap
             _gameManager = new GameManager(goldShopLimits);
             _gameManager.InitializeLoginState(nowUtc);
             _lastDailyCheckDateUtc = nowUtc.Date;
+            ApplyAudioSettings();
+            BindAudioSettingsViews();
             _levelBootstrapper = new LevelBootstrapper(_levelData, _gridManager, _levelView);
             _shopPanel = ResolveShopPanel();
 
@@ -256,6 +266,7 @@ namespace Game.Bootstrap
             Reward reward = _economyConfig.levelWinReward;
             _gameManager.GrantReward(reward);
             _onItemReceive?.Raise(reward);
+            _onAudioCue?.Raise(AudioCueId.Claim);
             Debug.Log($"[GameBootstrapper] Claimed win reward: {reward.amount} {reward.type}");
         }
 
@@ -266,6 +277,7 @@ namespace Game.Bootstrap
             Reward reward = _economyConfig.levelAdsWinReward;
             _gameManager.GrantReward(reward);
             _onItemReceive?.Raise(reward);
+            _onAudioCue?.Raise(AudioCueId.Claim);
             Debug.Log($"[GameBootstrapper] Claimed ads reward: {reward.amount} {reward.type}");
         }
 
@@ -281,6 +293,7 @@ namespace Game.Bootstrap
             }
 
             _onItemReceive?.Raise(reward);
+            _onAudioCue?.Raise(AudioCueId.Claim);
             UpdateWeeklyLoginUI();
             Debug.Log($"[GameBootstrapper] Claimed daily reward: {reward.amount} {reward.type}");
         }
@@ -302,6 +315,7 @@ namespace Game.Bootstrap
             }
 
             _onItemReceive?.Raise(reward);
+            _onAudioCue?.Raise(AudioCueId.Claim);
             UpdateWeeklyLoginUI();
             Debug.Log($"[GameBootstrapper] Claimed weekly reward (Day {currentDay + 1}): {reward.amount} {reward.type}");
         }
@@ -323,6 +337,7 @@ namespace Game.Bootstrap
                 return false;
             }
 
+            _onAudioCue?.Raise(AudioCueId.Spend);
             _onItemReceive?.Raise(item);
             _shopPanel?.Refresh();
             Debug.Log($"[GameBootstrapper] Purchased {item.amount} {item.type} for {cost.amount} {cost.type}");
@@ -412,6 +427,7 @@ namespace Game.Bootstrap
             if (_gameManager == null || !_gameManager.TryUseMoreMoves(levelManager, GameConfig.MORE_MOVE_AMOUNT))
                 return;
 
+            _onAudioCue?.Raise(AudioCueId.BoosterUsed);
             Debug.Log($"[GameBootstrapper] Used MoreMoves booster: +{GameConfig.MORE_MOVE_AMOUNT} moves");
         }
 
@@ -421,6 +437,7 @@ namespace Game.Bootstrap
             if (_gameManager == null || !_gameManager.TryUseUndo(levelManager, out MoveRecord record))
                 return;
 
+            _onAudioCue?.Raise(AudioCueId.BoosterUsed);
             _gridManager?.RevertMoveView(record);
             levelManager.CheckAllPersonConditions();
             Debug.Log("[GameBootstrapper] Used Undo booster: reverted last move");
@@ -444,6 +461,7 @@ namespace Game.Bootstrap
                 return;
             }
 
+            _onAudioCue?.Raise(AudioCueId.BoosterUsed);
             PersonView targetPersonView = _gridManager?.FindPersonView(targetPerson);
             _vfxPlayer?.PlayAtWorld(VfxId.RemoveBooster, targetPersonView?.transform);
             levelManager.CheckAllPersonConditions();
@@ -453,6 +471,49 @@ namespace Game.Bootstrap
         private void RaiseCurrentLevelChanged()
         {
             _onLevelChangedEvent?.Raise(CurrentLevel);
+        }
+
+        private void BindAudioSettingsViews()
+        {
+            if (_audioSettingsViews == null || _gameManager == null)
+                return;
+
+            for (int i = 0; i < _audioSettingsViews.Length; i++)
+            {
+                _audioSettingsViews[i]?.Bind(
+                    _gameManager.SoundVolume,
+                    _gameManager.IsSoundMuted,
+                    _gameManager.MusicVolume,
+                    _gameManager.IsMusicMuted,
+                    HandleSoundSettingsChanged,
+                    HandleMusicSettingsChanged
+                );
+            }
+        }
+
+        private void HandleSoundSettingsChanged(int volume, bool muted)
+        {
+            _gameManager?.SetSoundSettings(volume, muted);
+            ApplyAudioSettings();
+        }
+
+        private void HandleMusicSettingsChanged(int volume, bool muted)
+        {
+            _gameManager?.SetMusicSettings(volume, muted);
+            ApplyAudioSettings();
+        }
+
+        private void ApplyAudioSettings()
+        {
+            if (_audioPlayer == null || _gameManager == null)
+                return;
+
+            _audioPlayer.ApplySettings(
+                _gameManager.SoundVolume,
+                _gameManager.IsSoundMuted,
+                _gameManager.MusicVolume,
+                _gameManager.IsMusicMuted
+            );
         }
 
         private void OnApplicationQuit()

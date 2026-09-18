@@ -23,6 +23,10 @@ namespace Game.App
         public Inventory Inventory => _inventory;
         public EconomyManager EconomyManager => _economyManager;
         public int CurrentLevel => _gameData.currentLevel;
+        public int SoundVolume => _gameData.currentSoundVolume;
+        public bool IsSoundMuted => _gameData.isSoundMuted;
+        public int MusicVolume => _gameData.currentMusicVolume;
+        public bool IsMusicMuted => _gameData.isMusicMuted;
 
         public GameManager(int[] goldShopLimits, SaveLoadManager saveLoad = null)
         {
@@ -130,6 +134,20 @@ namespace Game.App
             return true;
         }
 
+        public void SetSoundSettings(int volume, bool muted)
+        {
+            _gameData.currentSoundVolume = ClampVolume(volume);
+            _gameData.isSoundMuted = muted;
+            SaveGame();
+        }
+
+        public void SetMusicSettings(int volume, bool muted)
+        {
+            _gameData.currentMusicVolume = ClampVolume(volume);
+            _gameData.isMusicMuted = muted;
+            SaveGame();
+        }
+
         public bool TryUseMoreMoves(LevelManager levelManager, int amount)
         {
             if (!CanUseBooster(levelManager, ItemType.MoreMoves))
@@ -199,6 +217,11 @@ namespace Game.App
             return levelManager?.CurrentLevel != null &&
                    !levelManager.CurrentLevel.IsOutOfMove &&
                    _inventory.HasEnough(boosterType, 1);
+        }
+
+        private static int ClampVolume(int volume)
+        {
+            return Math.Max(0, Math.Min(100, volume));
         }
     }
 }

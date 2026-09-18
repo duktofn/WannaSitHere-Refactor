@@ -8,6 +8,7 @@ using Game.Core.People;
 using Game.View.People;
 using Game.Events;
 using Game.App;
+using Game.View.Audio;
 using Game.View.VFX;
 
 namespace Game.View.Board
@@ -33,6 +34,9 @@ namespace Game.View.Board
 
         [Header("Visual Effects")]
         [SerializeField] private VfxPlayer _vfxPlayer;
+
+        [Header("Audio")]
+        [SerializeField] private AudioPlayer _audioPlayer;
 
         [Header("Events")]
         [SerializeField] private VoidEventChannelSO OnWinEvent;
@@ -82,6 +86,7 @@ namespace Game.View.Board
 
                 GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity, gridRoot);
                 CellView cellView = tmpCell.GetComponent<CellView>();
+                cellView.BindAudioPlayer(_audioPlayer);
                 cellView.BindData(c, personMoveManager);
                 cellView.CurrentPersonView?.BindVfxPlayer(_vfxPlayer);
                 _cellViewMap[c] = cellView;
@@ -108,6 +113,7 @@ namespace Game.View.Board
 
                 GameObject tmpCell = Instantiate(cellPrefabs, cellOffset, Quaternion.identity, gridRoot);
                 CellView cellView = tmpCell.GetComponent<CellView>();
+                cellView.BindAudioPlayer(_audioPlayer);
                 cellView.BindData(c, personMoveManager);
                 cellView.CurrentPersonView?.BindVfxPlayer(_vfxPlayer);
                 _cellViewMap[c] = cellView;

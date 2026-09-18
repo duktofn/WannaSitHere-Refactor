@@ -4,6 +4,8 @@ using UnityEngine.Serialization;
 using UnityEngine.UI;
 using PrimeTween;
 using Cysharp.Threading.Tasks;
+using Game.Events;
+using Game.View.Audio;
 
 namespace Game.View.UI
 {
@@ -13,6 +15,9 @@ namespace Game.View.UI
         [SerializeField] private Canvas transitionCanvas;
         [SerializeField] private Image transitionImage;
         [SerializeField] private Camera targetCamera;
+
+        [Header("Audio")]
+        [SerializeField] private AudioPlayer audioPlayer;
 
         [Header("Transition Settings")]
         [Tooltip("Thời gian mở màn hình (giây)")]
@@ -173,6 +178,14 @@ namespace Game.View.UI
         /// </summary>
         public async UniTask OpenAsync(Transform target = null, float? duration = null, Easing? easing = null)
         {
+            await OpenAsyncInternal(target, duration, easing, true);
+        }
+
+        private async UniTask OpenAsyncInternal(Transform target, float? duration, Easing? easing, bool playAudio)
+        {
+            if (playAudio)
+                audioPlayer?.Play(AudioCueId.Transition);
+
             Vector2 uvCenter = target != null ? CalculateCenterUV(target.position) : CalculateCenterUV();
             Easing activeEasing = easing ?? GetDefaultOpenEasing();
             await PlayTransitionAsync(0f, maxRadius, uvCenter, duration ?? openDuration, activeEasing, false);
@@ -180,6 +193,14 @@ namespace Game.View.UI
 
         public async UniTask OpenAsync(Vector3 worldPosition, float? duration = null, Easing? easing = null)
         {
+            await OpenAsyncInternal(worldPosition, duration, easing, true);
+        }
+
+        private async UniTask OpenAsyncInternal(Vector3 worldPosition, float? duration, Easing? easing, bool playAudio)
+        {
+            if (playAudio)
+                audioPlayer?.Play(AudioCueId.Transition);
+
             Vector2 uvCenter = CalculateCenterUV(worldPosition);
             Easing activeEasing = easing ?? GetDefaultOpenEasing();
             await PlayTransitionAsync(0f, maxRadius, uvCenter, duration ?? openDuration, activeEasing, false);
@@ -190,6 +211,14 @@ namespace Game.View.UI
         /// </summary>
         public async UniTask CloseAsync(Transform target = null, float? duration = null, Easing? easing = null)
         {
+            await CloseAsyncInternal(target, duration, easing, true);
+        }
+
+        private async UniTask CloseAsyncInternal(Transform target, float? duration, Easing? easing, bool playAudio)
+        {
+            if (playAudio)
+                audioPlayer?.Play(AudioCueId.Transition);
+
             Vector2 uvCenter = target != null ? CalculateCenterUV(target.position) : CalculateCenterUV();
             Easing activeEasing = easing ?? Easing.Standard(closeEase);
             await PlayTransitionAsync(maxRadius, 0f, uvCenter, duration ?? closeDuration, activeEasing, true);
@@ -197,6 +226,14 @@ namespace Game.View.UI
 
         public async UniTask CloseAsync(Vector3 worldPosition, float? duration = null, Easing? easing = null)
         {
+            await CloseAsyncInternal(worldPosition, duration, easing, true);
+        }
+
+        private async UniTask CloseAsyncInternal(Vector3 worldPosition, float? duration, Easing? easing, bool playAudio)
+        {
+            if (playAudio)
+                audioPlayer?.Play(AudioCueId.Transition);
+
             Vector2 uvCenter = CalculateCenterUV(worldPosition);
             Easing activeEasing = easing ?? Easing.Standard(closeEase);
             await PlayTransitionAsync(maxRadius, 0f, uvCenter, duration ?? closeDuration, activeEasing, true);
@@ -207,7 +244,7 @@ namespace Game.View.UI
         /// </summary>
         public async UniTask DoTransitionAsync(Action onCovered = null, Transform target = null, float? closeDurationOverride = null, float? openDurationOverride = null, float? delayBetween = null)
         {
-            await CloseAsync(target, closeDurationOverride);
+            await CloseAsyncInternal(target, closeDurationOverride, null, true);
 
             onCovered?.Invoke();
 
@@ -217,12 +254,12 @@ namespace Game.View.UI
                 await UniTask.Delay(TimeSpan.FromSeconds(wait));
             }
 
-            await OpenAsync(target, openDurationOverride);
+            await OpenAsyncInternal(target, openDurationOverride, null, false);
         }
 
         public async UniTask DoTransitionAsync(Func<UniTask> onCovered, Transform target = null, float? closeDurationOverride = null, float? openDurationOverride = null, float? delayBetween = null)
         {
-            await CloseAsync(target, closeDurationOverride);
+            await CloseAsyncInternal(target, closeDurationOverride, null, true);
 
             if (onCovered != null)
             {
@@ -235,7 +272,7 @@ namespace Game.View.UI
                 await UniTask.Delay(TimeSpan.FromSeconds(wait));
             }
 
-            await OpenAsync(target, openDurationOverride);
+            await OpenAsyncInternal(target, openDurationOverride, null, false);
         }
 
         // ─────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ using UnityEngine;
 using Game.Core.People;
 using Game.View.Board;
 using Game.View.Input;
+using Game.View.Audio;
 
 namespace Game.View.People
 {
@@ -9,10 +10,17 @@ namespace Game.View.People
     {
         [SerializeField] private GameObject personViewPrefabs;
 
+        private AudioPlayer _audioPlayer;
+
         public GameObject PersonViewPrefabs
         {
             get => personViewPrefabs;
             set => personViewPrefabs = value;
+        }
+
+        public void BindAudioPlayer(AudioPlayer audioPlayer)
+        {
+            _audioPlayer = audioPlayer;
         }
 
         public PersonView SpawnPerson(
@@ -32,6 +40,7 @@ namespace Game.View.People
             GameObject tmp = Instantiate(personViewPrefabs, targetCell.transform.position, Quaternion.identity, targetCell.transform.root);
             PersonView personView = tmp.GetComponent<PersonView>();
             personView.BindData(personData);
+            personView.BindAudioPlayer(_audioPlayer);
 
             PersonDragManager dragManager = tmp.GetComponent<PersonDragManager>();
             if (dragManager != null)
@@ -44,4 +53,3 @@ namespace Game.View.People
         }
     }
 }
-

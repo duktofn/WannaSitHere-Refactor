@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.Core.Board;
+using Game.View.Audio;
 using Game.View.People;
 
 namespace Game.View.Board
@@ -59,6 +60,12 @@ namespace Game.View.Board
         public void SetPersonView(PersonView view)
         {
             personView = view;
+        }
+
+        public void BindAudioPlayer(AudioPlayer audioPlayer)
+        {
+            personSpawner?.BindAudioPlayer(audioPlayer);
+            personView?.BindAudioPlayer(audioPlayer);
         }
 
         public Vector2Int GetCellIndex()

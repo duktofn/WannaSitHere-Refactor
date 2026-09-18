@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using Game.Core.People;
+using Game.Events;
+using Game.View.Audio;
 using Game.View.VFX;
 
 namespace Game.View.People
@@ -21,6 +23,7 @@ namespace Game.View.People
 
         private PersonRuntimeData _person;
         private VfxPlayer _vfxPlayer;
+        private AudioPlayer _audioPlayer;
         private bool _isSubscribed;
 
         private void Awake()
@@ -39,7 +42,7 @@ namespace Game.View.People
             SubscribeToStateChanges();
 
             if (_person != null)
-                UpdateState(_person.State);
+                ApplyState(_person.State);
         }
 
         private void OnDisable()
@@ -57,7 +60,7 @@ namespace Game.View.People
 
             personBody.sprite = _person.BaseSprite;
             SubscribeToStateChanges();
-            UpdateState(_person.State);
+            ApplyState(_person.State);
 
             if (personTooltip != null)
                 personTooltip.BindData(_person);
@@ -74,12 +77,17 @@ namespace Game.View.People
                 _vfxPlayer?.PlayAtWorld(VfxId.Happy, transform);
         }
 
+        public void BindAudioPlayer(AudioPlayer audioPlayer)
+        {
+            _audioPlayer = audioPlayer;
+        }
+
         private void SubscribeToStateChanges()
         {
             if (_person == null || _isSubscribed)
                 return;
 
-            _person.OnPersonStateChanged += UpdateState;
+            _person.OnPersonStateChanged += HandleStateChanged;
             _isSubscribed = true;
         }
 
@@ -88,11 +96,19 @@ namespace Game.View.People
             if (_person == null || !_isSubscribed)
                 return;
 
-            _person.OnPersonStateChanged -= UpdateState;
+            _person.OnPersonStateChanged -= HandleStateChanged;
             _isSubscribed = false;
         }
 
-        private void UpdateState(PersonState state)
+        private void HandleStateChanged(PersonState state)
+        {
+            ApplyState(state);
+
+            if (state == PersonState.Happy)
+                _audioPlayer?.Play(AudioCueId.PersonHappy);
+        }
+
+        private void ApplyState(PersonState state)
         {
             if (state == PersonState.Normal) 
                 personFace.sprite = normalFace;
