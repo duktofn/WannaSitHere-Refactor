@@ -1,7 +1,7 @@
 # Codebase Context
 
 Last Updated: 2026-09-17
-Last Reviewed Commit: d771672bb7b574980f573c10646aea23ffe9a701
+Last Reviewed Commit: 99888e1446c6a9e4f4d9e8c641ea63788226a3f8
 
 ---
 
@@ -211,7 +211,7 @@ Communication:
 - Subscribes to ScriptableObject event channels for game flow.
 - Reads domain state but does not mutate domain models directly (mutations go through `GridManager` → `LevelManager`).
 
-Modules: Board (CellView, GridManager, FoodTooltips), People (PersonView, PersonMover, PersonSpawner, PersonTooltip, PersonDragManager), UI (UIManager, LevelView, InventoryView, BoosterSlotView, PanelController, TransitionController, LevelEndPanel, LevelEndText, WeeklyLogin, ButtonSpriteSwap, UIAlphaExtensions), Effect (ButtonPunchShake, AdsShaking, CurrencyFlyAnimation), VFX (VfxId, VfxCatalogSO, VfxPlayer, VfxInstance).
+Modules: Board (CellView, GridManager, FoodTooltips), People (PersonView, PersonMover, PersonSpawner, PersonTooltip, PersonDragManager), UI (UIManager, LevelView, InventoryView, BoosterSlotView, ShopPanelView, ShopItemView, PanelController, TransitionController, LevelEndPanel, LevelEndText, WeeklyLogin, ButtonSpriteSwap, UIAlphaExtensions), Effect (ButtonPunchShake, AdsShaking, CurrencyFlyAnimation, CurrencyScatterAnimation), VFX (VfxId, VfxCatalogSO, VfxPlayer, VfxInstance).
 
 ---
 
@@ -233,6 +233,7 @@ Communication:
 
 - `GameBootstrapper` holds all serialized Data/View/Event references, listens to 15+ ScriptableObject event channels, and delegates application state changes to `Game.App.GameManager`.
 - `LevelBootstrapper` converts `LevelDataSO` → `LevelRuntimeData` and initializes `GridManager`.
+- `LevelLayoutGizmosDrawer` is a normal `MonoBehaviour` that reads selected level SO data for Scene-view layout visualization only.
 
 ---
 
@@ -1003,7 +1004,8 @@ Dependencies:
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
-| `InitializeLoginState` | `DateTime nowUtc` | `void` | Evaluates daily login state and persists a new login timestamp when required |
+| `InitializeLoginState` | `DateTime nowUtc` | `void` | Initializes daily login state through the daily refresh path |
+| `RefreshDailyState` | `DateTime nowUtc` | `bool` | Detects a new UTC calendar day, resets Gold shop purchase counts through `EconomyManager`, updates the saved login timestamp, and persists the result |
 | `SetLevel` | `int level` | `void` | Updates and persists the current level |
 | `GrantReward` | `Reward reward` | `void` | Applies and persists a configured reward |
 | `TryClaimDailyReward` / `TryClaimWeeklyReward` | `Reward reward` | `bool` | Claims a reward through `EconomyManager` and persists only on success |
@@ -1030,19 +1032,169 @@ Dependencies:
 
 - `GameManager`, `LevelBootstrapper`, `EventListener`
 - `EconomyConfigSO`, `ConditionDataSO`, `LevelDataSO`, `GameConfig`
-- `UIManager`, `GridManager`, `LevelView`, `WeeklyLogin`, `VfxPlayer`
+- `UIManager`, `GridManager`, `LevelView`, `WeeklyLogin`, `ShopPanelView`, `VfxPlayer`
 - Game-flow, reward, shop, booster, and economy-feedback channels
+
+### Fields
+
+| Name | Type | Purpose |
+|---|---|---|
+| `_levelData` | `List<LevelDataSO>` | Ordered level authoring data passed to `LevelBootstrapper` |
+| `_economyConfig` | `EconomyConfigSO` | Authoring source for rewards, shop prices, and Gold shop limits |
+| `_canSitAnywhereCondition` | `ConditionDataSO` | Authoring condition converted for Remove Booster execution |
+| `_uiManager` | `UIManager` | Main UI facade reference |
+| `_gridManager` | `GridManager` | Board view and active `LevelManager` reference |
+| `_levelView` | `LevelView` | In-game move and booster HUD reference |
+| `_weeklyLogin` | `WeeklyLogin` | Daily/weekly reward UI reference |
+| `_shopPanel` | `ShopPanelView` | Shop price, affordability, purchase, and limit UI reference |
+| `_vfxPlayer` | `VfxPlayer` | Presentation VFX player reference |
+| `_onPlayGameEvent` / `_onWinEvent` / `_onLoseEvent` | `VoidEventChannelSO` | Game flow event channels |
+| `_onNextLevelEvent` / `_onRestartLevelEvent` | `VoidEventChannelSO` | Level navigation event channels |
+| `_onLevelChangedEvent` | `IntEventChannelSO` | Publishes the current level number |
+| `_onClaimWinRewardEvent` / `_onClaimAdsRewardEvent` | `VoidEventChannelSO` | Win and ad reward claim channels |
+| `_onClaimDailyRewardEvent` / `_onClaimWeeklyRewardEvent` | `VoidEventChannelSO` | Login reward claim channels |
+| `_onBuyRemoveEvent` / `_onBuyUndoEvent` / `_onBuyMoreMovesEvent` | `VoidEventChannelSO` | Legacy/item-specific shop purchase channels |
+| `_onUseMoreMovesEvent` / `_onUseUndoEvent` / `_onUseRemoveEvent` | `VoidEventChannelSO` | In-game booster use channels |
+| `_onItemReceive` / `_onItemSpend` | `OnItemReceiveSO` / `OnItemSpendSO` | Economy transaction feedback channels |
+| `_listener` | `EventListener` | Tracks channel subscriptions for lifecycle-safe unbinding |
+| `_gameManager` | `GameManager` | Application state and transaction service created at runtime |
+| `_levelBootstrapper` | `LevelBootstrapper` | Level data conversion and view composition helper |
+| `_lastDailyCheckDateUtc` | `DateTime` | Prevents repeated daily-state checks after the current UTC date has been evaluated |
 
 ### Key Methods
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
 | `Awake` | — | `void` | Converts authoring limits into application input, creates `GameManager`, initializes presentation, and creates `LevelBootstrapper` |
+| `Update` | — | `void` | Checks for a UTC date change while the game remains open |
 | `OnEnable` / `OnDisable` | — | `void` | Binds and unbinds all event-channel callbacks |
 | `HandlePlayGame` | — | `void` | Loads the active level and binds the in-game booster HUD |
 | `HandleUseUndo` | — | `void` | Delegates undo to `GameManager`, then performs the view revert and condition refresh |
 | `HandleUseRemove` | — | `void` | Converts `CanSitAnywhere` data, delegates condition replacement, then plays presentation VFX and refreshes conditions |
+| `HandleShopPurchase` | `ShopPurchaseRequest request` | `void` | Resolves the configured price and reward for a Gold/Gem slot and delegates the transaction |
 | `UpdateWeeklyLoginUI` | — | `void` | Projects application economy state and authoring rewards onto `WeeklyLogin` |
+| `SaveGame` | — | `void` | Delegates persistence to `GameManager` and refreshes the ShopPanel |
+| `OnApplicationFocus` | `bool hasFocus` | `void` | Rechecks daily state when the application regains focus |
+| `RefreshDailyStateIfNeeded` | — | `void` | Runs the once-per-day application refresh and updates login/shop presentation when state changes |
+| `ResolveShopPanel` | — | `ShopPanelView` | Uses the serialized ShopPanel when available, otherwise resolves the existing scene object and adds the view component at runtime |
+
+---
+
+## ShopPurchaseRequest
+
+Path:
+`Assets/Game/View/UI/ShopPanelView.cs`
+
+Responsibility:
+
+Immutable presentation request identifying whether a shop slot uses Gold, its zero-based EconomyConfig slot index, and the booster item represented by that slot.
+
+### Fields / Properties
+
+| Name | Type | Purpose |
+|---|---|---|
+| `UsesGold` | `bool` (get) | Identifies whether the request came from the Gold shop row and therefore uses a daily limit |
+| `SlotIndex` | `int` (get) | Maps the clicked slot to the corresponding price and limit array entry |
+| `ItemType` | `ItemType` (get) | Identifies the reward item to purchase |
+
+---
+
+## ShopPanelView
+
+Path:
+`Assets/Game/View/UI/ShopPanelView.cs`
+
+Responsibility:
+
+Presentation coordinator for the ShopPanel. Receives EconomyConfig-derived price and limit arrays from `GameBootstrapper`, binds the six slot views, refreshes prices/limits/affordability, and forwards purchase requests through a callback.
+
+Inherits / Implements:
+
+- `MonoBehaviour`
+
+Dependencies:
+
+- `ShopItemView`, `EconomyManager`, `Reward`, `ItemType`
+- `Inventory.OnInventoryUpdate`
+
+### Fields
+
+| Name | Type | Purpose |
+|---|---|---|
+| `goldShopItems` | `ShopItemView[]` | Gold-row slots; discovered from `GoldShopItem 1..3` when not assigned in the Inspector |
+| `gemShopItems` | `ShopItemView[]` | Gem-row slots; discovered from `GemShopItem 1..3` when not assigned in the Inspector |
+| `_goldShopPrices` | `Reward[]` | Snapshot of `EconomyConfigSO.goldShopPrice` |
+| `_goldShopLimits` | `int[]` | Snapshot of `EconomyConfigSO.goldShopLimit` |
+| `_gemShopPrices` | `Reward[]` | Snapshot of `EconomyConfigSO.gemShopPrice` |
+| `_economyManager` | `EconomyManager` | Provides inventory affordability and Gold purchase counts |
+| `_onPurchaseRequested` | `Action<ShopPurchaseRequest>` | Callback to Bootstrap for the actual transaction |
+| `_isSubscribed` | `bool` | Prevents duplicate Inventory event subscriptions across enable/disable cycles |
+
+### Methods
+
+| Method | Parameters | Return Type | Purpose |
+|---|---|---|---|
+| `Bind` | `IReadOnlyList<Reward> goldShopPrices, IReadOnlyList<int> goldShopLimits, IReadOnlyList<Reward> gemShopPrices, EconomyManager economyManager, Action<ShopPurchaseRequest> onPurchaseRequested` | `void` | Supplies configured offers and transaction callback, then refreshes all slots |
+| `Refresh` | — | `void` | Reprojects current prices, Gold purchase counts, limits, and affordability to the slot views |
+| `Awake` | — | `void` | Ensures slot components exist and discovers slots from the existing ShopPanel hierarchy |
+| `OnEnable` / `OnDisable` | — | `void` | Subscribes/unsubscribes from inventory updates and refreshes presentation |
+
+### Relations
+
+- Maps slot indices `0..2` to `MoreMoves`, `Remove`, and `Undo`.
+- Uses `goldShopLimit[i]` and `EconomyManager.GetGoldShopPurchaseCount(i)` for Gold slots.
+- Uses `gemShopPrice[i]` without a purchase limit for Gem slots.
+- Calls `ShopItemView.Bind()` and receives purchase callbacks from each item.
+
+---
+
+## ShopItemView
+
+Path:
+`Assets/Game/View/UI/ShopItemView.cs`
+
+Responsibility:
+
+Displays one shop offer's configured price and optional Gold limit, controls button interactability from inventory and limit state, and forwards valid clicks as a `ShopPurchaseRequest`.
+
+Inherits / Implements:
+
+- `MonoBehaviour`
+
+Dependencies:
+
+- `TextMeshProUGUI` price/limit labels
+- `UnityEngine.UI.Button`
+- `EconomyManager`, `ShopPurchaseRequest`
+
+### Fields
+
+| Name | Type | Purpose |
+|---|---|---|
+| `priceText` | `TextMeshProUGUI` | Displays the current configured price amount |
+| `limitText` | `TextMeshProUGUI` | Displays `Limit: purchased/limit` for Gold offers when present |
+| `purchaseButton` | `UnityEngine.UI.Button` | Starts a purchase request and is disabled when the offer cannot be bought |
+| `_request` | `ShopPurchaseRequest` | Identifies the bound currency row, slot, and item |
+| `_price` | `Reward` | Current configured cost |
+| `_economyManager` | `EconomyManager` | Checks whether the player can afford the cost |
+| `_purchaseCount` / `_limit` | `int` | Current Gold purchase count and configured cap |
+| `_hasOffer` | `bool` | Distinguishes a configured slot from an unavailable slot |
+
+### Methods
+
+| Method | Parameters | Return Type | Purpose |
+|---|---|---|---|
+| `Bind` | `ShopPurchaseRequest request, Reward price, EconomyManager economyManager, int purchaseCount, int limit, Action<ShopPurchaseRequest> onPurchaseRequested` | `void` | Binds runtime offer state, updates labels, and evaluates button interactability |
+| `SetUnavailable` | — | `void` | Clears/hides labels and disables a slot when EconomyConfig lacks its entry |
+| `Refresh` | — | `void` | Updates price, limit text, and affordability/limit gating |
+| `OnPurchaseButtonClicked` | — | `void` | Entry point wired to each scene Button `OnClick`; forwards the validated purchase request |
+| `OnEnable` / `OnDisable` | — | `void` | Balances the Button click listener subscription |
+
+### Relations
+
+- Resolves existing child objects named `Price`, `LimitText`, and `Button` when serialized references are not assigned.
+- Each scene purchase Button has a persistent `OnClick` listener targeting its parent `ShopItemView.OnPurchaseButtonClicked`; runtime listener fallback remains available when no persistent listener exists.
+- Invokes the panel callback only when the current offer remains affordable and within its Gold limit.
 
 ---
 
@@ -1064,6 +1216,30 @@ Dependencies:
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
 | `LoadLevel` | `int levelNumber` | `void` | Wraps index, converts data, clears grids, creates grids, binds view |
+
+---
+
+## LevelLayoutGizmosDrawer
+
+Path:
+`Assets/Game/Bootstrap/LevelLayoutGizmosDrawer.cs`
+
+Responsibility:
+
+Normal `MonoBehaviour` that draws the selected `LevelDataSO` MainGrid and WaitGrid as Scene-view wireframe Gizmos. Designers drag level SOs into `levels` and choose the zero-based `levelIndex`; MainGrid is cyan and WaitGrid is yellow.
+
+### Fields
+
+| Name | Type | Purpose |
+|---|---|---|
+| `levels` | `List<LevelDataSO>` | Level assets available for Gizmos preview |
+| `levelIndex` | `int` | Zero-based index of the level to draw |
+
+### Key Methods
+
+| Method | Parameters | Return Type | Purpose |
+|---|---|---|---|
+| `OnDrawGizmos` | — | `void` | Draws MainGrid and WaitGrid cell rectangles using the selected level's layout data |
 
 ---
 
@@ -1203,6 +1379,42 @@ Dependencies:
 | `PlayAtUI` | `VfxId id, RectTransform target` | `void` | Converts a uGUI target position and plays a pooled `UIParticle` wrapper under the configured VFX root |
 | `Stop` | `VfxId id` | `void` | Stops and pools active instances of one type |
 | `StopAll` | — | `void` | Stops and pools all active instances |
+
+---
+
+## CurrencyScatterAnimation
+
+Path:
+`Assets/Game/View/Effect/CurrencyScatterAnimation.cs`
+
+Responsibility:
+
+Presentation component that prewarms and reuses currency icon UI objects, scatters them from a screen or transform position, holds them for a configurable delay, then shrinks and releases them back to the pool.
+
+Inherits / Implements:
+
+- `MonoBehaviour`
+
+Dependencies:
+
+- `CurrencyFlyAnimation` for the shared top-level currency overlay container
+- `PrimeTween`, `UniTask`, `UnityEngine.UI`
+
+### Key Methods
+
+| Method | Parameters | Return Type | Purpose |
+|---|---|---|---|
+| `PlayFromScreenCenter` | — | `void` | Starts the scatter animation from the screen center |
+| `PlayFromTransform` | `Transform source` | `void` | Starts the scatter animation from a world or UI transform; falls back to the screen center when the source is missing |
+| `Play` | `Vector3 startPos, bool isScreenPos = false` | `void` | Starts the animation from an explicit world or screen position |
+| `PlayAsync` | `Vector3 startPos, bool isScreenPos = false, Transform sourceTransform = null` | `UniTask` | Runs the scatter, delay, shrink, and release sequence |
+
+### Events
+
+| Name | Type | Purpose |
+|---|---|---|
+| `OnCoinDisappeared` | `Action` | Signals that one coin has completed its shrink animation |
+| `OnAllCoinsDisappeared` | `Action` | Signals that the current scatter animation has completed |
 
 ---
 
@@ -1486,7 +1698,7 @@ Path:
 
 Responsibility:
 
-Weekly login attendance UI. Displays 7-day reward grid with claimed marks, daily reward section, and claim buttons with sprite swap states.
+Weekly login attendance UI. Displays 7-day reward grid with claimed marks, daily reward section, claim buttons with sprite states, and day-specific currency fly feedback.
 
 Inherits / Implements:
 
@@ -1494,7 +1706,25 @@ Inherits / Implements:
 
 Dependencies:
 
-- `Reward`, `ItemType`, `ButtonSpriteSwap`
+- `Reward`, `ItemType`, `ButtonSpriteSwap`, `CurrencyFlyAnimation`
+
+### Fields
+
+| Name | Type | Purpose |
+|---|---|---|
+| `claimGoldCurrencyFly` | `CurrencyFlyAnimation` | CurrencyFly effect for Weekly ClaimButton on Days 1–6, configured with GoldIcon and GoldView |
+| `claimGemCurrencyFly` | `CurrencyFlyAnimation` | CurrencyFly effect for Weekly ClaimButton on Day 7, configured with GemIcon and GemView |
+
+### Key Methods
+
+| Method | Parameters | Return Type | Purpose |
+|---|---|---|---|
+| `UpdateAmountTexts` | — | `void` | Refreshes reward labels and claim states, and switches the Weekly ClaimButton between Gold and Gem CurrencyFly effects based on the current login day |
+
+### Relations
+
+- Uses the 0-based `_currentLoginDay` supplied by `GameBootstrapper`; index `6` represents Day 7.
+- The SampleScene assigns `claimGoldCurrencyFly` to component fileID `668022246` and `claimGemCurrencyFly` to component fileID `1819088850`; `ButtonSpriteSwap` remains independent of day-specific CurrencyFly selection.
 
 ---
 
@@ -1552,8 +1782,6 @@ Path: `Assets/Game/Editor/LevelDataSOEditor.cs`
 
 Responsibility: Custom inspector providing a visual 2D matrix editor for `LevelDataSO` with resize, batch fill, and clear operations.
 
----
-
 # Code Flow
 
 ## App Start & Initialization
@@ -1565,6 +1793,7 @@ Responsibility: Custom inspector providing a visual 2D matrix editor for `LevelD
   → `GameManager.InitializeLoginState(DateTime.UtcNow)` updates daily state and persists when needed
 → creates `LevelBootstrapper`
 → `UIManager.Initialize(Inventory)` → `InventoryView.BindData()`
+→ resolves/creates `ShopPanelView` and binds `EconomyConfigSO.goldShopPrice`, `goldShopLimit`, and `gemShopPrice`
 → updates `WeeklyLogin` UI
 
 `GameBootstrapper.OnEnable()`
@@ -1572,6 +1801,11 @@ Responsibility: Custom inspector providing a visual 2D matrix editor for `LevelD
 
 `GameBootstrapper.Start()`
 → Raises `_onLevelChangedEvent` with initial level
+
+`GameBootstrapper.Update()` / `OnApplicationFocus(true)`
+→ `GameManager.RefreshDailyState(DateTime.UtcNow)`
+→ resets Gold shop purchase counts when the UTC calendar date changes
+→ persists `GameData` and refreshes `WeeklyLogin`/`ShopPanel`
 
 ---
 
@@ -1660,13 +1894,17 @@ User taps claim reward
 
 ## Shop Purchase
 
-User taps buy button
-→ Event channel raised (e.g. `OnBuyRemove`)
-→ `GameBootstrapper.HandleBuyRemove()`
-  → `GameManager.TryPurchase(cost, item, slotIndex)`
-    → `EconomyManager.TryPurchase()` checks daily cap and balance
-    → If success: `Inventory.TrySpendItem(cost)`, `Inventory.UpdateInventory(item)`, `GameManager.SaveGame()`, then Bootstrap raises `_onItemReceive`
-    → If fail: Bootstrap raises `_onItemSpend` signaling failure
+`ShopPanelView.Bind()` copies `EconomyConfigSO` prices and Gold limits
+→ discovers `GoldShopItem 1..3` and `GemShopItem 1..3`
+→ `ShopItemView` displays the configured price; Gold slots display `Limit: purchased/limit`
+→ Gold button interactability uses `EconomyManager.GetGoldShopPurchaseCount(i)` and inventory affordability
+
+User taps a shop button
+→ `ShopItemView` emits `ShopPurchaseRequest(UsesGold, SlotIndex, ItemType)` to `GameBootstrapper.HandleShopPurchase()`
+→ `GameBootstrapper` selects `goldShopPrice[i]` or `gemShopPrice[i]` and the matching booster reward
+→ `GameManager.TryPurchase(cost, item, goldSlotIndex)` delegates to `EconomyManager.TryPurchase()`
+→ on success, inventory/purchase count are persisted and `_onItemReceive` is raised
+→ `ShopPanelView.Refresh()` updates prices, affordability, and Gold limit text
 
 ---
 
@@ -1699,7 +1937,10 @@ User taps buy button
 - UI button convention: visual effects (`ButtonPunchShake`) and logic (`ButtonEventRaiser`) are separate components on the same button.
 - `Game.View` does **not** reference `Game.Data`. Config-to-runtime conversion is done exclusively by `Game.Bootstrap`.
 - Move recording skips WaitGrid→WaitGrid moves to prevent cluttering undo history.
+- `ShopPanelView` receives copied EconomyConfig arrays from `GameBootstrapper`; `Game.View` remains independent of `Game.Data`.
+- Shop slot mapping is `0 = MoreMoves`, `1 = Remove`, `2 = Undo`; Gold limits apply per slot while Gem slots have no daily cap.
 - `CurrencyFlyAnimation` provides pooled coin burst-and-fly animations with `OnCoinArrived` / `OnAllCoinsArrived` events.
+- `CurrencyScatterAnimation` provides pooled coin scatter-and-shrink animations with a configurable hold delay and `OnCoinDisappeared` / `OnAllCoinsDisappeared` events.
 - `VFXCatalog.asset` maps `RemoveBooster`, `Happy`, and `Win` IDs to their configured prefabs; each entry owns its prewarm, fade, and scale settings.
 - `VfxPlayer` is a scene-owned presentation service; gameplay code triggers it only after successful domain operations, while `PersonView` reacts to the domain state event for Happy.
 - `UIAlphaExtensions` is a static extension class providing fluent alpha get/set and PrimeTween alpha tweening for `Graphic` and `CanvasGroup`.
