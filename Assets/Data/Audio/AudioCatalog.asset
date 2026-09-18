@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50b9a49879e1e7c44b15e9e44bf790df, type: 3}
+  m_Name: AudioCatalog
+  m_EditorClassIdentifier: Game.View::Game.View.Audio.AudioCatalogSO
+  cues:
+  - cue: 0
+    clips:
+    - {fileID: 8300000, guid: a550cb02580f00c40b4ba02aeff3acb4, type: 3}
+    bus: 0
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.04
+    allowOverlap: 1
+  - cue: 1
+    clips: []
+    bus: 0
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    allowOverlap: 0
+  - cue: 2
+    clips:
+    - {fileID: 8300000, guid: 79c3cb7a26813d146b07c293b0324039, type: 3}
+    bus: 1
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    allowOverlap: 0
+  - cue: 3
+    clips: []
+    bus: 1
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    allowOverlap: 0
+  - cue: 4
+    clips: []
+    bus: 1
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.4
+    allowOverlap: 0
+  - cue: 5
+    clips: []
+    bus: 1
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.4
+    allowOverlap: 0
+  - cue: 6
+    clips:
+    - {fileID: 8300000, guid: c7e63d8131772fe4ab154708b319f0ea, type: 3}
+    bus: 0
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    allowOverlap: 0
+  - cue: 7
+    clips: []
+    bus: 0
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    allowOverlap: 0
+  music:
+  - music: 0
+    clip: {fileID: 8300000, guid: 30830308e3a71a844b4137a19966f8ba, type: 3}
+    volume: 1
+    fadeDuration: 0.5
+  - music: 1
+    clip: {fileID: 8300000, guid: b3136e872b76fc6428c8c22a35c95c12, type: 3}
+    volume: 1
+    fadeDuration: 0.5
