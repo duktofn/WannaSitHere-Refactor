@@ -1,7 +1,7 @@
 # Codebase Context
 
-Last Updated: 2026-09-17
-Last Reviewed Commit: 99888e1446c6a9e4f4d9e8c641ea63788226a3f8
+Last Updated: 2026-09-18
+Last Reviewed Commit: 81d3afb118de0ca46d56ceba233018d74cfdecdd
 
 ---
 
@@ -20,6 +20,7 @@ Primary systems include:
 - economy (Gold, Gem, shop, daily/weekly login rewards),
 - persistence (JSON file save/load),
 - UI navigation and transitions,
+- catalogued UI/SFX/BGM audio playback with persisted settings,
 - event-driven architecture via ScriptableObject channels.
 
 The project separates core gameplay logic (pure C#, no MonoBehaviour) from presentation, configuration, and infrastructure concerns using a Clean/Layered Architecture with ScriptableObject Event Channels for decoupled communication.
@@ -86,10 +87,10 @@ Game.Events   Game.Data           Game.App               │
 ```
 
 - **`Game.Core`** — Domain center. No MonoBehaviours. No assembly references.
-- **`Game.Events`** — References `Game.Core` (for `Reward` type) and `UniTask`.
+- **`Game.Events`** — References `Game.Core` (for `Reward` type) and `UniTask`; also owns the presentation-only `AudioCueId` contract and typed cue channel.
 - **`Game.Data`** — References `Game.Core` only.
-- **`Game.App`** — References `Game.Core`, `Game.Events`.
-- **`Game.View`** — References `Game.Core`, `Game.Events`, `Game.App`, `PrimeTween`, `UniTask`, `TMP`, `InputSystem`, `uGUI`, `Coffee.UIParticle`.
+- **`Game.App`** — References `Game.Core`, `Game.Events`; stores audio volume/mute primitives in `GameData` but never references Unity audio objects.
+- **`Game.View`** — References `Game.Core`, `Game.Events`, `Game.App`, `PrimeTween`, `UniTask`, `TMP`, `InputSystem`, `uGUI`, `Coffee.UIParticle`, and Unity audio types only inside `Game.View.Audio`.
 - **`Game.Bootstrap`** — References all runtime assemblies: `Game.Core`, `Game.Data`, `Game.App`, `Game.View`, `Game.Events`.
 - **`Game.Editor`** — Editor-only. References `Game.Data`, `Game.App`, `Game.Core`, `Game.Bootstrap`.
 - **`Game.Tests.EditMode`** — Editor-only. References `Game.Core`, `Game.App`, `Game.Events`.
@@ -97,6 +98,8 @@ Game.Events   Game.Data           Game.App               │
 Key rule: `Game.View` does **not** reference `Game.Data`. Configuration-to-runtime conversion is `Game.Bootstrap`'s responsibility.
 
 Presentation VFX is owned by `Game.View.VFX`. `VfxCatalogSO` stores prefab and lifetime configuration, while `VfxPlayer` owns spawning, UI/world placement, pooling, cancellation, and cleanup. UI particle instances use the embedded `Coffee.UIParticle` renderer under the per-Canvas `VFXRoot`, while world effects continue to use the regular ParticleSystem path. `Game.Core` remains unaware of VFX; `Game.Bootstrap` and presentation views provide explicit references to the player.
+
+Presentation audio is owned by `Game.View.Audio`. `AudioCueId` and `AudioCueEventChannelSO` provide the cross-layer cue contract without audio objects. `AudioCatalogSO` stores cue/music configuration, while the scene-owned `AudioPlayer` owns AudioSources, Mixer routing, variation/cooldown rules, and BGM cross-fade. `GameBootstrapper` raises outcome cues only after successful application operations; view components call the player directly for button, transition, and Happy feedback.
 
 ---
 
@@ -145,6 +148,7 @@ Communication:
 
 - Channels are ScriptableObject assets assigned via serialized references in the Inspector.
 - Publishers call `channel.Raise()`. Subscribers register via `channel.OnRaised += handler` or through `EventListener`.
+- `AudioCueEventChannelSO` is the single typed `AudioCueId` channel at `Assets/Data/Events/OnAudioCue.asset`; it carries no `AudioClip` or `AudioSource`.
 
 ---
 
@@ -187,6 +191,7 @@ Communication:
 
 - `LevelManager` validates moves, records history, evaluates conditions, and raises win/lose via `VoidEventChannelSO`.
 - `GameManager` owns `GameData`, `Inventory`, and `EconomyManager`; it persists successful state changes through `SaveLoadManager` without referencing authoring data or presentation components.
+- `GameManager` exposes and persists integer volume/mute settings; `GameBootstrapper` passes those primitives to `AudioPlayer.ApplySettings`.
 - `SaveLoadManager` serializes `GameData` to `data.json` at `Application.persistentDataPath`.
 
 ---
@@ -211,7 +216,7 @@ Communication:
 - Subscribes to ScriptableObject event channels for game flow.
 - Reads domain state but does not mutate domain models directly (mutations go through `GridManager` → `LevelManager`).
 
-Modules: Board (CellView, GridManager, FoodTooltips), People (PersonView, PersonMover, PersonSpawner, PersonTooltip, PersonDragManager), UI (UIManager, LevelView, InventoryView, BoosterSlotView, ShopPanelView, ShopItemView, PanelController, TransitionController, LevelEndPanel, LevelEndText, WeeklyLogin, ButtonSpriteSwap, UIAlphaExtensions), Effect (ButtonPunchShake, AdsShaking, CurrencyFlyAnimation, CurrencyScatterAnimation), VFX (VfxId, VfxCatalogSO, VfxPlayer, VfxInstance).
+Modules: Board (CellView, GridManager, FoodTooltips), People (PersonView, PersonMover, PersonSpawner, PersonTooltip, PersonDragManager), UI (UIManager, LevelView, InventoryView, BoosterSlotView, ShopPanelView, ShopItemView, PanelController, TransitionController, LevelEndPanel, LevelEndText, WeeklyLogin, ButtonSpriteSwap, UIAlphaExtensions), Effect (ButtonPunchShake, AdsShaking, CurrencyFlyAnimation, CurrencyScatterAnimation), VFX (VfxId, VfxCatalogSO, VfxPlayer, VfxInstance), Audio (AudioCatalogSO, AudioPlayer, AudioEventBinder, UIButtonSound, AudioSettingsView).
 
 ---
 
@@ -231,7 +236,7 @@ Used By:
 
 Communication:
 
-- `GameBootstrapper` holds all serialized Data/View/Event references, listens to 15+ ScriptableObject event channels, and delegates application state changes to `Game.App.GameManager`.
+- `GameBootstrapper` holds all serialized Data/View/Event references, listens to 15+ ScriptableObject event channels, delegates application state changes to `Game.App.GameManager`, raises successful outcome audio cues, and applies persisted audio settings to the scene `AudioPlayer`.
 - `LevelBootstrapper` converts `LevelDataSO` → `LevelRuntimeData` and initializes `GridManager`.
 - `LevelLayoutGizmosDrawer` is a normal `MonoBehaviour` that reads selected level SO data for Scene-view layout visualization only.
 
@@ -307,6 +312,28 @@ Concrete parameterless event channel. CreateAssetMenu: `Game/Event Channel/No Pa
 Inherits / Implements:
 
 - `EventChannelSO`
+
+## AudioCueId
+
+Path:
+`Assets/Game/Events/AudioCueId.cs`
+
+Responsibility:
+
+Presentation cue contract containing `ButtonClick`, `Transition`, `BoosterUsed`, `PersonHappy`, `Win`, `Lose`, `Claim`, and `Spend`. It has no Unity audio references and is not used by `Game.Core`.
+
+## AudioCueEventChannelSO
+
+Path:
+`Assets/Game/Events/AudioCueEventChannelSO.cs`
+
+Responsibility:
+
+Typed ScriptableObject event channel carrying one `AudioCueId`. The project uses one serialized asset, `Assets/Data/Events/OnAudioCue.asset`, for all gameplay outcome cues.
+
+Inherits / Implements:
+
+- `EventChannelSO<AudioCueId>`
 
 ---
 
@@ -1000,6 +1027,13 @@ Dependencies:
 | `_economyManager` | `EconomyManager` | Login/shop manager |
 | `_gameData` | `GameData` | Runtime save data copy |
 
+### Properties
+
+| Name | Type | Purpose |
+|---|---|---|
+| `SoundVolume` / `MusicVolume` | `int` | Persisted 0–100 volume percentages exposed to the composition root |
+| `IsSoundMuted` / `IsMusicMuted` | `bool` | Persisted mute flags |
+
 ### Key Methods
 
 | Method | Parameters | Return Type | Purpose |
@@ -1011,6 +1045,7 @@ Dependencies:
 | `TryClaimDailyReward` / `TryClaimWeeklyReward` | `Reward reward` | `bool` | Claims a reward through `EconomyManager` and persists only on success |
 | `TryPurchase` | `Reward cost, Reward item, int goldShopSlotIndex = -1` | `bool` | Shop transaction via EconomyManager |
 | `TryUseMoreMoves` / `TryUseUndo` / `TryUseRemove` | `LevelManager, ...` | `bool` | Executes core booster behavior and persists the consumed inventory item |
+| `SetSoundSettings` / `SetMusicSettings` | `int volume, bool muted` | `void` | Clamps and persists the corresponding audio settings without referencing Unity audio types |
 | `SaveGame` | — | `void` | Serializes state to GameData and persists |
 
 ---
@@ -1033,7 +1068,9 @@ Dependencies:
 - `GameManager`, `LevelBootstrapper`, `EventListener`
 - `EconomyConfigSO`, `ConditionDataSO`, `LevelDataSO`, `GameConfig`
 - `UIManager`, `GridManager`, `LevelView`, `WeeklyLogin`, `ShopPanelView`, `VfxPlayer`
+- `AudioPlayer`, `AudioSettingsView`
 - Game-flow, reward, shop, booster, and economy-feedback channels
+- `AudioCueEventChannelSO`
 
 ### Fields
 
@@ -1048,6 +1085,8 @@ Dependencies:
 | `_weeklyLogin` | `WeeklyLogin` | Daily/weekly reward UI reference |
 | `_shopPanel` | `ShopPanelView` | Shop price, affordability, purchase, and limit UI reference |
 | `_vfxPlayer` | `VfxPlayer` | Presentation VFX player reference |
+| `_audioPlayer` | `AudioPlayer` | Scene-owned presentation audio service |
+| `_audioSettingsViews` | `AudioSettingsView[]` | Existing Main and InGame settings panels bound to persisted audio callbacks |
 | `_onPlayGameEvent` / `_onWinEvent` / `_onLoseEvent` | `VoidEventChannelSO` | Game flow event channels |
 | `_onNextLevelEvent` / `_onRestartLevelEvent` | `VoidEventChannelSO` | Level navigation event channels |
 | `_onLevelChangedEvent` | `IntEventChannelSO` | Publishes the current level number |
@@ -1056,6 +1095,7 @@ Dependencies:
 | `_onBuyRemoveEvent` / `_onBuyUndoEvent` / `_onBuyMoreMovesEvent` | `VoidEventChannelSO` | Legacy/item-specific shop purchase channels |
 | `_onUseMoreMovesEvent` / `_onUseUndoEvent` / `_onUseRemoveEvent` | `VoidEventChannelSO` | In-game booster use channels |
 | `_onItemReceive` / `_onItemSpend` | `OnItemReceiveSO` / `OnItemSpendSO` | Economy transaction feedback channels |
+| `_onAudioCue` | `AudioCueEventChannelSO` | Single channel used for successful BoosterUsed, Claim, and Spend outcomes |
 | `_listener` | `EventListener` | Tracks channel subscriptions for lifecycle-safe unbinding |
 | `_gameManager` | `GameManager` | Application state and transaction service created at runtime |
 | `_levelBootstrapper` | `LevelBootstrapper` | Level data conversion and view composition helper |
@@ -1071,6 +1111,9 @@ Dependencies:
 | `HandlePlayGame` | — | `void` | Loads the active level and binds the in-game booster HUD |
 | `HandleUseUndo` | — | `void` | Delegates undo to `GameManager`, then performs the view revert and condition refresh |
 | `HandleUseRemove` | — | `void` | Converts `CanSitAnywhere` data, delegates condition replacement, then plays presentation VFX and refreshes conditions |
+| `HandleClaimWinReward` / `HandleClaimAdsReward` / `HandleClaimDailyReward` / `HandleClaimWeeklyReward` | — | `void` | Raises `Claim` only after the applicable reward operation completes successfully |
+| `TryPurchase` | `Reward cost, Reward item, int goldShopSlotIndex = -1` | `bool` | Raises `Spend` only after the payment succeeds |
+| `BindAudioSettingsViews` / `ApplyAudioSettings` | — | `void` | Connects existing setting UI to GameManager persistence and AudioPlayer mixer application |
 | `HandleShopPurchase` | `ShopPurchaseRequest request` | `void` | Resolves the configured price and reward for a Gold/Gem slot and delegates the transaction |
 | `UpdateWeeklyLoginUI` | — | `void` | Projects application economy state and authoring rewards onto `WeeklyLogin` |
 | `SaveGame` | — | `void` | Delegates persistence to `GameManager` and refreshes the ShopPanel |
@@ -1260,6 +1303,7 @@ Dependencies:
 
 - `LevelManager`, `PersonMover`, `VoidEventChannelSO`
 - `VfxPlayer`
+- `AudioPlayer`
 
 ### Fields
 
@@ -1273,6 +1317,7 @@ Dependencies:
 | `OnWinEvent` | `VoidEventChannelSO` | Win channel passed to LevelManager |
 | `OnLoseEvent` | `VoidEventChannelSO` | Lose channel passed to LevelManager |
 | `_vfxPlayer` | `VfxPlayer` | Player injected into spawned PersonViews and stopped when the level view is cleared |
+| `_audioPlayer` | `AudioPlayer` | Player injected into spawned PersonViews so state-transition audio stays in the View layer |
 
 ### Key Methods
 
@@ -1416,6 +1461,78 @@ Dependencies:
 | `OnCoinDisappeared` | `Action` | Signals that one coin has completed its shrink animation |
 | `OnAllCoinsDisappeared` | `Action` | Signals that the current scatter animation has completed |
 
+## AudioCatalogSO
+
+Path:
+`Assets/Game/View/Audio/AudioCatalogSO.cs`
+
+Responsibility:
+
+ScriptableObject catalog for all cue and music configuration. Cue entries contain variation clips, UI/SFX bus, volume, pitch range, cooldown, and overlap policy; music entries contain `MusicId`, clip, volume, and fade duration. The configured asset is `Assets/Data/Audio/AudioCatalog.asset`.
+
+Dependencies:
+
+- `AudioCueId` from `Game.Events`
+- Unity `AudioClip`
+
+### Key Methods
+
+| Method | Parameters | Return Type | Purpose |
+|---|---|---|---|
+| `TryGetCue` | `AudioCueId cue, out CueEntry entry` | `bool` | Resolves one cue configuration |
+| `TryGetMusic` | `MusicId musicId, out MusicEntry entry` | `bool` | Resolves one music configuration |
+| `EnsureRequiredEntries` | — | `void` | Ensures the catalog has one editable entry per supported cue/music identifier |
+
+## AudioPlayer
+
+Path:
+`Assets/Game/View/Audio/AudioPlayer.cs`
+
+Responsibility:
+
+Scene-owned runtime player. Uses one UI source, a four-source SFX pool, and two music sources; selects variations, applies cooldown/overlap rules, routes sources to Mixer groups, cross-fades Menu/In-game music, and applies exposed volume parameters.
+
+Dependencies:
+
+- `AudioCatalogSO`
+- `AudioMixer`, `AudioMixerGroup`, `AudioSource`
+
+### Public API
+
+| Method | Parameters | Return Type | Purpose |
+|---|---|---|---|
+| `Play` | `AudioCueId cue` | `void` | Plays a catalogued UI/SFX cue after lookup and anti-spam checks |
+| `PlayMusic` | `MusicId music` | `void` | Starts or cross-fades the selected music entry |
+| `StopMusic` | — | `void` | Stops both music sources and clears active music |
+| `ApplySettings` | `int soundVolume, bool soundMuted, int musicVolume, bool musicMuted` | `void` | Sets `SoundVolume` and `MusicVolume` Mixer parameters |
+
+## AudioEventBinder
+
+Path:
+`Assets/Game/View/Audio/AudioEventBinder.cs`
+
+Responsibility:
+
+Lifecycle-safe `EventListener` bridge from `OnAudioCue`, win/lose, Play Game, Main Panel, and Back Home channels to `AudioPlayer`. Restart/Next Level are intentionally not bound, so In-game BGM continues across those actions.
+
+## UIButtonSound
+
+Path:
+`Assets/Game/View/Audio/UIButtonSound.cs`
+
+Responsibility:
+
+Button-local direct-call component that plays `ButtonClick` from the existing Button callback without replacing `ButtonEventRaiser` or gameplay event listeners.
+
+## AudioSettingsView
+
+Path:
+`Assets/Game/View/Audio/AudioSettingsView.cs`
+
+Responsibility:
+
+Presentation adapter for the existing Sound/Music sliders and mute buttons. It emits primitive volume/mute callbacks supplied by `GameBootstrapper`; it does not own `GameData` or Unity audio objects.
+
 ---
 
 ## CellView
@@ -1454,12 +1571,15 @@ Dependencies:
 
 - `PersonRuntimeData`, `PersonTooltip`
 - `VfxPlayer`
+- `AudioPlayer`
 
 ### Key Methods
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
 | `BindVfxPlayer` | `VfxPlayer vfxPlayer` | `void` | Injects the presentation VFX player and handles an already-Happy state |
+| `BindAudioPlayer` | `AudioPlayer audioPlayer` | `void` | Injects the presentation audio player without replaying the current state |
+| `HandleStateChanged` | `PersonState state` | `void` | Updates the face and plays `PersonHappy` only for a domain state-change notification |
 
 ---
 
@@ -1527,11 +1647,18 @@ Path:
 
 Responsibility:
 
-Instantiates person prefab, binds `PersonRuntimeData`, initializes `PersonDragManager`, and links to `CellView`.
+Instantiates person prefab, binds `PersonRuntimeData`, injects the scene `AudioPlayer` into the spawned `PersonView`, initializes `PersonDragManager`, and links to `CellView`.
 
 Inherits / Implements:
 
 - `MonoBehaviour`
+
+### Key Methods
+
+| Method | Parameters | Return Type | Purpose |
+|---|---|---|---|
+| `BindAudioPlayer` | `AudioPlayer audioPlayer` | `void` | Stores the scene-owned player for subsequently spawned views |
+| `SpawnPerson` | `PersonRuntimeData, CellView, PersonMover` | `PersonView` | Instantiates and initializes one character presentation |
 
 ---
 
@@ -1645,7 +1772,7 @@ Path:
 
 Responsibility:
 
-Circle iris-wipe screen transition via custom shader material. Supports open, close, and full cycle transitions with configurable easing and focal points.
+Circle iris-wipe screen transition via custom shader material. Supports open, close, and full cycle transitions with configurable easing and focal points, and plays the View-owned `Transition` cue before the transition tween.
 
 Inherits / Implements:
 
@@ -1790,7 +1917,9 @@ Responsibility: Custom inspector providing a visual 2D matrix editor for `LevelD
 → creates `GameManager`
   → `SaveLoadManager.GetGameData()` loads `GameData` from disk
   → creates `Inventory` and `EconomyManager` from saved state
-  → `GameManager.InitializeLoginState(DateTime.UtcNow)` updates daily state and persists when needed
+→ `GameManager.InitializeLoginState(DateTime.UtcNow)` updates daily state and persists when needed
+→ `GameBootstrapper.ApplyAudioSettings()` sends persisted volume/mute primitives to `AudioPlayer.ApplySettings()`
+→ `AudioSettingsView` instances are bound to `GameManager.SetSoundSettings` / `SetMusicSettings`
 → creates `LevelBootstrapper`
 → `UIManager.Initialize(Inventory)` → `InventoryView.BindData()`
 → resolves/creates `ShopPanelView` and binds `EconomyConfigSO.goldShopPrice`, `goldShopLimit`, and `gemShopPrice`
@@ -1843,7 +1972,7 @@ User drags `PersonView`
         → `LevelRuntimeData.ModifyMove(-1)` → `OnMoveChanged`
         → `LevelManager.CheckAllPersonConditions()`
           → `LevelConditionEvaluator.UpdateAllPersonStates()` → sets Happy/Angry/Normal
-            → `PersonView.UpdateState(Happy)` → `VfxPlayer.PlayAtWorld(Happy, person transform)`
+            → `PersonView.HandleStateChanged(Happy)` → `VfxPlayer.PlayAtWorld(Happy, person transform)` + `AudioPlayer.Play(PersonHappy)`
           → If all satisfied → `_onWinEvent.Raise()`
           → If out of moves → `_onLoseEvent.Raise()`
 
@@ -1859,7 +1988,8 @@ User taps Undo slot
     → Pops `MoveRecord`, restores cells, refunds move
   → `GridManager.RevertMoveView(record)` → `PersonMover.RevertMove()` (tween animation)
   → `LevelManager.CheckAllPersonConditions()`
-  → `GameManager.SaveGame()` persists the spent Undo item
+→ `GameManager.SaveGame()` persists the spent Undo item
+→ `GameBootstrapper` raises `OnAudioCue(BoosterUsed)` only after the successful booster result
 
 ## Remove Booster VFX
 
@@ -1872,6 +2002,42 @@ User taps Undo slot
 → `VfxPlayer.PlayAtWorld(RemoveBooster, targetPersonView.transform)`
 → `LevelManager.CheckAllPersonConditions()` updates the person to Happy
 → VFX instances are cleared when `GridManager.ClearGrids()` starts a new level
+
+---
+
+## Audio Flow
+
+Scene `[Audio]` contains `AudioPlayer`, `AudioEventBinder`, one UI source, four SFX sources, and two music sources.
+
+`OnAudioCue.asset`
+→ `AudioEventBinder.HandleAudioCue()`
+→ `AudioPlayer.Play(cue)`
+→ catalog variation selection → cooldown/overlap check → UI/SFX source pool → Mixer bus
+
+`OnWinEvent` / `OnLoseEvent`
+→ `AudioEventBinder`
+→ `AudioPlayer.Play(Win/Lose)`
+
+`OnPlayGameEvent`
+→ `AudioEventBinder`
+→ `AudioPlayer.PlayMusic(InGame)`
+
+`OnMainPanel` / `OnBackToHome`
+→ `AudioEventBinder`
+→ `AudioPlayer.PlayMusic(MainMenu)`
+
+`PersonRuntimeData.OnPersonStateChanged(Happy)`
+→ `PersonView.HandleStateChanged()`
+→ `AudioPlayer.Play(PersonHappy)`; rebind/load paths only update the face and do not replay the cue
+
+`UIButtonSound` calls `AudioPlayer.Play(ButtonClick)` directly from each Button's local click listener while `ButtonEventRaiser` continues to raise gameplay channels.
+
+`AudioSettingsView`
+→ `GameBootstrapper` callback
+→ `GameManager.SetSoundSettings` / `SetMusicSettings`
+→ `GameData` JSON persistence
+→ `AudioPlayer.ApplySettings`
+→ `AudioMixer.SetFloat(SoundVolume/MusicVolume)`
 
 ---
 
@@ -1888,6 +2054,7 @@ User taps claim reward
 → `GameBootstrapper.HandleClaimWinReward()` gets reward from `EconomyConfigSO.levelWinReward`
   → `GameManager.GrantReward(reward)` → `Inventory.UpdateInventory(reward)` → `OnInventoryUpdate` → `InventoryView` animates
   → `GameBootstrapper` raises `_onItemReceive` with reward
+  → `GameBootstrapper` raises `OnAudioCue(Claim)` after the grant completes
   → `SaveGame()`
 
 ---
@@ -1903,7 +2070,7 @@ User taps a shop button
 → `ShopItemView` emits `ShopPurchaseRequest(UsesGold, SlotIndex, ItemType)` to `GameBootstrapper.HandleShopPurchase()`
 → `GameBootstrapper` selects `goldShopPrice[i]` or `gemShopPrice[i]` and the matching booster reward
 → `GameManager.TryPurchase(cost, item, goldSlotIndex)` delegates to `EconomyManager.TryPurchase()`
-→ on success, inventory/purchase count are persisted and `_onItemReceive` is raised
+→ on success, inventory/purchase count are persisted, `OnAudioCue(Spend)` is raised, and `_onItemReceive` is raised
 → `ShopPanelView.Refresh()` updates prices, affordability, and Gold limit text
 
 ---
@@ -1944,3 +2111,8 @@ User taps a shop button
 - `VFXCatalog.asset` maps `RemoveBooster`, `Happy`, and `Win` IDs to their configured prefabs; each entry owns its prewarm, fade, and scale settings.
 - `VfxPlayer` is a scene-owned presentation service; gameplay code triggers it only after successful domain operations, while `PersonView` reacts to the domain state event for Happy.
 - `UIAlphaExtensions` is a static extension class providing fluent alpha get/set and PrimeTween alpha tweening for `Graphic` and `CanvasGroup`.
+- `AudioCueId` is a presentation contract only; `Game.Core` and `Game.App` do not reference `AudioClip` or `AudioSource`.
+- `AudioCatalog.asset` is the single cue/music catalog and `OnAudioCue.asset` is the single typed gameplay cue channel.
+- `MainScene/[Audio]` is wired with one UI source, four SFX sources, two music sources, `AudioEventBinder`, and `UIButtonSound` on 34 scene buttons.
+- Existing Main and InGame setting panels now have `AudioSettingsView`; `GameData` uses 0–100 volume percentages with 100% defaults for new/legacy saves missing the audio fields.
+- The `GameAudio` mixer asset and its `Master/Music/Sound/UI/SFX` group tree with exposed `MusicVolume`/`SoundVolume` parameters are still manual Unity Editor setup; the catalog folders currently contain no user audio clips.

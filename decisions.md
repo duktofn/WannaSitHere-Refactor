@@ -360,3 +360,82 @@ This preserves the current assembly dependency direction: App stays independent 
 - `Game.Editor.CheatToolWindow`
 - DEC-001
 - DEC-002
+
+## DEC-006 — Use hybrid event/direct-call communication for audio
+
+Date: 2026-09-18
+
+Status: Accepted
+
+### Problem
+
+Audio feedback needs to react to cross-system gameplay outcomes without coupling `Game.Core` or `Game.App` to Unity audio objects, while view-owned interactions such as buttons, transitions, and person feedback need precise local timing.
+
+### Context
+
+The project already uses ScriptableObject event channels for game flow and a scene-owned presentation service for VFX. Outcome success is known in `GameBootstrapper`, while `PersonView`, `TransitionController`, and individual `Button` components own their local presentation moments. A single global audio event for every sound would make local one-to-one timing less explicit; direct calls from gameplay would violate the application/presentation boundary.
+
+### Options
+
+#### Option A — Route every sound through one audio event channel
+
+Pros:
+
+- One uniform publication mechanism.
+- Additional listeners can observe every cue.
+
+Cons:
+
+- Local UI timing becomes indirect.
+- Button/transition/person views need extra event assets or payload conventions.
+- It is easier to raise a cue before an outcome has actually succeeded.
+
+#### Option B — Directly call `AudioPlayer` from every producer
+
+Pros:
+
+- Precise local timing and simple call flow.
+
+Cons:
+
+- Gameplay/application code would know the presentation player.
+- Cross-system win/lose and outcome notifications become tightly coupled.
+
+#### Option C — Hybrid event/direct-call strategy
+
+Pros:
+
+- Successful gameplay outcomes use one typed `OnAudioCue` channel and remain decoupled from `AudioClip`/`AudioSource`.
+- Win/lose and BGM reuse existing game-flow channels.
+- View-owned button, transition, and Happy feedback call the player at the exact presentation boundary.
+
+Cons:
+
+- Two trigger paths must be documented and validated.
+- The scene must wire both the binder and local player references.
+
+### Decision
+
+Use a hybrid strategy. `GameBootstrapper` raises `AudioCueId.BoosterUsed`, `Claim`, and `Spend` only after successful operations; `AudioEventBinder` maps those cues plus existing win/lose/menu/game-flow channels to `AudioPlayer`. `UIButtonSound`, `TransitionController`, and `PersonView` call `AudioPlayer` directly because they own the exact local interaction/state-transition timing.
+
+`Game.Core` and `Game.App` may store primitive audio settings and raise the cue contract through the composition root, but they must not reference `AudioClip`, `AudioSource`, or `AudioMixer`.
+
+### Reason
+
+This preserves the existing event-channel architecture for one-to-many outcome and flow notifications while following the established presentation-owned VFX pattern for one-to-one view feedback. It also places the success boundary in `GameBootstrapper`, preventing failed booster/purchase attempts from playing success audio.
+
+### Consequences
+
+- `Assets/Data/Events/OnAudioCue.asset` is the single typed gameplay cue channel.
+- `AudioPlayer` and `AudioCatalogSO` remain in `Game.View.Audio`.
+- Local view components need serialized or runtime-injected `AudioPlayer` references and must respect Unity lifecycle unbinding.
+- New audio triggers should first classify as an outcome/flow event or a view-owned direct interaction before adding code.
+
+### Related
+
+- `Game.Events.AudioCueId`
+- `Game.Events.AudioCueEventChannelSO`
+- `Game.View.Audio.AudioPlayer`
+- `Game.View.Audio.AudioEventBinder`
+- `Game.Bootstrap.GameBootstrapper`
+- `DEC-001 — Presentation-owned VFX player with explicit calls`
