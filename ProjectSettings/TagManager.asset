@@ -41,14 +41,14 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Background
+    uniqueID: 1856284923
+    locked: 0
   - name: Cell
     uniqueID: 3218962079
     locked: 0
   - name: Person
     uniqueID: 1200874725
-    locked: 0
-  - name: Background
-    uniqueID: 1856284923
     locked: 0
   - name: Tooltips
     uniqueID: 36068101
