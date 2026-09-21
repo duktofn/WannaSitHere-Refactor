@@ -71,10 +71,21 @@ namespace Game.View.Audio
             if (!_isBound || _isSubscribed || !isActiveAndEnabled)
                 return;
 
-            soundVolumeSlider?.onValueChanged.AddListener(HandleSoundVolumeChanged);
-            musicVolumeSlider?.onValueChanged.AddListener(HandleMusicVolumeChanged);
-            soundMuteButton?.onClick.AddListener(HandleSoundMuteClicked);
-            musicMuteButton?.onClick.AddListener(HandleMusicMuteClicked);
+            // Scene wiring is the primary path. Keep runtime listeners only for
+            // controls that have no persistent UnityEvent, so mute is not toggled
+            // twice when both paths are present.
+            if (soundVolumeSlider != null && soundVolumeSlider.onValueChanged.GetPersistentEventCount() == 0)
+                soundVolumeSlider.onValueChanged.AddListener(SetSoundVolume);
+
+            if (musicVolumeSlider != null && musicVolumeSlider.onValueChanged.GetPersistentEventCount() == 0)
+                musicVolumeSlider.onValueChanged.AddListener(SetMusicVolume);
+
+            if (soundMuteButton != null && soundMuteButton.onClick.GetPersistentEventCount() == 0)
+                soundMuteButton.onClick.AddListener(ToggleSoundMute);
+
+            if (musicMuteButton != null && musicMuteButton.onClick.GetPersistentEventCount() == 0)
+                musicMuteButton.onClick.AddListener(ToggleMusicMute);
+
             _isSubscribed = true;
         }
 
@@ -83,10 +94,10 @@ namespace Game.View.Audio
             if (!_isSubscribed)
                 return;
 
-            soundVolumeSlider?.onValueChanged.RemoveListener(HandleSoundVolumeChanged);
-            musicVolumeSlider?.onValueChanged.RemoveListener(HandleMusicVolumeChanged);
-            soundMuteButton?.onClick.RemoveListener(HandleSoundMuteClicked);
-            musicMuteButton?.onClick.RemoveListener(HandleMusicMuteClicked);
+            soundVolumeSlider?.onValueChanged.RemoveListener(SetSoundVolume);
+            musicVolumeSlider?.onValueChanged.RemoveListener(SetMusicVolume);
+            soundMuteButton?.onClick.RemoveListener(ToggleSoundMute);
+            musicMuteButton?.onClick.RemoveListener(ToggleMusicMute);
             _isSubscribed = false;
         }
 
@@ -96,23 +107,23 @@ namespace Game.View.Audio
             musicVolumeSlider?.SetValueWithoutNotify(Mathf.Clamp01(musicVolume / 100f));
         }
 
-        private void HandleSoundVolumeChanged(float value)
+        public void SetSoundVolume(float value)
         {
             _onSoundChanged?.Invoke(Mathf.RoundToInt(Mathf.Clamp01(value) * 100f), _soundMuted);
         }
 
-        private void HandleMusicVolumeChanged(float value)
+        public void SetMusicVolume(float value)
         {
             _onMusicChanged?.Invoke(Mathf.RoundToInt(Mathf.Clamp01(value) * 100f), _musicMuted);
         }
 
-        private void HandleSoundMuteClicked()
+        public void ToggleSoundMute()
         {
             _soundMuted = !_soundMuted;
             _onSoundChanged?.Invoke(GetVolume(soundVolumeSlider), _soundMuted);
         }
 
-        private void HandleMusicMuteClicked()
+        public void ToggleMusicMute()
         {
             _musicMuted = !_musicMuted;
             _onMusicChanged?.Invoke(GetVolume(musicVolumeSlider), _musicMuted);

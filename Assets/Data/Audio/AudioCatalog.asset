@@ -48,7 +48,8 @@ MonoBehaviour:
     cooldown: 0
     allowOverlap: 0
   - cue: 4
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: d8ceb034769fb2b49af03b8b8a74d8b3, type: 3}
     bus: 1
     volume: 1
     pitchMin: 1
@@ -83,9 +84,9 @@ MonoBehaviour:
   music:
   - music: 0
     clip: {fileID: 8300000, guid: 30830308e3a71a844b4137a19966f8ba, type: 3}
-    volume: 1
+    volume: 0.5
     fadeDuration: 0.5
   - music: 1
     clip: {fileID: 8300000, guid: b3136e872b76fc6428c8c22a35c95c12, type: 3}
-    volume: 1
+    volume: 0.5
     fadeDuration: 0.5
