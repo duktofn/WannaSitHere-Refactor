@@ -439,3 +439,33 @@ This preserves the existing event-channel architecture for one-to-many outcome a
 - `Game.View.Audio.AudioEventBinder`
 - `Game.Bootstrap.GameBootstrapper`
 - `DEC-001 — Presentation-owned VFX player with explicit calls`
+
+## DEC-007 — Keep shared person definitions separate from level occurrences
+
+Date: 2026-09-21
+
+Status: Accepted
+
+### Problem
+
+The former model stores conditions and a default person on reusable cell assets. That makes two occurrences of the same character share authoring data and makes level-specific placement difficult to inspect or validate.
+
+### Context
+
+Character name, trait, and base sprite are stable definition data. Conditions and placement vary by level and may vary between occurrences of the same character. `CellView` also relies on `CellRuntimeData.DefaultPerson` during initial spawn, so conversion must provide the initial person before the cell is presented.
+
+### Decision
+
+Use `PersonDefinitionSO` for shared `personName`, `trait`, and `baseSprite`. Store each occurrence in a serializable `LevelPersonConfig` owned by `LevelDataSO`, including its `ConditionDataSO` references, `GridId`, and `Vector2Int` position.
+
+`LevelDataSO` is the single authoring-to-runtime conversion boundary. It shares validation with the `LevelDataSO` Inspector, creates a new `PersonRuntimeData` and condition list for every occurrence, passes that person into `CellDataSO.ToRuntimeData()`, and preserves the invariant `CellRuntimeData.DefaultPerson == CurrentPerson` at level load.
+
+Migration has been fully completed: `PersonDataSO`, `CellDataSO.defaultPerson`, `LevelPersonMigrationUtility`, `LevelPersonMigrationWindow`, and legacy migration validation/tests have been permanently removed. All character configurations are authoring-owned by `LevelDataSO.personConfigs` referencing shared `PersonDefinitionSO` assets.
+
+### Consequences
+
+- Adding a level requires configuring cells, selecting an existing definition, and assigning conditions in `LevelDataSO`.
+- Runtime boosters and condition changes affect only the relevant `PersonRuntimeData` instance.
+- Invalid definitions, conditions, duplicate placements, grid coordinates, and target cells are reported before the active grids are cleared.
+- `CellDataSO` contains only cell configuration (type, food, sprite) without any person references.
+- All legacy `PersonDataSO` assets and temporary migration tooling have been cleanly retired.

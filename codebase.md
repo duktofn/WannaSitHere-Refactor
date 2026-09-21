@@ -1,6 +1,6 @@
 # Codebase Context
 
-Last Updated: 2026-09-18
+Last Updated: 2026-09-21
 Last Reviewed Commit: 81d3afb118de0ca46d56ceba233018d74cfdecdd
 
 ---
@@ -93,9 +93,9 @@ Game.Events   Game.Data           Game.App               │
 - **`Game.View`** — References `Game.Core`, `Game.Events`, `Game.App`, `PrimeTween`, `UniTask`, `TMP`, `InputSystem`, `uGUI`, `Coffee.UIParticle`, and Unity audio types only inside `Game.View.Audio`.
 - **`Game.Bootstrap`** — References all runtime assemblies: `Game.Core`, `Game.Data`, `Game.App`, `Game.View`, `Game.Events`.
 - **`Game.Editor`** — Editor-only. References `Game.Data`, `Game.App`, `Game.Core`, `Game.Bootstrap`.
-- **`Game.Tests.EditMode`** — Editor-only. References `Game.Core`, `Game.App`, `Game.Events`.
+- **`Game.Tests.EditMode`** — Editor-only. References `Game.Core`, `Game.App`, `Game.Events`, `Game.Data`.
 
-Key rule: `Game.View` does **not** reference `Game.Data`. Configuration-to-runtime conversion is `Game.Bootstrap`'s responsibility.
+Key rule: `Game.View` does **not** reference `Game.Data`. `Game.Bootstrap` orchestrates level loading, while `LevelDataSO` owns validation and configuration-to-runtime conversion.
 
 Presentation VFX is owned by `Game.View.VFX`. `VfxCatalogSO` stores prefab and lifetime configuration, while `VfxPlayer` owns spawning, UI/world placement, pooling, cancellation, and cleanup. UI particle instances use the embedded `Coffee.UIParticle` renderer under the per-Canvas `VFXRoot`, while world effects continue to use the regular ParticleSystem path. `Game.Core` remains unaware of VFX; `Game.Bootstrap` and presentation views provide explicit references to the player.
 
@@ -168,8 +168,9 @@ Used By:
 
 Communication:
 
-- `LevelBootstrapper` calls `LevelDataSO.ToRuntimeData()` to create `LevelRuntimeData`.
-- `PersonDataSO.ToRuntimeData()` chains to `ConditionDataSO.ToRuntimeData()`.
+- `LevelBootstrapper` calls `LevelDataSO.TryToRuntimeData()` to validate and create `LevelRuntimeData` before the active grids are cleared.
+- `LevelDataSO` owns the conversion boundary: it validates `LevelPersonConfig` entries, creates one `PersonRuntimeData` per occurrence, and passes that instance to `CellDataSO.ToRuntimeData()`.
+- `PersonDefinitionSO` contains shared name/trait/sprite data. Conditions and placement belong to `LevelPersonConfig` owned by `LevelDataSO`.
 
 ---
 
@@ -251,7 +252,7 @@ Custom inspectors and development utilities. Editor-only assembly.
 Contains:
 
 - `CheatToolWindow`: Dual-mode (Play/Edit) cheat window for manipulating save data and game state.
-- `LevelDataSOEditor`: Visual 2D matrix editor for `LevelDataSO`.
+- `LevelDataSOEditor`: Visual 2D matrix editor for `LevelDataSO`, including level-owned person placements, conditions, person-name markers that can be clicked to select a configuration, and shared validation feedback.
 
 ---
 
@@ -259,7 +260,7 @@ Contains:
 
 Responsibility:
 
-NUnit EditMode tests covering pure domain logic: Grid, Conditions, Economy, MoveHistory, Boosters, LevelManager move recording.
+NUnit EditMode tests covering pure domain logic and level-data conversion: Grid, Conditions, Economy, MoveHistory, Boosters, LevelManager move recording, validation, and per-occurrence runtime isolation.
 
 ---
 
@@ -1531,7 +1532,7 @@ Path:
 
 Responsibility:
 
-Presentation adapter for the existing Sound/Music sliders and mute buttons. It emits primitive volume/mute callbacks supplied by `GameBootstrapper`; it does not own `GameData` or Unity audio objects.
+Presentation adapter for the existing Sound/Music sliders and mute buttons. It emits primitive volume/mute callbacks supplied by `GameBootstrapper`; it does not own `GameData` or Unity audio objects. Main Menu and In-Game `MainScene` controls are persistently wired to its public `SetSoundVolume`, `SetMusicVolume`, `ToggleSoundMute`, and `ToggleMusicMute` methods; runtime listeners are used only as a fallback for controls without a persistent UnityEvent.
 
 ---
 
@@ -1861,13 +1862,21 @@ Dependencies:
 
 Path: `Assets/Game/Data/Levels/LevelDataSO.cs`
 
-Responsibility: ScriptableObject configuring level layout (move count, main grid, wait grid). Provides `ToRuntimeData()` factory.
+Responsibility: ScriptableObject configuring level layout (move count, main grid, wait grid), serialized `LevelPersonConfig` occurrences, and `levelEnvironmentPrefabs`. `TryToRuntimeData()` validates the complete configuration and creates the runtime grids without mutating the authoring data before gameplay grids are cleared.
 
-### PersonDataSO
+### PersonDefinitionSO
 
-Path: `Assets/Game/Data/People/PersonDataSO.cs`
+Path:
+`Assets/Game/Data/People/PersonDefinitionSO.cs`
 
-Responsibility: ScriptableObject configuring a character (name, trait, conditions, sprite). Provides `ToRuntimeData()` factory.
+Responsibility: Shared character definition containing only `personName`, `trait`, and `baseSprite`. It never owns occurrence-specific conditions.
+
+### LevelPersonConfig
+
+Path:
+`Assets/Game/Data/Levels/LevelPersonConfig.cs`
+
+Responsibility: Serializable level-owned occurrence containing a definition, condition references, grid id, and position. Each conversion creates a fresh `PersonRuntimeData` and fresh condition runtime list.
 
 ### ConditionDataSO
 
@@ -1879,7 +1888,7 @@ Responsibility: ScriptableObject configuring a single condition rule. Provides `
 
 Path: `Assets/Game/Data/Board/CellDataSO.cs`
 
-Responsibility: ScriptableObject configuring a board cell (type, food, default person, sprite). Provides `ToRuntimeData()` factory.
+Responsibility: ScriptableObject configuring a board cell (type, food, sprite). Runtime conversion receives the initial person from `LevelDataSO`.
 
 ### EconomyConfigSO
 
@@ -1907,7 +1916,21 @@ Responsibility: Dual-mode (Play/Edit) `EditorWindow` for manipulating save data:
 
 Path: `Assets/Game/Editor/LevelDataSOEditor.cs`
 
-Responsibility: Custom inspector providing a visual 2D matrix editor for `LevelDataSO` with resize, batch fill, and clear operations.
+Responsibility: Custom inspector providing a visual 2D matrix editor for `LevelDataSO` with resize, batch fill, and clear operations. It restricts MainGrid cell references to `Seat`/`Food`/`Block` and WaitGrid references to `Seat`; invalid existing references are shown as warnings instead of being silently deleted.
+
+## Level-owned person data flow
+
+```text
+LevelDataSO
+  -> Validate personConfigs (shared by Inspector and runtime)
+  -> LevelPersonConfig.ToRuntimeData()
+  -> fresh PersonRuntimeData per (gridId, position)
+  -> CellDataSO.ToRuntimeData(..., initialPerson)
+  -> CellRuntimeData.DefaultPerson == CurrentPerson
+  -> LevelRuntimeData
+```
+
+`LevelBootstrapper` performs this conversion before calling `GridManager.ClearGrids()`. An invalid level logs the level name and configuration location and leaves the current grids untouched. After clearing the previous level, it instantiates every `LevelDataSO.levelEnvironmentPrefabs` entry as a child of `GridManager.WorldRoot` at local position `(0, 0, 0)`, before creating the new grid cells. The Inspector keeps invalid configurations visible after grid resize or cell-type changes so the author can correct or remove them explicitly.
 
 # Code Flow
 
@@ -1946,8 +1969,11 @@ User taps Play button
 → `UIManager.PlayGame()` transitions MainMenu → InGame
 → `GameBootstrapper.HandlePlayGame()`
   → `LevelBootstrapper.LoadLevel(currentLevel)`
-    → `LevelDataSO.ToRuntimeData()` → `LevelRuntimeData`
-    → `GridManager.ClearGrids()`
+    → `LevelDataSO.TryToRuntimeData()` validates level-owned person configurations
+      → invalid: logs level/location errors and leaves current grids untouched
+      → valid: creates independent `PersonRuntimeData` instances and `LevelRuntimeData`
+    → `GridManager.ClearGrids()` only after successful conversion
+    → Instantiates `levelEnvironmentPrefabs` under `GridManager.WorldRoot` at local position `(0, 0, 0)`
     → `GridManager.Initialize(levelRuntimeData)`
       → Creates `LevelManager` with grids, adjacency, and win/lose channels
     → `GridManager.CreateMainGrid()` and `CreateWaitGrid()`
@@ -2113,6 +2139,6 @@ User taps a shop button
 - `UIAlphaExtensions` is a static extension class providing fluent alpha get/set and PrimeTween alpha tweening for `Graphic` and `CanvasGroup`.
 - `AudioCueId` is a presentation contract only; `Game.Core` and `Game.App` do not reference `AudioClip` or `AudioSource`.
 - `AudioCatalog.asset` is the single cue/music catalog and `OnAudioCue.asset` is the single typed gameplay cue channel.
-- `MainScene/[Audio]` is wired with one UI source, four SFX sources, two music sources, `AudioEventBinder`, and `UIButtonSound` on 34 scene buttons.
-- Existing Main and InGame setting panels now have `AudioSettingsView`; `GameData` uses 0–100 volume percentages with 100% defaults for new/legacy saves missing the audio fields.
-- The `GameAudio` mixer asset and its `Master/Music/Sound/UI/SFX` group tree with exposed `MusicVolume`/`SoundVolume` parameters are still manual Unity Editor setup; the catalog folders currently contain no user audio clips.
+- `MainScene/[Audio]` is wired with one UI source, four SFX sources, two music sources, `AudioEventBinder`, and `UIButtonSound` on 34 scene buttons. `GameAudioMixer.mixer` routes these sources through `Master/Sound(UI,SFX)/Music` and exposes `SoundVolume` plus `MusicVolume` for `AudioPlayer` settings.
+- Existing Main and InGame setting panels now have `AudioSettingsView`; all four Sound/Music controls in each panel are persistently wired to the view methods, while `AudioSettingsView` retains a no-duplicate runtime fallback for unwired controls. `GameData` uses 0–100 volume percentages with 100% defaults for new/legacy saves missing the audio fields.
+- The `GameAudioMixer.mixer` asset uses a `Master/Sound(UI,SFX)/Music` group tree with exposed `MusicVolume`/`SoundVolume` parameters; the MainScene AudioPlayer and seven audio sources are routed to it. The catalog still has intentionally unassigned cue clips for content not yet provided.

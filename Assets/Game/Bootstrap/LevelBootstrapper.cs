@@ -33,6 +33,12 @@ namespace Game.Bootstrap
                 return;
             }
 
+            if (_levelData.Count == 0)
+            {
+                Debug.LogWarning("[LevelBootstrapper] Level Data list is empty.");
+                return;
+            }
+
             int index = (levelNumber > 0 ? levelNumber - 1 : 0) % _levelData.Count;
             LevelDataSO targetLevelSO = _levelData[index];
 
@@ -42,9 +48,17 @@ namespace Game.Bootstrap
                 return;
             }
 
-            LevelRuntimeData runtime = targetLevelSO.ToRuntimeData();
+            if (!targetLevelSO.TryToRuntimeData(out LevelRuntimeData runtime, out _))
+            {
+                Debug.LogError(
+                    $"[LevelBootstrapper] Level '{targetLevelSO.name}' is invalid; " +
+                    "the current grids were left untouched.",
+                    targetLevelSO);
+                return;
+            }
 
             _gridManager.ClearGrids();
+            SpawnLevelEnvironment(targetLevelSO);
             _gridManager.Initialize(runtime);
             _gridManager.CreateMainGrid();
             _gridManager.CreateWaitGrid();
@@ -53,6 +67,33 @@ namespace Game.Bootstrap
                 _levelView.BindData(runtime);
 
             Debug.Log($"[LevelBootstrapper] Level {levelNumber} (index {index}) loaded successfully");
+        }
+
+        private void SpawnLevelEnvironment(LevelDataSO level)
+        {
+            if (level.levelEnvironmentPrefabs == null || level.levelEnvironmentPrefabs.Count == 0)
+                return;
+
+            Transform worldRoot = _gridManager.WorldRoot;
+            if (worldRoot == null)
+            {
+                Debug.LogWarning(
+                    $"[LevelBootstrapper] Cannot spawn environment for level '{level.name}': WorldRoot is missing.",
+                    level);
+                return;
+            }
+
+            foreach (GameObject environmentPrefab in level.levelEnvironmentPrefabs)
+            {
+                if (environmentPrefab == null)
+                    continue;
+
+                GameObject environmentInstance = Object.Instantiate(
+                    environmentPrefab,
+                    worldRoot,
+                    false);
+                environmentInstance.transform.localPosition = Vector3.zero;
+            }
         }
     }
 }

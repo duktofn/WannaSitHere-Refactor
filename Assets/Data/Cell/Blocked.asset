@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 36d0383138abb0e4a82deb90d01c4f41, type: 3}
-  m_Name: CoolSeat
+  m_Name: Blocked
   m_EditorClassIdentifier: Game.Data::Game.Data.Board.CellDataSO
-  type: 0
-  defaultPerson: {fileID: 11400000, guid: 73bcbed022f58094b9316964ae64084c, type: 2}
-  food: 0
-  sprite: {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}
+  type: 2
+  defaultPerson: {fileID: 0}
+  food: 2
+  sprite: {fileID: 0}

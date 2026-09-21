@@ -4,7 +4,8 @@
     "references": [
         "Game.Core",
         "Game.App",
-        "Game.Events"
+        "Game.Events",
+        "Game.Data"
     ],
     "includePlatforms": [
         "Editor"

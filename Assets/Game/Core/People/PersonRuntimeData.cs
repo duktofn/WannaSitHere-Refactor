@@ -24,7 +24,9 @@ namespace Game.Core.People
         {
             PersonName = personName;
             Trait = trait;
-            _conditions = new List<ConditionRuntimeData>(conditions);
+            _conditions = conditions == null
+                ? new List<ConditionRuntimeData>()
+                : new List<ConditionRuntimeData>(conditions);
             BaseSprite = baseSprite;
             SetState(PersonState.Normal);
         }
