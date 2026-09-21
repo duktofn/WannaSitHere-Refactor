@@ -40,11 +40,11 @@ namespace Game.View.Board
 
         private void InitCell(PersonMover personMoveManager)
         {
+            if (spriteRenderer != null)
+                spriteRenderer.sprite = _cell.Sprite;
+
             if (_cell.Type == CellType.Food)
             {
-                if (spriteRenderer != null)
-                    spriteRenderer.sprite = _cell.Sprite;
-
                 if (foodTooltips != null)
                     foodTooltips.Initialize(_cell.Food.ToString(), GetComponent<Collider2D>());
 

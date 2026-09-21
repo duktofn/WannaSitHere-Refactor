@@ -43,6 +43,7 @@ namespace Game.View.Board
         [SerializeField] private VoidEventChannelSO OnLoseEvent;
 
         public LevelManager LevelManager => _levelManager;
+        public Transform WorldRoot => gridRoot != null ? gridRoot : transform;
 
         private void Awake()
         {
@@ -78,6 +79,8 @@ namespace Game.View.Board
 
             foreach (CellRuntimeData c in _main.GridContent)
             {
+                if (c == null) continue;
+
                 Vector2 step = _main.CellDistance + _main.CellSize;
                 Vector3 cellOffset = new Vector3((c.Index.x - (_main.GridSize.x - 1) / 2f) * step.x,
                                                  (c.Index.y - (_main.GridSize.y - 1) / 2f) * step.y,
@@ -105,6 +108,8 @@ namespace Game.View.Board
 
             foreach (CellRuntimeData c in _wait.GridContent)
             {
+                if (c == null) continue;
+
                 Vector2 step = _wait.CellDistance + _wait.CellSize;
                 Vector3 cellOffset = new Vector3((c.Index.x - (_wait.GridSize.x - 1) / 2f) * step.x,
                                                  (c.Index.y - (_wait.GridSize.y - 1) / 2f) * step.y,
