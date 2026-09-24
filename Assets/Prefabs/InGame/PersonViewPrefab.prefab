@@ -417,6 +417,8 @@ MonoBehaviour:
   nameText: {fileID: 7798593697930781321}
   traitText: {fileID: 5841999925495633595}
   conditionText: {fileID: 8944233159554215276}
+  checkedSprite: {fileID: -2272638341103920032, guid: 59e5c34b729c19944917a0bc55dd5482, type: 3}
+  uncheckedSprite: {fileID: -8380939188574121211, guid: 8f75f25a16601c94da30346e17e342d5, type: 3}
   duration: 0.15
   showEase: 27
   hideEase: 26

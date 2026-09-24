@@ -110,18 +110,18 @@ namespace Game.Core.Conditions
 
             if (cellGrid == GridId.WaitGrid)
             {
+                for (int i = 0; i < person.Conditions.Count; i++)
+                    person.SetConditionSatisfied(i, false);
                 person.SetState(PersonState.Normal);
                 return;
             }
 
             bool isConditionOk = true;
-            foreach (ConditionRuntimeData condition in person.Conditions)
+            for (int i = 0; i < person.Conditions.Count; i++)
             {
-                if (!IsConditionSatisfied(containCell, condition, mainGrid))
-                    isConditionOk = false;
-
-                if (!isConditionOk)
-                    break;
+                bool satisfied = IsConditionSatisfied(containCell, person.Conditions[i], mainGrid);
+                person.SetConditionSatisfied(i, satisfied);
+                isConditionOk &= satisfied;
             }
 
             person.SetState(isConditionOk ? PersonState.Happy : PersonState.Angry);

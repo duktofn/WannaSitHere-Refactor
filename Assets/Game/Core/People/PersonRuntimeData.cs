@@ -10,12 +10,15 @@ namespace Game.Core.People
         public readonly string PersonName;
         public readonly PersonTrait Trait;
         private readonly List<ConditionRuntimeData> _conditions;
+        private readonly List<bool> _conditionSatisfied;
         public IReadOnlyList<ConditionRuntimeData> Conditions => _conditions;
+        public IReadOnlyList<bool> ConditionSatisfied => _conditionSatisfied;
         public readonly Sprite BaseSprite;
         public PersonState State { get; private set; }
 
         public event Action<PersonState> OnPersonStateChanged;
         public event Action OnConditionsCleared;
+        public event Action OnConditionStatusChanged;
         
         public PersonRuntimeData(string personName, 
                                 PersonTrait trait, 
@@ -28,6 +31,7 @@ namespace Game.Core.People
                 ? new List<ConditionRuntimeData>()
                 : new List<ConditionRuntimeData>(conditions);
             BaseSprite = baseSprite;
+            _conditionSatisfied = new List<bool>(new bool[_conditions.Count]);
             SetState(PersonState.Normal);
         }
 
@@ -37,6 +41,7 @@ namespace Game.Core.People
         public void ClearConditions()
         {
             _conditions.Clear();
+            _conditionSatisfied.Clear();
             OnConditionsCleared?.Invoke();
         }
 
@@ -46,10 +51,21 @@ namespace Game.Core.People
         public void ReplaceConditions(ConditionRuntimeData condition)
         {
             _conditions.Clear();
+            _conditionSatisfied.Clear();
             if (condition != null)
+            {
                 _conditions.Add(condition);
+                _conditionSatisfied.Add(false);
+            }
 
             OnConditionsCleared?.Invoke();
+        }
+
+        public void SetConditionSatisfied(int index, bool satisfied)
+        {
+            if (_conditionSatisfied[index] == satisfied) return;
+            _conditionSatisfied[index] = satisfied;
+            OnConditionStatusChanged?.Invoke();
         }
 
         public void SetState(PersonState state)

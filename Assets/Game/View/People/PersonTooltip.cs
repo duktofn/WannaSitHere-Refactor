@@ -21,6 +21,8 @@ namespace Game.View.People
         [SerializeField] private TextMeshPro nameText;
         [SerializeField] private TextMeshPro traitText;
         [SerializeField] private TextMeshPro conditionText;
+        [SerializeField] private Sprite checkedSprite;
+        [SerializeField] private Sprite uncheckedSprite;
 
         [Header("Show/Hide Tween")]
         [SerializeField] private float duration;
@@ -41,6 +43,8 @@ namespace Game.View.People
         private bool _hasBotAnchor;
         private float _midBaseScaleY = 1f;
         private PersonRuntimeData _boundPerson;
+        private readonly TextMeshPro[] _conditionRows = new TextMeshPro[MaxConditions];
+        private readonly SpriteRenderer[] _conditionCheckboxes = new SpriteRenderer[MaxConditions];
 
         private void Awake()
         {
@@ -59,6 +63,24 @@ namespace Game.View.People
             nameText.GetComponent<MeshRenderer>().sortingLayerName = textSortingLayer;
             traitText.GetComponent<MeshRenderer>().sortingLayerName = textSortingLayer;
             conditionText.GetComponent<MeshRenderer>().sortingLayerName = textSortingLayer;
+            _conditionRows[0] = conditionText;
+            for (int i = 0; i < MaxConditions; i++)
+            {
+                if (i > 0)
+                {
+                    GameObject row = Instantiate(conditionText.gameObject, conditionText.transform.parent);
+                    row.name = "ConditionText" + (i + 1);
+                    _conditionRows[i] = row.GetComponent<TextMeshPro>();
+                    _conditionRows[i].GetComponent<MeshRenderer>().sortingLayerName = textSortingLayer;
+                }
+
+                GameObject checkbox = new GameObject("ConditionCheckbox" + (i + 1));
+                checkbox.transform.SetParent(tooltipsRoot.transform, false);
+                _conditionCheckboxes[i] = checkbox.AddComponent<SpriteRenderer>();
+                _conditionCheckboxes[i].sortingLayerName = textSortingLayer;
+                _conditionCheckboxes[i].sortingOrder = conditionText.GetComponent<MeshRenderer>().sortingOrder + 1;
+                checkbox.SetActive(false);
+            }
         }
 
         private void OnDestroy()
@@ -78,7 +100,10 @@ namespace Game.View.People
         {
             StopListeningForOutsideClick();
             if (_boundPerson != null)
+            {
                 _boundPerson.OnConditionsCleared -= RefreshConditions;
+                _boundPerson.OnConditionStatusChanged -= RefreshConditions;
+            }
         }
 
         private void StartListeningForOutsideClick()
@@ -112,13 +137,17 @@ namespace Game.View.People
         public void BindData(PersonRuntimeData person)
         {
             if (_boundPerson != null)
+            {
                 _boundPerson.OnConditionsCleared -= RefreshConditions;
+                _boundPerson.OnConditionStatusChanged -= RefreshConditions;
+            }
 
             _boundPerson = person;
 
             if (person == null) return;
 
             person.OnConditionsCleared += RefreshConditions;
+            person.OnConditionStatusChanged += RefreshConditions;
 
             nameText.text = person.PersonName;
             traitText.text = person.Trait.ToString();
@@ -139,18 +168,23 @@ namespace Game.View.People
             if (person.Conditions != null && person.Conditions.Count > 0)
             {
                 int count = Math.Min(person.Conditions.Count, MaxConditions);
-                var descriptions = new string[count];
-
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < MaxConditions; i++)
                 {
-                    descriptions[i] = person.Conditions[i].Description;
+                    bool hasCondition = i < count;
+                    _conditionRows[i].text = hasCondition ? person.Conditions[i].Description : string.Empty;
+                    _conditionCheckboxes[i].sprite = hasCondition && person.ConditionSatisfied[i]
+                        ? checkedSprite
+                        : uncheckedSprite;
+                    _conditionCheckboxes[i].gameObject.SetActive(hasCondition);
                 }
-
-                conditionText.text = string.Join("\n\n", descriptions);
             }
             else
             {
-                conditionText.text = string.Empty;
+                for (int i = 0; i < MaxConditions; i++)
+                {
+                    _conditionRows[i].text = string.Empty;
+                    _conditionCheckboxes[i].gameObject.SetActive(false);
+                }
             }
         }
 
@@ -163,15 +197,27 @@ namespace Game.View.People
             }
 
             float midWidth = mid.sprite.bounds.size.x * Mathf.Abs(mid.transform.localScale.x);
-            float textWidth = Mathf.Max(0.01f, midWidth - horizontalPadding * 2f);
-            conditionText.rectTransform.sizeDelta = new Vector2(textWidth, 100f);
-            conditionText.ForceMeshUpdate();
-            float textHeight = conditionText.GetPreferredValues(
-                conditionText.text,
-                textWidth,
-                Mathf.Infinity
-            ).y;
-            conditionText.rectTransform.sizeDelta = new Vector2(textWidth, textHeight);
+            const float checkboxSize = 0.13f;
+            const float checkboxGap = 0.04f;
+            float checkboxX = -midWidth * 0.5f + horizontalPadding + checkboxSize * 0.5f;
+            float textWidth = Mathf.Max(0.01f, midWidth - horizontalPadding * 2f - checkboxSize - checkboxGap);
+            float[] rowHeights = new float[MaxConditions];
+            float textHeight = 0f;
+            for (int i = 0; i < MaxConditions; i++)
+            {
+                TextMeshPro row = _conditionRows[i];
+                row.horizontalAlignment = HorizontalAlignmentOptions.Left;
+                row.verticalAlignment = VerticalAlignmentOptions.Top;
+                row.rectTransform.pivot = new Vector2(0f, 1f);
+                row.rectTransform.sizeDelta = new Vector2(textWidth, 100f);
+                row.ForceMeshUpdate();
+                rowHeights[i] = string.IsNullOrEmpty(row.text)
+                    ? 0f
+                    : row.GetPreferredValues(row.text, textWidth, Mathf.Infinity).y;
+                textHeight += rowHeights[i];
+            }
+            if (rowHeights[0] > 0f && rowHeights[1] > 0f)
+                textHeight += bottomPadding;
 
             float midBaseHeight = mid.sprite.bounds.size.y * _midBaseScaleY;
             float desiredMidHeight = Mathf.Max(
@@ -214,17 +260,34 @@ namespace Game.View.People
             SetHeaderPosition(nameText, topCenterY);
             SetHeaderPosition(traitText, topCenterY);
 
-            Vector3 conditionPosition = conditionText.transform.localPosition;
-            conditionText.verticalAlignment = VerticalAlignmentOptions.Top;
-            conditionText.rectTransform.pivot = new Vector2(
-                conditionText.rectTransform.pivot.x,
-                1f
-            );
-            conditionText.transform.localPosition = new Vector3(
-                conditionPosition.x,
-                botTopY + actualMidHeight - topPadding,
-                conditionPosition.z
-            );
+            float rowTopY = botTopY + actualMidHeight - topPadding;
+            for (int i = 0; i < MaxConditions; i++)
+            {
+                TextMeshPro row = _conditionRows[i];
+                row.rectTransform.sizeDelta = new Vector2(textWidth, rowHeights[i]);
+                row.transform.localPosition = new Vector3(
+                    checkboxX + checkboxSize * 0.5f + checkboxGap,
+                    rowTopY,
+                    row.transform.localPosition.z
+                );
+
+                if (rowHeights[i] > 0f)
+                {
+                    SpriteRenderer checkbox = _conditionCheckboxes[i];
+                    checkbox.transform.localPosition = new Vector3(
+                        checkboxX,
+                        rowTopY - checkboxSize * 0.5f,
+                        row.transform.localPosition.z - 0.01f
+                    );
+                    if (checkbox.sprite != null && checkbox.sprite.bounds.size.x > 0f)
+                    {
+                        float scale = checkboxSize / checkbox.sprite.bounds.size.x;
+                        checkbox.transform.localScale = new Vector3(scale, scale, 1f);
+                    }
+                }
+
+                rowTopY -= rowHeights[i] + bottomPadding;
+            }
         }
 
         private static void SetHeaderPosition(TextMeshPro text, float y)
