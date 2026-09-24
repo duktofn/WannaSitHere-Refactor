@@ -139,7 +139,6 @@ Game.Features.GachaMerge/
 ```
 
 ---
-
 ## 4. Coding Conventions (Quick Reference)
 
 | Element | Convention | Example |
@@ -147,7 +146,7 @@ Game.Features.GachaMerge/
 | Classes / Structs | PascalCase | `MergeService` |
 | Interfaces | `I` + PascalCase | `IMergeAnimator` |
 | Private fields | `_camelCase` | `_currentHealth` |
-| Serialized fields | `[SerializeField] private` | `[SerializeField] private PullConfigSO config` |
+| Serialized fields (Unity only) | `[SerializeField] private` | `[SerializeField] private PullConfigSO config` |
 | Async methods | Suffix `Async` | `ApplyMergePlanAsync()` |
 | ScriptableObjects | Suffix `SO` | `PullConfigSO` |
 | Event Channels | Suffix `ChannelSO` | `SpawnHeroChannelSO` |
