@@ -62,7 +62,6 @@ namespace Game.App
             targetCell.SetPerson(person);
             sourceCell?.SetPerson(targetPerson);
 
-            // Record the move for undo (skip only internal WaitLine-to-WaitLine moves)
             bool isWaitLineToWaitLine = sourceCell != null &&
                                         sourceCell.OwnGrid == GridId.WaitGrid &&
                                         targetCell.OwnGrid == GridId.WaitGrid;
@@ -72,7 +71,6 @@ namespace Game.App
                 _moveHistory.Record(new MoveRecord(sourceCell, targetCell, person, targetPerson));
             }
 
-            // Consume one move after a successful move operation.
             _currentLevel.ModifyMove(-1);
             CheckAllPersonConditions();
 
