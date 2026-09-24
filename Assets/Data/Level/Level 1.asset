@@ -34,11 +34,12 @@ MonoBehaviour:
     _posY: 0.25
     _gridContent:
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
-    - {fileID: 0}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
   personConfigs:
   - definition: {fileID: 11400000, guid: 73bcbed022f58094b9316964ae64084c, type: 2}
     conditions:
     - {fileID: 11400000, guid: 7b4a02bb7c462774ea56c3203a0c985a, type: 2}
+    - {fileID: 11400000, guid: 56be8f26cc282174c8fdee2508ac07b9, type: 2}
     gridId: 1
     position: {x: 0, y: 0}
   levelEnvironmentPrefabs:
