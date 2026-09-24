@@ -32,6 +32,7 @@ namespace Game.View.People
         [Header("Mid Resize")]
         [SerializeField, FormerlySerializedAs("padding")] private float topPadding = 0.08f;
         [SerializeField] private float bottomPadding = 0.08f;
+        [SerializeField] private float conditionSpacing = 0.04f;
         [SerializeField] private float horizontalPadding = 0.15f;
 
         private const int MaxConditions = 2;
@@ -197,7 +198,7 @@ namespace Game.View.People
             }
 
             float midWidth = mid.sprite.bounds.size.x * Mathf.Abs(mid.transform.localScale.x);
-            const float checkboxSize = 0.13f;
+            const float checkboxSize = 0.18f;
             const float checkboxGap = 0.04f;
             float checkboxX = -midWidth * 0.5f + horizontalPadding + checkboxSize * 0.5f;
             float textWidth = Mathf.Max(0.01f, midWidth - horizontalPadding * 2f - checkboxSize - checkboxGap);
@@ -217,7 +218,7 @@ namespace Game.View.People
                 textHeight += rowHeights[i];
             }
             if (rowHeights[0] > 0f && rowHeights[1] > 0f)
-                textHeight += bottomPadding;
+                textHeight += conditionSpacing;
 
             float midBaseHeight = mid.sprite.bounds.size.y * _midBaseScaleY;
             float desiredMidHeight = Mathf.Max(
@@ -279,14 +280,18 @@ namespace Game.View.People
                         rowTopY - checkboxSize * 0.5f,
                         row.transform.localPosition.z - 0.01f
                     );
-                    if (checkbox.sprite != null && checkbox.sprite.bounds.size.x > 0f)
+                    if (checkbox.sprite != null && uncheckedSprite != null)
                     {
-                        float scale = checkboxSize / checkbox.sprite.bounds.size.x;
+                        // Both frames use the same pixel size; the checked sprite also includes the protruding tick.
+                        float scale = checkboxSize * checkbox.sprite.pixelsPerUnit / uncheckedSprite.rect.width;
                         checkbox.transform.localScale = new Vector3(scale, scale, 1f);
                     }
                 }
 
-                rowTopY -= rowHeights[i] + bottomPadding;
+                float spacingAfterRow = i < MaxConditions - 1 && rowHeights[i + 1] > 0f
+                    ? conditionSpacing
+                    : 0f;
+                rowTopY -= rowHeights[i] + spacingAfterRow;
             }
         }
 
