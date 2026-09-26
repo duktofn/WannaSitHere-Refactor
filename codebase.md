@@ -1,7 +1,7 @@
 # Codebase Context
 
-Last Updated: 2026-09-21
-Last Reviewed Commit: 81d3afb118de0ca46d56ceba233018d74cfdecdd
+Last Updated: 2026-09-26
+Last Reviewed Commit: working tree (includes uncommitted changes)
 
 ---
 
@@ -29,16 +29,17 @@ The project separates core gameplay logic (pure C#, no MonoBehaviour) from prese
 
 # Tech Stack
 
-- Unity 6000.3.18f1
+- Unity 6000.3.18f1 (revision `5ebeb53e4c07`)
 - C#
 - UniTask (via Git URL)
 - PrimeTween 1.4.11
 - Unity Input System 1.20.0
 - Universal Render Pipeline 17.3.0
+- Unity LevelPlay Ads Mediation UPM 9.5.1
 - TextMeshPro
 - uGUI (com.unity.ugui 2.0.0)
 - UI Particle (com.coffee.ui-particle 4.13.3, embedded)
-- NUnit (via com.unity.test-framework 1.6.0)
+- Unity Test Framework 1.6.0 (NUnit)
 
 ---
 
@@ -53,9 +54,9 @@ Assets/
 │   ├── Core/                (Game.Core)         Pure C# domain: rules, state, economy, boosters
 │   ├── Events/              (Game.Events)       ScriptableObject event channels
 │   ├── Data/                (Game.Data)          SO configuration authoring + conversion
-│   ├── App/                 (Game.App)           Level coordination, persistence
+│   ├── App/                 (Game.App)           Game orchestration, level coordination, persistence
 │   ├── View/                (Game.View)          MonoBehaviour presentation, UI, input, effects, VFX
-│   ├── Bootstrap/           (Game.Bootstrap)     Composition root, lifecycle orchestrator
+│   ├── Bootstrap/           (Game.Bootstrap)     Composition root and Unity adapters
 │   ├── Editor/              (Game.Editor)        Custom inspectors, cheat tools
 │   └── Tests/               (Game.Tests.*)       EditMode unit tests
 ├── Prefabs/                 UI and gameplay prefabs
@@ -66,6 +67,22 @@ Assets/
 ```
 
 `Assets/Art/VFX/` contains first-party gameplay VFX and `VFXCatalog.asset`. `Assets/Lana Studio/Hyper Casual FX/` contains imported third-party particle assets retained as source material for the configured effects.
+
+Mobile mediation support includes the `com.unity.services.levelplay` package, editor dependency metadata under `Assets/LevelPlay/Editor/`, Google dependency resolver files under `Assets/MobileDependencyResolver/`, and Android Gradle templates under `Assets/Plugins/Android/`.
+
+---
+
+# Verified Project Configuration
+
+- **Editor:** Unity `6000.3.18f1`, revision `5ebeb53e4c07`, from `ProjectSettings/ProjectVersion.txt`.
+- **Render pipeline:** URP `17.3.0`; the quality profiles reference `Assets/Settings/UniversalRP.asset` in `ProjectSettings/QualitySettings.asset`.
+- **Input:** Input System package `1.20.0`; `ProjectSettings/ProjectSettings.asset` sets `activeInputHandler: 1` (Input System only).
+- **Build scenes:** `Assets/Scenes/MainScene.unity` is the only enabled Build Settings scene in `ProjectSettings/EditorBuildSettings.asset`. `Assets/Scenes/LV Scene.unity` is not listed there.
+- **Tests:** `Game.Tests.EditMode` in `Assets/Game/Tests/Game.Tests.EditMode.asmdef` is the only test assembly; sources include `DomainTests.cs`, `LevelDataRefactorTests.cs`, and `GameManagerFlowTests.cs`. No PlayMode test assembly was found.
+- **C# conventions:** Block-scoped namespaces, `_camelCase` private fields, and `[SerializeField] private` for Unity-serialized fields; see `AGENTS.md`.
+- **Ads and networking:** LevelPlay `9.5.1` is installed, but no first-party LevelPlay API usage was found under `Assets/Game`. `com.unity.multiplayer.center` is installed, but no runtime networking package or first-party networking API usage was found under `Assets/Game`.
+- **Unity tooling:** Unity MCP tools are available. The Editor state query succeeded and reported the Editor idle and outside Play Mode during this inspection.
+- **Review scope:** The working tree already contained uncommitted changes. They were left untouched and are not treated as stable project behavior in this document.
 
 ---
 
@@ -89,17 +106,17 @@ Game.Events   Game.Data           Game.App               │
 - **`Game.Core`** — Domain center. No MonoBehaviours. No assembly references.
 - **`Game.Events`** — References `Game.Core` (for `Reward` type) and `UniTask`; also owns the presentation-only `AudioCueId` contract and typed cue channel.
 - **`Game.Data`** — References `Game.Core` only.
-- **`Game.App`** — References `Game.Core`, `Game.Events`; stores audio volume/mute primitives in `GameData` but never references Unity audio objects.
-- **`Game.View`** — References `Game.Core`, `Game.Events`, `Game.App`, `PrimeTween`, `UniTask`, `TMP`, `InputSystem`, `uGUI`, `Coffee.UIParticle`, and Unity audio types only inside `Game.View.Audio`.
+- **`Game.App`** — References `Game.Core`, `Game.Events`, and `Game.Debug`; stores audio volume/mute primitives in `GameData` but never references Unity audio objects.
+- **`Game.View`** — References `Game.Core`, `Game.Events`, `Game.App`, `Game.Debug`, `PrimeTween`, `UniTask`, `TMP`, `InputSystem`, `uGUI`, `Coffee.UIParticle`, and Unity audio types only inside `Game.View.Audio`.
 - **`Game.Bootstrap`** — References all runtime assemblies: `Game.Core`, `Game.Data`, `Game.App`, `Game.View`, `Game.Events`.
 - **`Game.Editor`** — Editor-only. References `Game.Data`, `Game.App`, `Game.Core`, `Game.Bootstrap`.
 - **`Game.Tests.EditMode`** — Editor-only. References `Game.Core`, `Game.App`, `Game.Events`, `Game.Data`.
 
-Key rule: `Game.View` does **not** reference `Game.Data`. `Game.Bootstrap` orchestrates level loading, while `LevelDataSO` owns validation and configuration-to-runtime conversion.
+Key rules: `Game.View` does **not** reference `Game.Data`. `GameManager` owns application command ordering and game-flow decisions. `GameBootstrapper` only creates and wires dependencies, converts scene authoring configuration, binds endpoints, and forwards Unity lifecycle notifications. `LevelDataSO` owns validation and configuration-to-runtime conversion through the Unity level-loader adapter.
 
 Presentation VFX is owned by `Game.View.VFX`. `VfxCatalogSO` stores prefab and lifetime configuration, while `VfxPlayer` owns spawning, UI/world placement, pooling, cancellation, and cleanup. UI particle instances use the embedded `Coffee.UIParticle` renderer under the per-Canvas `VFXRoot`, while world effects continue to use the regular ParticleSystem path. `Game.Core` remains unaware of VFX; `Game.Bootstrap` and presentation views provide explicit references to the player.
 
-Presentation audio is owned by `Game.View.Audio`. `AudioCueId` and `AudioCueEventChannelSO` provide the cross-layer cue contract without audio objects. `AudioCatalogSO` stores cue/music configuration, while the scene-owned `AudioPlayer` owns AudioSources, Mixer routing, variation/cooldown rules, and BGM cross-fade. `GameBootstrapper` raises outcome cues only after successful application operations; view components call the player directly for button, transition, and Happy feedback.
+Presentation audio is owned by `Game.View.Audio`. `AudioCueId` and `AudioCueEventChannelSO` provide the cross-layer cue contract without audio objects. `AudioCatalogSO` stores cue/music configuration, while the scene-owned `AudioPlayer` owns AudioSources, Mixer routing, variation/cooldown rules, and BGM cross-fade. `GameManager` reports accepted application results through presentation outputs; view components call the player directly for button, transition, and Happy feedback.
 
 ---
 
@@ -178,7 +195,7 @@ Communication:
 
 Responsibility:
 
-Application state and game operations: level gameplay coordination (`LevelManager`), persisted progress (`GameManager`, `SaveLoadManager`, `GameData`), economy transactions, and core booster execution.
+Application state and game operations: active-level coordination and game-flow orchestration (`GameManager`), gameplay rules/history (`LevelManager`), persisted progress (`SaveLoadManager`, `GameData`), economy transactions, core booster execution, and tutorial trigger policy (`TutorialService`).
 
 Depends On:
 
@@ -186,13 +203,14 @@ Depends On:
 
 Used By:
 
-- `Game.View` (via `LevelManager` reference in `GridManager`), `Game.Bootstrap`.
+- `Game.View` (via the active `LevelManager` supplied to `GridManager`), `Game.Bootstrap`.
 
 Communication:
 
-- `LevelManager` validates moves, records history, evaluates conditions, and raises win/lose via `VoidEventChannelSO`.
-- `GameManager` owns `GameData`, `Inventory`, and `EconomyManager`; it persists successful state changes through `SaveLoadManager` without referencing authoring data or presentation components.
-- `GameManager` exposes and persists integer volume/mute settings; `GameBootstrapper` passes those primitives to `AudioPlayer.ApplySettings`.
+- `LevelManager` validates moves, records history, evaluates conditions, and raises typed C# outcome/move notifications to its owning `GameManager`.
+- `GameManager` owns `GameData`, `Inventory`, `EconomyManager`, active-session state, level loading/transition order, outcome acceptance, rewards, shop/booster decisions, daily refresh, settings, and tutorial activation. Unity work is accessed only through `ILevelLoader` and `IGamePresentation`; the App assembly does not reference `Game.Data`, `Game.View`, or `Game.Bootstrap`.
+- `GameManager` persists volume/mute settings and sends primitive settings values through `IGamePresentation`.
+- `TutorialService` raises `TriggerFired` whenever it receives a trigger request, before looking for a configured tutorial; `GameManager` forwards it as `TutorialTriggerFired`. On a fresh save, the first-time tutorial trigger waits until Level 1 is ready. `IsFirstTimePlaying` remains true when there is no matching tutorial, or while a started tutorial is still incomplete; it is persisted as false after completion.
 - `SaveLoadManager` serializes `GameData` to `data.json` at `Application.persistentDataPath`.
 
 ---
@@ -214,7 +232,7 @@ Used By:
 Communication:
 
 - Subscribes to domain C# events (`OnPersonStateChanged`, `OnMoveChanged`, `OnInventoryUpdate`, `OnConditionsCleared`).
-- Subscribes to ScriptableObject event channels for game flow.
+- Owns rendering/input and subscribes to result/feedback channels; requested game-flow commands are bound by `GameBootstrapper` to `GameManager`.
 - Reads domain state but does not mutate domain models directly (mutations go through `GridManager` → `LevelManager`).
 
 Modules: Board (CellView, GridManager, FoodTooltips), People (PersonView, PersonMover, PersonSpawner, PersonTooltip, PersonDragManager), UI (UIManager, LevelView, InventoryView, BoosterSlotView, ShopPanelView, ShopItemView, PanelController, TransitionController, LevelEndPanel, LevelEndText, WeeklyLogin, ButtonSpriteSwap, UIAlphaExtensions), Effect (ButtonPunchShake, AdsShaking, CurrencyFlyAnimation, CurrencyScatterAnimation), VFX (VfxId, VfxCatalogSO, VfxPlayer, VfxInstance), Audio (AudioCatalogSO, AudioPlayer, AudioEventBinder, UIButtonSound, AudioSettingsView).
@@ -225,7 +243,7 @@ Modules: Board (CellView, GridManager, FoodTooltips), People (PersonView, Person
 
 Responsibility:
 
-Sole layer that knows all other layers. Creates and wires runtime objects. Orchestrates game lifecycle.
+Sole layer that knows all runtime layers. Creates and wires runtime objects, translates scene configuration into App-owned inputs, binds command/result channels, and forwards Unity lifecycle notifications. It does not decide or sequence game use cases.
 
 Depends On:
 
@@ -237,8 +255,9 @@ Used By:
 
 Communication:
 
-- `GameBootstrapper` holds all serialized Data/View/Event references, listens to 15+ ScriptableObject event channels, delegates application state changes to `Game.App.GameManager`, raises successful outcome audio cues, and applies persisted audio settings to the scene `AudioPlayer`.
-- `LevelBootstrapper` converts `LevelDataSO` → `LevelRuntimeData` and initializes `GridManager`.
+- `GameBootstrapper` creates `GameManager`, the Unity implementations of `ILevelLoader` and `IGamePresentation`, and `TutorialService`; when no `FirstTimePlaying` tutorial is authored, it composes the default Level 1 tutorial at runtime. It binds serialized request channels directly to manager commands and accepted result events to existing result channels.
+- `LevelBootstrapper` implements `ILevelLoader`: it validates/converts a level before clearing the board, then activates it using the `LevelManager` supplied by `GameManager`.
+- `UnityGamePresentation` adapts application presentation requests to `UIManager`, `GridManager`, audio/VFX services, and existing feedback channels.
 - `LevelLayoutGizmosDrawer` is a normal `MonoBehaviour` that reads selected level SO data for Scene-view layout visualization only.
 
 ---
@@ -260,7 +279,7 @@ Contains:
 
 Responsibility:
 
-NUnit EditMode tests covering pure domain logic and level-data conversion: Grid, Conditions, Economy, MoveHistory, Boosters, LevelManager move recording, validation, and per-occurrence runtime isolation.
+NUnit EditMode tests covering domain logic, level-data conversion, and GameManager orchestration through fake loader/presentation/store dependencies. GameManager flow cases cover preparation failure preserving the active session, transition ordering, duplicate-command rejection, home cancellation, stale-session outcomes, one-time win progression, and restart progression semantics.
 
 ---
 
@@ -567,7 +586,7 @@ Path:
 
 Responsibility:
 
-Runtime state of a character: name, trait, conditions list, sprite, and emotional state. Fires events on state change and condition clearing.
+Runtime state of a character: name, trait, conditions, per-condition satisfaction, sprite, and emotional state. Fires events when state, condition list, or condition satisfaction changes.
 
 ### Fields
 
@@ -576,6 +595,9 @@ Runtime state of a character: name, trait, conditions list, sprite, and emotiona
 | `PersonName` | `string` (readonly) | Display name |
 | `Trait` | `PersonTrait` (readonly) | Personality trait (Cool, Sick, Dirty, Loud, Quiet) |
 | `_conditions` | `List<ConditionRuntimeData>` | Satisfaction requirements |
+| `_conditionSatisfied` | `List<bool>` | Satisfaction state aligned by index with `_conditions` |
+| `Conditions` | `IReadOnlyList<ConditionRuntimeData>` | Read-only condition list |
+| `ConditionSatisfied` | `IReadOnlyList<bool>` | Read-only per-condition satisfaction list |
 | `BaseSprite` | `Sprite` (readonly) | Default visual sprite |
 | `State` | `PersonState` (get; private set) | Normal, Angry, or Happy |
 
@@ -585,6 +607,7 @@ Runtime state of a character: name, trait, conditions list, sprite, and emotiona
 |---|---|---|---|
 | `ClearConditions` | — | `void` | Empties conditions list and fires `OnConditionsCleared` |
 | `ReplaceConditions` | `ConditionRuntimeData condition` | `void` | Replaces the complete list with one condition and fires `OnConditionsCleared` |
+| `SetConditionSatisfied` | `int index, bool satisfied` | `void` | Updates one condition's status and fires `OnConditionStatusChanged` when the value changes |
 | `SetState` | `PersonState state` | `void` | Updates State and fires `OnPersonStateChanged` if changed |
 
 ### Events
@@ -593,6 +616,7 @@ Runtime state of a character: name, trait, conditions list, sprite, and emotiona
 |---|---|---|
 | `OnPersonStateChanged` | `Action<PersonState>` | Fired when emotional state changes |
 | `OnConditionsCleared` | `Action` | Fired after the condition list is cleared or replaced |
+| `OnConditionStatusChanged` | `Action` | Fired when a condition's satisfied state changes |
 
 ---
 
@@ -927,11 +951,11 @@ Path:
 
 Responsibility:
 
-Primary gameplay coordinator for a level session. Validates moves, records history (skipping WaitGrid↔WaitGrid), evaluates conditions, and raises win/lose events.
+Domain rules for one level session. Validates moves, records history (skipping WaitGrid↔WaitGrid), evaluates conditions, and raises C# outcome/move notifications to the owning `GameManager`.
 
 Dependencies:
 
-- `LevelRuntimeData`, `LevelConditionEvaluator`, `MoveHistory`, `VoidEventChannelSO`
+- `LevelRuntimeData`, `LevelConditionEvaluator`, `MoveHistory`
 
 ### Fields
 
@@ -940,15 +964,15 @@ Dependencies:
 | `_currentLevel` | `LevelRuntimeData` (readonly) | Active level state |
 | `_conditionEvaluator` | `LevelConditionEvaluator` (readonly) | Condition validation engine |
 | `_moveHistory` | `MoveHistory` (readonly) | Move recorder for undo |
-| `_onWinEvent` | `VoidEventChannelSO` (readonly) | Win event channel |
-| `_onLoseEvent` | `VoidEventChannelSO` (readonly) | Lose event channel |
+| `OutcomeRaised` | `Action<LevelManager, LevelOutcome>` | Reports a domain win/lose result to the owning application session |
+| `MoveSucceeded` | `Action` | Reports a committed move for application tutorial triggers |
 
 ### Methods
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
 | `TryMovePerson` | `CellRuntimeData sourceCell, CellRuntimeData targetCell, PersonRuntimeData person` | `bool` | Validates, executes move, records history, decrements move, checks win/lose |
-| `CheckAllPersonConditions` | — | `void` | Updates all states; raises win or lose |
+| `CheckAllPersonConditions` | — | `void` | Updates all states; reports win or lose through `OutcomeRaised` |
 | `CheckPersonCondition` | `CellRuntimeData containCell, PersonRuntimeData person, GridId cellGrid` | `void` | Evaluates single person |
 | `IsConditionSatisfied` | `CellRuntimeData cell, ConditionRuntimeData condition` | `bool` | Checks single condition |
 | `GetAdjacentCells` | `Vector2Int index, Grid<CellRuntimeData> grid` | `List<CellRuntimeData>` | Returns adjacent cells |
@@ -1001,6 +1025,8 @@ Serializable DTO for player progression, currencies, boosters, login state, shop
 | `isSoundMuted` | `bool` | SFX mute toggle |
 | `currentMusicVolume` | `int` | Music volume |
 | `isMusicMuted` | `bool` | Music mute toggle |
+| `isTutorialCompleted` | `bool` | Legacy completion flag for the Drag mechanic tutorial |
+| `completedTutorialIds` | `List<string>` | Persisted per-mechanic tutorial completions |
 
 ---
 
@@ -1011,43 +1037,87 @@ Path:
 
 Responsibility:
 
-Plain C# application service that owns loaded progress, inventory, economy state, persistence, reward/shop transactions, and core booster execution. It has no `Game.Data` or `Game.View` dependency.
+Plain C# application orchestrator that owns game commands, active level/session state, operation ordering, accepted outcomes, progression, reward/shop/booster decisions, daily refresh, settings, and tutorial trigger policy. It has no `Game.Data`, `Game.View`, or `Game.Bootstrap` dependency; Unity work crosses App-owned interfaces.
 
 Dependencies:
 
-- `SaveLoadManager`, `GameData`, `Inventory`, `EconomyManager`
-- `LevelManager`, `MoreMoveBooster`, `UndoBooster`, `RemoveBooster`
+- `IGameDataStore`, `GameData`, `Inventory`, `EconomyManager`
+- `ILevelLoader`, `IGamePresentation`, `LevelManager`, `TutorialService`
+- `Game.Debug.Logger` for application diagnostics
+- `MoreMoveBooster`, `UndoBooster`, `RemoveBooster`
 - Core `Reward`, `ItemType`, `ConditionRuntimeData`, and `PersonRuntimeData`
 
 ### Fields
 
 | Name | Type | Purpose |
 |---|---|---|
-| `_saveLoad` | `SaveLoadManager` | Persistence controller |
+| `_saveLoad` | `IGameDataStore` | Persistence boundary |
 | `_inventory` | `Inventory` | Runtime inventory |
 | `_economyManager` | `EconomyManager` | Login/shop manager |
 | `_gameData` | `GameData` | Runtime save data copy |
+| `_levelLoader` | `ILevelLoader` | Prepares and activates authored levels |
+| `_presentation` | `IGamePresentation` | Executes Unity transitions, UI, audio, VFX, and feedback |
+| `_activeLevelManager` | `LevelManager` | Domain manager for the current session |
+| `_sessionState` | `SessionState` | Home/transition/playing/win/lose application state |
 
 ### Properties
 
 | Name | Type | Purpose |
 |---|---|---|
-| `SoundVolume` / `MusicVolume` | `int` | Persisted 0–100 volume percentages exposed to the composition root |
+| `CurrentLevel` | `int` | Saved progression level |
+| `ActiveLevelNumber` | `int` | Level loaded into the active session, distinct from progression |
+| `ActiveLevelManager` | `LevelManager` | Domain manager for the active board |
+| `TotalLevels` | `int` | Catalog size supplied by `ILevelLoader` |
+| `SoundVolume` / `MusicVolume` | `int` | Persisted 0–100 volume percentages |
 | `IsSoundMuted` / `IsMusicMuted` | `bool` | Persisted mute flags |
+
+### Events
+
+| Name | Type | Purpose |
+|---|---|---|
+| `TutorialTriggerFired` | `Action<TutorialTrigger>` | Raised for each tutorial trigger request; the first-time request occurs when Level 1 is ready |
 
 ### Key Methods
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
-| `InitializeLoginState` | `DateTime nowUtc` | `void` | Initializes daily login state through the daily refresh path |
-| `RefreshDailyState` | `DateTime nowUtc` | `bool` | Detects a new UTC calendar day, resets Gold shop purchase counts through `EconomyManager`, updates the saved login timestamp, and persists the result |
-| `SetLevel` | `int level` | `void` | Updates and persists the current level |
-| `GrantReward` | `Reward reward` | `void` | Applies and persists a configured reward |
-| `TryClaimDailyReward` / `TryClaimWeeklyReward` | `Reward reward` | `bool` | Claims a reward through `EconomyManager` and persists only on success |
-| `TryPurchase` | `Reward cost, Reward item, int goldShopSlotIndex = -1` | `bool` | Shop transaction via EconomyManager |
-| `TryUseMoreMoves` / `TryUseUndo` / `TryUseRemove` | `LevelManager, ...` | `bool` | Executes core booster behavior and persists the consumed inventory item |
-| `SetSoundSettings` / `SetMusicSettings` | `int volume, bool muted` | `void` | Clamps and persists the corresponding audio settings without referencing Unity audio types |
-| `SaveGame` | — | `void` | Serializes state to GameData and persists |
+| `PlayLevelAsync` / `NextLevelAsync` | `CancellationToken` | `Task` | Prepares, transitions to, activates, and commits a level session |
+| `RestartLevelAsync` | `CancellationToken` | `Task` | Reloads the active level without advancing progression |
+| `BackToHomeAsync` | `CancellationToken` | `Task` | Cancels active tutorial/load work and transitions to Home |
+| `OnApplicationReady` | — | `void` | Marks application startup and defers the first-time tutorial until Level 1 is ready |
+| `Tick` | `DateTime nowUtc` | `void` | Advances an active tutorial and performs once-per-day refresh |
+| `TryUseMoreMoves` / `TryUseUndo` / `TryUseRemove` | — | `bool` | Validates session/inventory, executes booster, persists it, then requests success feedback |
+| `TryPurchaseShopRequest` | `ShopPurchaseRequest request` | `bool` | Resolves configured offer and purchases it through `EconomyManager` |
+| `TryClaimDailyReward` / `TryClaimWeeklyReward` | — | `bool` | Claims configured reward and persists only on success |
+| `SetSoundSettings` / `SetMusicSettings` | `int volume, bool muted` | `void` | Clamps, persists, and applies settings through presentation boundary |
+| `CancelPendingOperations` | — | `void` | Cancels in-flight operations and tutorials during teardown |
+| `SaveGame` | — | `void` | Copies runtime economy/progression/tutorial state into `GameData` and persists |
+
+---
+
+## TutorialService
+
+Path:
+`Assets/Game/App/Tutorial/TutorialService.cs`
+
+Responsibility:
+
+Selects a configured `MechanicTutorial` for a `TutorialTrigger`, raises `TriggerFired` before tutorial matching, ticks the active tutorial, cancels it when a session is replaced, restores completed mechanic IDs from save data, and reports completed IDs to `GameManager` for persistence. `GameManager` forwards `TriggerFired` through its public `TutorialTriggerFired` event. `TutorialTrigger` and `MechanicTutorialID` are declared in this file.
+
+Related types:
+
+- `MechanicTutorial` (`Assets/Game/App/Tutorial/MechanicTutorial.cs`) owns an ordered set of steps and their begin/update/end lifecycle.
+- `TutorialStep` (`Assets/Game/App/Tutorial/TutorialStep.cs`) is the abstract lifecycle for one authored tutorial action.
+- Trigger points are FirstTimePlaying, LevelReady, SuccessfulMove, and successful MoreMoves/Undo/Remove booster use. A trigger request is observable even when no configured tutorial matches; in that case `TryStart` returns `false` and no tutorial step begins. If `MainScene` has no authored first-time tutorial, `GameBootstrapper` supplies one runtime tutorial using a single sequence step.
+
+## FirstTimeTutorialStep
+
+Path:
+`Assets/Game/View/Tutorial/FirstTimeTutorialStep.cs`
+
+Responsibility:
+
+Runs the Level 1 first-time sequence in one reusable step component: disables boosters without a separate intro screen, asks the player to inspect the person tooltip, locks input for 2.5 seconds, guides food selection to hamburger, then lets the player either drag the person or tap the person and an eligible seat. It completes when the person becomes happy. Instruction text uses the VAG Rounded font and Figma's 600x1213 artboard positions; the animated pointer uses the `hand_0` sprite from `Assets/Art/UI/Common/hand.png`. Missing tutorial targets are logged and skipped. The overlay is created under the existing in-game Canvas at runtime, with its font and sprite assigned on `MainScene`.
 
 ---
 
@@ -1058,7 +1128,7 @@ Path:
 
 Responsibility:
 
-Scene MonoBehaviour composition root. Owns serialized authoring, scene, VFX, and event-channel references; creates `GameManager`; wires lifecycle/event handlers; and performs level/UI/VFX orchestration around application operations.
+Scene MonoBehaviour composition root. Owns serialized authoring, scene, VFX, and event-channel references; constructs and wires `GameManager`, the Unity level/presentation adapters, and `TutorialService`; binds request/result endpoints; and forwards Unity lifecycle notifications. It contains no game-flow use-case decisions.
 
 Inherits / Implements:
 
@@ -1066,9 +1136,10 @@ Inherits / Implements:
 
 Dependencies:
 
-- `GameManager`, `LevelBootstrapper`, `EventListener`
+- `GameManager`, `LevelBootstrapper`, `UnityGamePresentation`, `EventListener`
 - `EconomyConfigSO`, `ConditionDataSO`, `LevelDataSO`, `GameConfig`
 - `UIManager`, `GridManager`, `LevelView`, `WeeklyLogin`, `ShopPanelView`, `VfxPlayer`
+- `TMP_FontAsset` for tutorial text and `Sprite` for its hand pointer
 - `AudioPlayer`, `AudioSettingsView`
 - Game-flow, reward, shop, booster, and economy-feedback channels
 - `AudioCueEventChannelSO`
@@ -1080,6 +1151,8 @@ Dependencies:
 | `_levelData` | `List<LevelDataSO>` | Ordered level authoring data passed to `LevelBootstrapper` |
 | `_economyConfig` | `EconomyConfigSO` | Authoring source for rewards, shop prices, and Gold shop limits |
 | `_canSitAnywhereCondition` | `ConditionDataSO` | Authoring condition converted for Remove Booster execution |
+| `_tutorialFont` | `TMP_FontAsset` | VAG Rounded font assigned to the default first-time tutorial |
+| `_tutorialHandSprite` | `Sprite` | Hand pointer sprite assigned to the default first-time tutorial |
 | `_uiManager` | `UIManager` | Main UI facade reference |
 | `_gridManager` | `GridManager` | Board view and active `LevelManager` reference |
 | `_levelView` | `LevelView` | In-game move and booster HUD reference |
@@ -1088,50 +1161,32 @@ Dependencies:
 | `_vfxPlayer` | `VfxPlayer` | Presentation VFX player reference |
 | `_audioPlayer` | `AudioPlayer` | Scene-owned presentation audio service |
 | `_audioSettingsViews` | `AudioSettingsView[]` | Existing Main and InGame settings panels bound to persisted audio callbacks |
-| `_onPlayGameEvent` / `_onWinEvent` / `_onLoseEvent` | `VoidEventChannelSO` | Game flow event channels |
-| `_onNextLevelEvent` / `_onRestartLevelEvent` | `VoidEventChannelSO` | Level navigation event channels |
-| `_onLevelChangedEvent` | `IntEventChannelSO` | Publishes the current level number |
-| `_onClaimWinRewardEvent` / `_onClaimAdsRewardEvent` | `VoidEventChannelSO` | Win and ad reward claim channels |
-| `_onClaimDailyRewardEvent` / `_onClaimWeeklyRewardEvent` | `VoidEventChannelSO` | Login reward claim channels |
-| `_onBuyRemoveEvent` / `_onBuyUndoEvent` / `_onBuyMoreMovesEvent` | `VoidEventChannelSO` | Legacy/item-specific shop purchase channels |
-| `_onUseMoreMovesEvent` / `_onUseUndoEvent` / `_onUseRemoveEvent` | `VoidEventChannelSO` | In-game booster use channels |
-| `_onItemReceive` / `_onItemSpend` | `OnItemReceiveSO` / `OnItemSpendSO` | Economy transaction feedback channels |
-| `_onAudioCue` | `AudioCueEventChannelSO` | Single channel used for successful BoosterUsed, Claim, and Spend outcomes |
+| Request channels | `VoidEventChannelSO` | Bound directly to manager commands for play, navigation, claims, purchases, and boosters |
+| Result channels | `VoidEventChannelSO` / `IntEventChannelSO` | Publish accepted win/lose and progression-level notifications from manager events |
 | `_listener` | `EventListener` | Tracks channel subscriptions for lifecycle-safe unbinding |
-| `_gameManager` | `GameManager` | Application state and transaction service created at runtime |
-| `_levelBootstrapper` | `LevelBootstrapper` | Level data conversion and view composition helper |
-| `_lastDailyCheckDateUtc` | `DateTime` | Prevents repeated daily-state checks after the current UTC date has been evaluated |
+| `_gameManager` | `GameManager` | Application orchestrator created at runtime |
+| `_mechanicTutorials` | `MechanicTutorial[]` | Tutorial definitions passed to `TutorialService` |
 
 ### Key Methods
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
-| `Awake` | — | `void` | Converts authoring limits into application input, creates `GameManager`, initializes presentation, and creates `LevelBootstrapper` |
-| `Update` | — | `void` | Checks for a UTC date change while the game remains open |
-| `OnEnable` / `OnDisable` | — | `void` | Binds and unbinds all event-channel callbacks |
-| `HandlePlayGame` | — | `void` | Loads the active level and binds the in-game booster HUD |
-| `HandleUseUndo` | — | `void` | Delegates undo to `GameManager`, then performs the view revert and condition refresh |
-| `HandleUseRemove` | — | `void` | Converts `CanSitAnywhere` data, delegates condition replacement, then plays presentation VFX and refreshes conditions |
-| `HandleClaimWinReward` / `HandleClaimAdsReward` / `HandleClaimDailyReward` / `HandleClaimWeeklyReward` | — | `void` | Raises `Claim` only after the applicable reward operation completes successfully |
-| `TryPurchase` | `Reward cost, Reward item, int goldShopSlotIndex = -1` | `bool` | Raises `Spend` only after the payment succeeds |
-| `BindAudioSettingsViews` / `ApplyAudioSettings` | — | `void` | Connects existing setting UI to GameManager persistence and AudioPlayer mixer application |
-| `HandleShopPurchase` | `ShopPurchaseRequest request` | `void` | Resolves the configured price and reward for a Gold/Gem slot and delegates the transaction |
-| `UpdateWeeklyLoginUI` | — | `void` | Projects application economy state and authoring rewards onto `WeeklyLogin` |
-| `SaveGame` | — | `void` | Delegates persistence to `GameManager` and refreshes the ShopPanel |
-| `OnApplicationFocus` | `bool hasFocus` | `void` | Rechecks daily state when the application regains focus |
-| `RefreshDailyStateIfNeeded` | — | `void` | Runs the once-per-day application refresh and updates login/shop presentation when state changes |
-| `ResolveShopPanel` | — | `ShopPanelView` | Uses the serialized ShopPanel when available, otherwise resolves the existing scene object and adds the view component at runtime |
+| `Awake` | — | `void` | Converts authoring input, constructs application services/adapters, and initializes presentation |
+| `OnEnable` / `OnDisable` | — | `void` | Binds/unbinds command and accepted-result endpoints; cancels work when disabled |
+| `Start` | — | `void` | Forwards initial level-number publication |
+| `Update` / `OnApplicationFocus` | — | `void` | Forwards current time to `GameManager.Tick` |
+| `OnApplicationQuit` | — | `void` | Cancels pending operations and forwards save |
 
 ---
 
 ## ShopPurchaseRequest
 
 Path:
-`Assets/Game/View/UI/ShopPanelView.cs`
+`Assets/Game/App/ShopPurchaseRequest.cs`
 
 Responsibility:
 
-Immutable presentation request identifying whether a shop slot uses Gold, its zero-based EconomyConfig slot index, and the booster item represented by that slot.
+Immutable App-owned command data identifying whether a shop slot uses Gold, its zero-based EconomyConfig slot index, and the booster item represented by that slot. View code can reference this contract without an App-to-View dependency.
 
 ### Fields / Properties
 
@@ -1150,7 +1205,7 @@ Path:
 
 Responsibility:
 
-Presentation coordinator for the ShopPanel. Receives EconomyConfig-derived price and limit arrays from `GameBootstrapper`, binds the six slot views, refreshes prices/limits/affordability, and forwards purchase requests through a callback.
+Presentation coordinator for the ShopPanel. Receives copied price and limit arrays through `UnityGamePresentation`, binds the six slot views, refreshes prices/limits/affordability, and forwards purchase requests through an application callback.
 
 Inherits / Implements:
 
@@ -1171,14 +1226,14 @@ Dependencies:
 | `_goldShopLimits` | `int[]` | Snapshot of `EconomyConfigSO.goldShopLimit` |
 | `_gemShopPrices` | `Reward[]` | Snapshot of `EconomyConfigSO.gemShopPrice` |
 | `_economyManager` | `EconomyManager` | Provides inventory affordability and Gold purchase counts |
-| `_onPurchaseRequested` | `Action<ShopPurchaseRequest>` | Callback to Bootstrap for the actual transaction |
+| `_onPurchaseRequested` | `Action<ShopPurchaseRequest>` | Callback to `GameManager` for the actual transaction |
 | `_isSubscribed` | `bool` | Prevents duplicate Inventory event subscriptions across enable/disable cycles |
 
 ### Methods
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
-| `Bind` | `IReadOnlyList<Reward> goldShopPrices, IReadOnlyList<int> goldShopLimits, IReadOnlyList<Reward> gemShopPrices, EconomyManager economyManager, Action<ShopPurchaseRequest> onPurchaseRequested` | `void` | Supplies configured offers and transaction callback, then refreshes all slots |
+| `Bind` | `IReadOnlyList<Reward> goldShopPrices, IReadOnlyList<int> goldShopLimits, IReadOnlyList<Reward> gemShopPrices, EconomyManager economyManager, Action<ShopPurchaseRequest> onPurchaseRequested` | `void` | Supplies configured offers and application transaction callback, then refreshes all slots |
 | `Refresh` | — | `void` | Reprojects current prices, Gold purchase counts, limits, and affordability to the slot views |
 | `Awake` | — | `void` | Ensures slot components exist and discovers slots from the existing ShopPanel hierarchy |
 | `OnEnable` / `OnDisable` | — | `void` | Subscribes/unsubscribes from inventory updates and refreshes presentation |
@@ -1249,17 +1304,18 @@ Path:
 
 Responsibility:
 
-POCO class that converts `LevelDataSO` to `LevelRuntimeData`, clears old grids, initializes `GridManager`, and binds `LevelView`.
+Unity adapter implementing `ILevelLoader`. It validates and converts a requested `LevelDataSO` into `LevelRuntimeData` before modifying the current board, then activates the prepared board with the `LevelManager` supplied by `GameManager`.
 
 Dependencies:
 
-- `LevelDataSO`, `GridManager`, `LevelView`
+- `ILevelLoader`, `LevelDataSO`, `GridManager`, `LevelView`
 
 ### Methods
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
-| `LoadLevel` | `int levelNumber` | `void` | Wraps index, converts data, clears grids, creates grids, binds view |
+| `TryPrepare` | `int levelNumber, out IPreparedLevel, out string error` | `bool` | Wraps catalog index and validates/converts level data without clearing the active board |
+| `Activate` | `IPreparedLevel prepared, LevelManager levelManager` | `void` | Clears the prior view, spawns environment, binds the supplied domain manager, builds grids, and binds HUD |
 
 ---
 
@@ -1294,7 +1350,7 @@ Path:
 
 Responsibility:
 
-Instantiates `CellView` prefabs from grid data, maintains `_cellViewMap` dictionary for domain↔view lookup, delegates move validation to `LevelManager`, and supports undo view reversion.
+Instantiates `CellView` prefabs from non-null grid cells, maintains `_cellViewMap` for domain↔view lookup, delegates move validation to the `LevelManager` supplied by `GameManager`, supports undo view reversion, and gates gameplay input during transitions. `WorldRoot` exposes the configured `gridRoot` or falls back to the component transform for level environment objects.
 
 Inherits / Implements:
 
@@ -1302,7 +1358,7 @@ Inherits / Implements:
 
 Dependencies:
 
-- `LevelManager`, `PersonMover`, `VoidEventChannelSO`
+- `LevelManager`, `PersonMover`
 - `VfxPlayer`
 - `AudioPlayer`
 
@@ -1314,9 +1370,8 @@ Dependencies:
 | `_levelManager` | `LevelManager` | Domain coordinator |
 | `personMoveManager` | `PersonMover` | Movement handler |
 | `cellPrefabs` | `GameObject` | Cell view prefab |
+| `gridRoot` | `Transform` | Parent for generated cell and level environment objects |
 | `adjacent` | `List<Vector2Int>` | Cardinal direction offsets |
-| `OnWinEvent` | `VoidEventChannelSO` | Win channel passed to LevelManager |
-| `OnLoseEvent` | `VoidEventChannelSO` | Lose channel passed to LevelManager |
 | `_vfxPlayer` | `VfxPlayer` | Player injected into spawned PersonViews and stopped when the level view is cleared |
 | `_audioPlayer` | `AudioPlayer` | Player injected into spawned PersonViews so state-transition audio stays in the View layer |
 
@@ -1324,7 +1379,7 @@ Dependencies:
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
-| `Initialize` | `LevelRuntimeData level` | `void` | Stores grids, constructs LevelManager |
+| `Initialize` | `LevelRuntimeData level, LevelManager levelManager` | `void` | Binds the runtime data and application-owned domain manager |
 | `ClearGrids` | — | `void` | Stops active VFX and destroys all cell views |
 | `CreateMainGrid` | — | `void` | Instantiates main grid cells |
 | `CreateWaitGrid` | — | `void` | Instantiates wait grid cells |
@@ -1514,7 +1569,7 @@ Path:
 
 Responsibility:
 
-Lifecycle-safe `EventListener` bridge from `OnAudioCue`, win/lose, Play Game, Main Panel, and Back Home channels to `AudioPlayer`. Restart/Next Level are intentionally not bound, so In-game BGM continues across those actions.
+Lifecycle-safe `EventListener` bridge from `OnAudioCue` and accepted win/lose result channels to `AudioPlayer`. Game music changes are requested through `IGamePresentation` only after a successful GameManager flow operation; raw Play/Home requests do not change BGM.
 
 ## UIButtonSound
 
@@ -1543,7 +1598,7 @@ Path:
 
 Responsibility:
 
-Visual representation of a single board cell. Hosts `PersonView` and `FoodTooltips`. Spawns default person on initialization.
+Visual representation of a board cell. Applies the configured cell sprite, initializes `FoodTooltips` for food cells, and spawns the configured default person for occupied cells.
 
 Inherits / Implements:
 
@@ -1629,7 +1684,7 @@ Path:
 
 Responsibility:
 
-Shows character condition bubble on tap. Dynamically resizes bubble to fit condition text. Listens to `OnConditionsCleared` to refresh when conditions are removed.
+Shows the character's condition bubble on tap, including checked/unchecked status for up to two conditions. Dynamically sizes the bubble and refreshes when conditions or their satisfaction states change.
 
 Inherits / Implements:
 
@@ -1670,7 +1725,7 @@ Path:
 
 Responsibility:
 
-Root UI coordinator. Manages canvas state switching (MainMenu ↔ InGame), win/lose panel visibility, settings panels, and screen transitions via `TransitionController`.
+Presentation facade for canvas state, win/lose panels, settings panels, and transitions via `TransitionController`. `GameManager` owns game-flow timing and awaits its transition operations through `UnityGamePresentation`; `UIManager` does not subscribe to Play/Next/Restart/Home request channels.
 
 Inherits / Implements:
 
@@ -1678,7 +1733,7 @@ Inherits / Implements:
 
 Dependencies:
 
-- `EventListener`, `VoidEventChannelSO`, `IntEventChannelSO`, `TransitionController`, `InventoryView`, `UniTask`, `TMP`
+- `VoidEventChannelSO`, `IntEventChannelSO`, `TransitionController`, `InventoryView`, `UniTask`, `TMP`
 - `VfxPlayer`
 
 ### Key Methods
@@ -1687,10 +1742,9 @@ Dependencies:
 |---|---|---|---|
 | `Initialize` | `Inventory inventory` | `void` | Binds InventoryView, refreshes level text |
 | `UpdateLevelText` | `int level` | `void` | Updates level label |
-| `PlayGame` | — | `void` | Transitions from menu to game |
-| `NextLevel` | — | `void` | Transitions to next level |
-| `RestartLevel` | — | `void` | Restarts current level |
-| `BackToHome` | — | `void` | Returns to main menu |
+| `CloseTransitionAsync` / `OpenTransitionAsync` | `CancellationToken` | `Task` | Executes the requested transition and reports completion to GameManager |
+| `ShowGameScreen` | `int levelNumber` | `void` | Selects the in-game screen and updates displayed level |
+| `ShowHomeScreen` | `int levelNumber` | `void` | Selects the home screen and updates displayed level |
 | `ShowWin` | — | `void` | Shows win panel and plays Win VFX at the panel center |
 | `ShowLose` | — | `void` | Shows lose panel |
 | `ShowSetting` | — | `void` | Opens settings panel |
@@ -1910,7 +1964,7 @@ Responsibility: Static class with gameplay constants: `MAX_CONDITION_PER_PERSON 
 
 Path: `Assets/Game/Editor/CheatToolWindow.cs`
 
-Responsibility: Dual-mode (Play/Edit) `EditorWindow` for manipulating save data: currencies, boosters, login state, shop purchases, level progression, and win/lose bypass.
+Responsibility: Dual-mode (Play/Edit) `EditorWindow` for manipulating save data and application state. In Play Mode it issues level, win/lose, save, and economy commands through `GameBootstrapper.GameManager`.
 
 ### LevelDataSOEditor
 
@@ -1930,177 +1984,81 @@ LevelDataSO
   -> LevelRuntimeData
 ```
 
-`LevelBootstrapper` performs this conversion before calling `GridManager.ClearGrids()`. An invalid level logs the level name and configuration location and leaves the current grids untouched. After clearing the previous level, it instantiates every `LevelDataSO.levelEnvironmentPrefabs` entry as a child of `GridManager.WorldRoot` at local position `(0, 0, 0)`, before creating the new grid cells. The Inspector keeps invalid configurations visible after grid resize or cell-type changes so the author can correct or remove them explicitly.
+`LevelBootstrapper.TryPrepare` performs this conversion before `GameManager` starts the transition or modifies the active board. An invalid level logs the level name and configuration location and leaves the current session and grids untouched. During activation it clears the previous view, instantiates every `LevelDataSO.levelEnvironmentPrefabs` entry as a child of `GridManager.WorldRoot` at local position `(0, 0, 0)`, binds the manager-created `LevelManager`, then creates cells and binds the HUD. The Inspector keeps invalid configurations visible after grid resize or cell-type changes so the author can correct or remove them explicitly.
 
 # Code Flow
 
-## App Start & Initialization
+## App Start and lifecycle forwarding
 
 `GameBootstrapper.Awake()`
-→ creates `GameManager`
-  → `SaveLoadManager.GetGameData()` loads `GameData` from disk
-  → creates `Inventory` and `EconomyManager` from saved state
-→ `GameManager.InitializeLoginState(DateTime.UtcNow)` updates daily state and persists when needed
-→ `GameBootstrapper.ApplyAudioSettings()` sends persisted volume/mute primitives to `AudioPlayer.ApplySettings()`
-→ `AudioSettingsView` instances are bound to `GameManager.SetSoundSettings` / `SetMusicSettings`
-→ creates `LevelBootstrapper`
-→ `UIManager.Initialize(Inventory)` → `InventoryView.BindData()`
-→ resolves/creates `ShopPanelView` and binds `EconomyConfigSO.goldShopPrice`, `goldShopLimit`, and `gemShopPrice`
-→ updates `WeeklyLogin` UI
+→ converts serialized economy/condition/grid settings into `GameManagerConfig`
+→ constructs `LevelBootstrapper` (`ILevelLoader`), `UnityGamePresentation` (`IGamePresentation`), `TutorialService`, and `GameManager`
+→ initializes UI, inventory, shop, audio settings, and daily login state
 
 `GameBootstrapper.OnEnable()`
-→ Registers 15+ event channel listeners via `_listener`
+→ binds request channels directly to `GameManager` command methods
+→ forwards accepted win/lose and level-number events to existing result channels
 
-`GameBootstrapper.Start()`
-→ Raises `_onLevelChangedEvent` with initial level
-
-`GameBootstrapper.Update()` / `OnApplicationFocus(true)`
-→ `GameManager.RefreshDailyState(DateTime.UtcNow)`
-→ resets Gold shop purchase counts when the UTC calendar date changes
-→ persists `GameData` and refreshes `WeeklyLogin`/`ShopPanel`
+`GameBootstrapper.Start()` publishes the current level and calls `GameManager.OnApplicationReady()`. For a fresh save, the manager requests `FirstTimePlaying`; `TutorialService.TriggerFired` and `GameManager.TutorialTriggerFired` are raised before tutorial matching. The manager then clears and saves `IsFirstTimePlaying`, even if no tutorial definition is configured. `Update`, focus, disable, and quit callbacks forward tick/cancellation/save lifecycle work. Daily date checks and application policy remain inside `GameManager`.
 
 ---
 
-## Play Level
+## Play, restart, next, and home
 
-User taps Play button
-→ `ButtonPunchShake.OnButtonPressed()` (visual only)
-→ `ButtonEventRaiser.RaiseAll()` waits delay → raises `OnPlayGameEvent`
-→ `UIManager.PlayGame()` transitions MainMenu → InGame
-→ `GameBootstrapper.HandlePlayGame()`
-  → `LevelBootstrapper.LoadLevel(currentLevel)`
-    → `LevelDataSO.TryToRuntimeData()` validates level-owned person configurations
-      → invalid: logs level/location errors and leaves current grids untouched
-      → valid: creates independent `PersonRuntimeData` instances and `LevelRuntimeData`
-    → `GridManager.ClearGrids()` only after successful conversion
-    → Instantiates `levelEnvironmentPrefabs` under `GridManager.WorldRoot` at local position `(0, 0, 0)`
-    → `GridManager.Initialize(levelRuntimeData)`
-      → Creates `LevelManager` with grids, adjacency, and win/lose channels
-    → `GridManager.CreateMainGrid()` and `CreateWaitGrid()`
-      → Instantiates `CellView` prefabs, binds data, spawns persons
-    → `LevelView.BindData(levelRuntimeData)`
-  → `LevelView.BindBoosters(_inventory)`
+Play/Next/Restart/Home request channel
+→ thin `GameBootstrapper` binding invokes the corresponding `GameManager` command
+→ manager serializes level operations with its operation gate and owns the session state
+
+For Play/Next/Restart:
+
+1. `ILevelLoader.TryPrepare()` validates and converts the requested level while the current board remains intact.
+2. On preparation failure, the manager reports the error and retains the current board/session without publishing LevelReady.
+3. The manager cancels the active tutorial, disables gameplay input, and awaits the closing transition.
+4. `GameManager` creates the session's `LevelManager` and passes it into `ILevelLoader.Activate()`.
+5. `LevelBootstrapper` clears the old view, creates environment and cells, and binds `LevelView`; the presentation selects the game screen.
+6. After the opening transition completes, the manager commits `ActiveLevelNumber` and Playing state, persists requested progression, enables input, updates music/level display, and evaluates LevelReady tutorial eligibility.
+
+Restart targets `ActiveLevelNumber` and does not advance saved progression. A win advances saved progression once for that accepted active session; Next then loads the new progression level. Home and teardown cancel pending work and active tutorials. If activation fails after clearing the board, the manager recovers to Home because the previous board can no longer be restored automatically.
 
 ---
 
-## Drag & Drop Move
+## Move, outcomes, and tutorials
 
-User drags `PersonView`
-→ `PersonDragManager.OnBeginDrag()` → `PersonMover.BeginMove()`
-→ `PersonDragManager.OnDrag()` → `PersonMover.DragTo()`
-→ `PersonDragManager.OnEndDrag()`
-  → `PersonMover.GetOverlappingCell()` (physics overlap)
-  → `PersonMover.MoveToCell()`
-    → `GridManager.TryMovePerson(sourceCell, targetCell, person)`
-      → `LevelManager.TryMovePerson()`
-        → Validates target is Seat, swaps cell occupants
-        → Records `MoveRecord` in `MoveHistory` (skip WaitGrid↔WaitGrid)
-        → `LevelRuntimeData.ModifyMove(-1)` → `OnMoveChanged`
-        → `LevelManager.CheckAllPersonConditions()`
-          → `LevelConditionEvaluator.UpdateAllPersonStates()` → sets Happy/Angry/Normal
-            → `PersonView.HandleStateChanged(Happy)` → `VfxPlayer.PlayAtWorld(Happy, person transform)` + `AudioPlayer.Play(PersonHappy)`
-          → If all satisfied → `_onWinEvent.Raise()`
-          → If out of moves → `_onLoseEvent.Raise()`
+`PersonDragManager` → `PersonMover` → `GridManager.TryMovePerson()` → active `LevelManager.TryMovePerson()`
+→ validates and applies the move, records history/decrements moves, and evaluates conditions
+→ updates person state/tooltip presentation
+→ emits an outcome for a win/loss, or `MoveSucceeded` after the move check
+
+`GameManager` accepts an outcome only from the current active manager while Playing and only once. It persists the win progression before emitting `WinAccepted`; accepted result channels then drive the existing win/lose UI and audio listeners. Stale managers and duplicate outcomes have no effect.
+
+`TutorialService` raises `TriggerFired` for each requested application trigger, then matches configured mechanic tutorials (FirstTimePlaying, LevelReady, successful move, or successful booster use), runs the current step from `GameManager.Tick()`, and reports completion. `GameManager` forwards trigger requests through `TutorialTriggerFired` and persists completed mechanic IDs; restart, home, and level replacement cancel the active tutorial. With the current empty `_mechanicTutorials` list, `FirstTimePlaying` is still emitted once but no tutorial step starts.
 
 ---
 
-## Use Booster (e.g. Undo)
+## Booster, economy, and settings commands
 
-User taps Undo slot
-→ `BoosterSlotView.OnClick()` raises `_onUseUndoEvent`
-→ `GameBootstrapper.HandleUseUndo()`
-  → `GameManager.TryUseUndo(levelManager, out record)` checks active level, inventory, and executes core undo
-  → `UndoBooster.TryUse()`
-    → Pops `MoveRecord`, restores cells, refunds move
-  → `GridManager.RevertMoveView(record)` → `PersonMover.RevertMove()` (tween animation)
-  → `LevelManager.CheckAllPersonConditions()`
-→ `GameManager.SaveGame()` persists the spent Undo item
-→ `GameBootstrapper` raises `OnAudioCue(BoosterUsed)` only after the successful booster result
+Booster request channel
+→ `GameManager` validates active session and inventory
+→ core booster changes domain state
+→ manager persists the result and requests successful audio/VFX/view feedback through `IGamePresentation`
 
-## Remove Booster VFX
+Undo additionally asks the presentation adapter to revert the move view before re-evaluating conditions. Remove resolves its `PersonView` and world VFX inside `UnityGamePresentation`; application code sees only the domain `PersonRuntimeData`.
 
-`BoosterSlotView.OnClick()` raises `_onUseRemoveEvent`
-→ `GameBootstrapper.HandleUseRemove()` converts `_canSitAnywhereCondition`
-→ `GameManager.TryUseRemove()` executes `RemoveBooster` and persists the spent item
-→ `RemoveBooster` skips persons already carrying `CanSitAnywhere`
-→ selected person receives a single `CanSitAnywhere` condition
-→ `GridManager.FindPersonView(TargetPerson)` resolves the selected presentation object
-→ `VfxPlayer.PlayAtWorld(RemoveBooster, targetPersonView.transform)`
-→ `LevelManager.CheckAllPersonConditions()` updates the person to Happy
-→ VFX instances are cleared when `GridManager.ClearGrids()` starts a new level
+Shop/reward request channels
+→ direct manager command binding
+→ `GameManager` resolves configured prices/rewards, validates EconomyManager rules, mutates inventory, persists success, and requests item/audio/UI refresh feedback
 
----
-
-## Audio Flow
-
-Scene `[Audio]` contains `AudioPlayer`, `AudioEventBinder`, one UI source, four SFX sources, and two music sources.
-
-`OnAudioCue.asset`
-→ `AudioEventBinder.HandleAudioCue()`
-→ `AudioPlayer.Play(cue)`
-→ catalog variation selection → cooldown/overlap check → UI/SFX source pool → Mixer bus
-
-`OnWinEvent` / `OnLoseEvent`
-→ `AudioEventBinder`
-→ `AudioPlayer.Play(Win/Lose)`
-
-`OnPlayGameEvent`
-→ `AudioEventBinder`
-→ `AudioPlayer.PlayMusic(InGame)`
-
-`OnMainPanel` / `OnBackToHome`
-→ `AudioEventBinder`
-→ `AudioPlayer.PlayMusic(MainMenu)`
-
-`PersonRuntimeData.OnPersonStateChanged(Happy)`
-→ `PersonView.HandleStateChanged()`
-→ `AudioPlayer.Play(PersonHappy)`; rebind/load paths only update the face and do not replay the cue
-
-`UIButtonSound` calls `AudioPlayer.Play(ButtonClick)` directly from each Button's local click listener while `ButtonEventRaiser` continues to raise gameplay channels.
-
-`AudioSettingsView`
-→ `GameBootstrapper` callback
+`AudioSettingsView` callbacks
 → `GameManager.SetSoundSettings` / `SetMusicSettings`
-→ `GameData` JSON persistence
-→ `AudioPlayer.ApplySettings`
-→ `AudioMixer.SetFloat(SoundVolume/MusicVolume)`
+→ saved `GameData` and `IGamePresentation.ApplyAudioSettings()`
 
 ---
 
-## Win & Claim Reward
+## Audio and UI feedback
 
-`_onWinEvent.Raise()`
-→ `UIManager.ShowWin()` activates `levelWinPanel`
-→ `VfxPlayer.PlayAtUI(Win, levelWinPanel RectTransform)` places Win VFX at its center
-→ `LevelEndPanel` reveals graphics sequentially
-→ `GameBootstrapper.HandleWin()` → `GameManager.AdvanceLevel()` increments level and saves
+`GameManager` calls `IGamePresentation` after successful application flow operations. `UnityGamePresentation` adapts these calls to `UIManager`, `GridManager`, `AudioPlayer`, `VfxPlayer`, and existing item/audio event channels. Raw Play/Home requests do not independently transition the UI or change music.
 
-User taps claim reward
-→ `ButtonEventRaiser` raises `OnClaimWinRewardEvent`
-→ `GameBootstrapper.HandleClaimWinReward()` gets reward from `EconomyConfigSO.levelWinReward`
-  → `GameManager.GrantReward(reward)` → `Inventory.UpdateInventory(reward)` → `OnInventoryUpdate` → `InventoryView` animates
-  → `GameBootstrapper` raises `_onItemReceive` with reward
-  → `GameBootstrapper` raises `OnAudioCue(Claim)` after the grant completes
-  → `SaveGame()`
-
----
-
-## Shop Purchase
-
-`ShopPanelView.Bind()` copies `EconomyConfigSO` prices and Gold limits
-→ discovers `GoldShopItem 1..3` and `GemShopItem 1..3`
-→ `ShopItemView` displays the configured price; Gold slots display `Limit: purchased/limit`
-→ Gold button interactability uses `EconomyManager.GetGoldShopPurchaseCount(i)` and inventory affordability
-
-User taps a shop button
-→ `ShopItemView` emits `ShopPurchaseRequest(UsesGold, SlotIndex, ItemType)` to `GameBootstrapper.HandleShopPurchase()`
-→ `GameBootstrapper` selects `goldShopPrice[i]` or `gemShopPrice[i]` and the matching booster reward
-→ `GameManager.TryPurchase(cost, item, goldSlotIndex)` delegates to `EconomyManager.TryPurchase()`
-→ on success, inventory/purchase count are persisted, `OnAudioCue(Spend)` is raised, and `_onItemReceive` is raised
-→ `ShopPanelView.Refresh()` updates prices, affordability, and Gold limit text
-
----
-
+Local ButtonClick, Transition, and PersonHappy feedback remains owned by the corresponding view components. Accepted win/lose result channels continue driving `UIManager` panels and `AudioEventBinder` outcome cues.
 # Important Dependencies
 
 | Package | Version | Purpose |
@@ -2111,6 +2069,7 @@ User taps a shop button
 | URP | 17.3.0 | Render pipeline |
 | TextMeshPro | (bundled) | All text rendering |
 | NUnit | (via test-framework 1.6.0) | EditMode unit tests |
+| `com.unity.services.levelplay` | 9.5.1 | Unity LevelPlay Ads Mediation package; no first-party runtime calls found yet |
 
 ---
 
@@ -2130,12 +2089,13 @@ User taps a shop button
 - UI button convention: visual effects (`ButtonPunchShake`) and logic (`ButtonEventRaiser`) are separate components on the same button.
 - `Game.View` does **not** reference `Game.Data`. Config-to-runtime conversion is done exclusively by `Game.Bootstrap`.
 - Move recording skips WaitGrid→WaitGrid moves to prevent cluttering undo history.
-- `ShopPanelView` receives copied EconomyConfig arrays from `GameBootstrapper`; `Game.View` remains independent of `Game.Data`.
+- `ShopPanelView` receives copied EconomyConfig arrays from `UnityGamePresentation`; `Game.View` remains independent of `Game.Data`.
 - Shop slot mapping is `0 = MoreMoves`, `1 = Remove`, `2 = Undo`; Gold limits apply per slot while Gem slots have no daily cap.
 - `CurrencyFlyAnimation` provides pooled coin burst-and-fly animations with `OnCoinArrived` / `OnAllCoinsArrived` events.
 - `CurrencyScatterAnimation` provides pooled coin scatter-and-shrink animations with a configurable hold delay and `OnCoinDisappeared` / `OnAllCoinsDisappeared` events.
 - `VFXCatalog.asset` maps `RemoveBooster`, `Happy`, and `Win` IDs to their configured prefabs; each entry owns its prewarm, fade, and scale settings.
 - `VfxPlayer` is a scene-owned presentation service; gameplay code triggers it only after successful domain operations, while `PersonView` reacts to the domain state event for Happy.
+- `PersonTooltip` displays each character condition's live satisfied state with a checkbox and refreshes from `OnConditionsCleared` / `OnConditionStatusChanged`.
 - `UIAlphaExtensions` is a static extension class providing fluent alpha get/set and PrimeTween alpha tweening for `Graphic` and `CanvasGroup`.
 - `AudioCueId` is a presentation contract only; `Game.Core` and `Game.App` do not reference `AudioClip` or `AudioSource`.
 - `AudioCatalog.asset` is the single cue/music catalog and `OnAudioCue.asset` is the single typed gameplay cue channel.

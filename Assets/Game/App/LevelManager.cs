@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Game.Core.Levels;
@@ -5,7 +6,6 @@ using Game.Core.Conditions;
 using Game.Core.Board;
 using Game.Core.Booster;
 using Game.Core.People;
-using Game.Events;
 
 namespace Game.App
 {
@@ -14,8 +14,8 @@ namespace Game.App
         private readonly LevelRuntimeData _currentLevel;
         private readonly LevelConditionEvaluator _conditionEvaluator;
         private readonly MoveHistory _moveHistory;
-        private readonly VoidEventChannelSO _onWinEvent;
-        private readonly VoidEventChannelSO _onLoseEvent;
+        public event Action<LevelManager, LevelOutcome> OutcomeRaised;
+        public event Action MoveSucceeded;
 
         public LevelRuntimeData CurrentLevel => _currentLevel;
         public LevelConditionEvaluator ConditionEvaluator => _conditionEvaluator;
@@ -23,15 +23,11 @@ namespace Game.App
 
         public LevelManager(
             LevelRuntimeData currentLevel,
-            List<Vector2Int> adjacentOffsets,
-            VoidEventChannelSO onWinEvent = null,
-            VoidEventChannelSO onLoseEvent = null)
+            List<Vector2Int> adjacentOffsets)
         {
             _currentLevel = currentLevel;
             _conditionEvaluator = new LevelConditionEvaluator(adjacentOffsets);
             _moveHistory = new MoveHistory();
-            _onWinEvent = onWinEvent;
-            _onLoseEvent = onLoseEvent;
         }
 
         public bool TryMovePerson(
@@ -73,6 +69,7 @@ namespace Game.App
 
             _currentLevel.ModifyMove(-1);
             CheckAllPersonConditions();
+            MoveSucceeded?.Invoke();
 
             return true;
         }
@@ -85,13 +82,13 @@ namespace Game.App
 
             if (_conditionEvaluator.AreAllPersonConditionsSatisfied(_currentLevel.MainGrid, _currentLevel.WaitGrid))
             {
-                _onWinEvent?.Raise();
+                OutcomeRaised?.Invoke(this, LevelOutcome.Won);
                 return;
             }
 
             if (_currentLevel.IsOutOfMove)
             {
-                _onLoseEvent?.Raise();
+                OutcomeRaised?.Invoke(this, LevelOutcome.Lost);
             }
         }
 
@@ -114,5 +111,10 @@ namespace Game.App
             return _conditionEvaluator.GetAdjacentCells(index, grid);
         }
     }
-}
 
+    public enum LevelOutcome
+    {
+        Won,
+        Lost
+    }
+}

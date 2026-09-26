@@ -10,12 +10,26 @@ namespace Game.View.UI
         [SerializeField] private TextMeshProUGUI moveText;
         
         [Header("Booster")]
+        [SerializeField] private GameObject boosterPanel;
         [SerializeField] private BoosterSlotView moreMoveSlot;
         [SerializeField] private BoosterSlotView undoSlot;
         [SerializeField] private BoosterSlotView removeSlot;
 
         private LevelRuntimeData data;
         private Inventory _inventory;
+        private bool _boostersEnabled = true;
+
+        public bool BoostersEnabled => _boostersEnabled;
+
+        public void SetBoostersEnabled(bool enabled)
+        {
+            _boostersEnabled = enabled;
+            moreMoveSlot?.SetTutorialEnabled(enabled);
+            undoSlot?.SetTutorialEnabled(enabled);
+            removeSlot?.SetTutorialEnabled(enabled);
+            if (boosterPanel != null)
+                boosterPanel.SetActive(enabled);
+        }
 
         public void BindData(LevelRuntimeData source)
         {

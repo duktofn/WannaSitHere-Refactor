@@ -330,6 +330,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LV1Prefabs
       objectReference: {fileID: 0}
+    - target: {fileID: 2667617272019986250, guid: 1d08f9f0619543e469d3f5e732244869, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6860336190570470226, guid: 1d08f9f0619543e469d3f5e732244869, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.013000011

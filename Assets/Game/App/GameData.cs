@@ -1,8 +1,13 @@
+using System.Collections.Generic;
+
 namespace Game.App.SaveAndLoad
 {
     [System.Serializable]
     public struct GameData
     {
+        public bool IsTutorialCompleted;
+        public bool IsFirstTimePlaying;
+        public List<string> completedTutorialIds;
         public int currentLevel;
         public int currentGold;
         public int currentGem; 

@@ -10,7 +10,8 @@
         "Game.Events",
         "UniTask",
         "Unity.InputSystem",
-        "Game.App"
+        "Game.App",
+        "Game.Debug"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

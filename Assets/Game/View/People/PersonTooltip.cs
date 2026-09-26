@@ -38,6 +38,7 @@ namespace Game.View.People
         private const int MaxConditions = 2;
 
         private bool _isShowTooltips;
+        private bool _inputEnabled = true;
         private Vector3 _originalLocalPos;
         private InputAction _pointerPressAction;
         private float _botAnchorY;
@@ -46,6 +47,9 @@ namespace Game.View.People
         private PersonRuntimeData _boundPerson;
         private readonly TextMeshPro[] _conditionRows = new TextMeshPro[MaxConditions];
         private readonly SpriteRenderer[] _conditionCheckboxes = new SpriteRenderer[MaxConditions];
+
+        public bool IsShowingTooltip => _isShowTooltips;
+        public event Action Tapped;
 
         private void Awake()
         {
@@ -324,13 +328,23 @@ namespace Game.View.People
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (eventData.dragging || 
+            if (!_inputEnabled || eventData.dragging ||
                 Vector2.Distance(eventData.pressPosition, eventData.position) > 5f)
             {
                 return;                
             }
 
             ToggleTooltips();
+            Tapped?.Invoke();
+        }
+
+        public void SetInputEnabled(bool enabled)
+        {
+            _inputEnabled = enabled;
+            if (!enabled)
+                StopListeningForOutsideClick();
+            else if (_isShowTooltips)
+                StartListeningForOutsideClick();
         }
 
         public void Hide()

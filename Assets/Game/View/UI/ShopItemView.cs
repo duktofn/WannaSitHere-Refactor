@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using Game.App;
 using Game.Core.Economy;
 
 namespace Game.View.UI

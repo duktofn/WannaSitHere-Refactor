@@ -6,7 +6,8 @@
         "Game.Data",
         "Game.View",
         "Game.App",
-        "Game.Events"
+        "Game.Events",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

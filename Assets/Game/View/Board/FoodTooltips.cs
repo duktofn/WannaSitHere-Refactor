@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using TMPro;
 using PrimeTween;
@@ -20,8 +21,10 @@ namespace Game.View.Board
         private InputAction _pointerPressAction;
         private Collider2D _cellCollider;
         private bool _isInitialized;
+        private bool _inputEnabled = true;
 
         public bool IsVisible => tooltipVisual != null ? tooltipVisual.activeSelf : gameObject.activeSelf;
+        public event Action<FoodTooltips> Tapped;
 
         private void Awake()
         {
@@ -44,7 +47,17 @@ namespace Game.View.Board
                 foodName.text = name;
 
             _isInitialized = true;
-            EnablePointerAction();
+            if (_inputEnabled)
+                EnablePointerAction();
+        }
+
+        public void SetInputEnabled(bool enabled)
+        {
+            _inputEnabled = enabled;
+            if (enabled)
+                EnablePointerAction();
+            else
+                DisablePointerAction();
         }
 
         public void EnablePointerAction()
@@ -64,7 +77,7 @@ namespace Game.View.Board
 
         private void OnEnable()
         {
-            if (_isInitialized)
+            if (_isInitialized && _inputEnabled)
                 EnablePointerAction();
         }
 
@@ -80,6 +93,9 @@ namespace Game.View.Board
 
         private void OnPointerPressed(InputAction.CallbackContext ctx)
         {
+            if (!_inputEnabled)
+                return;
+
             Vector2 screenPos = Pointer.current.position.ReadValue();
 
             Camera cam = Camera.main;
@@ -97,6 +113,7 @@ namespace Game.View.Board
             if (isHitSelf)
             {
                 ToggleTooltips();
+                Tapped?.Invoke(this);
             }
             else if (IsVisible)
             {

@@ -6,7 +6,6 @@ using Game.Core.Conditions;
 using Game.Core.Levels;
 using Game.Core.People;
 using Game.View.People;
-using Game.Events;
 using Game.App;
 using Game.View.Audio;
 using Game.View.VFX;
@@ -38,12 +37,11 @@ namespace Game.View.Board
         [Header("Audio")]
         [SerializeField] private AudioPlayer _audioPlayer;
 
-        [Header("Events")]
-        [SerializeField] private VoidEventChannelSO OnWinEvent;
-        [SerializeField] private VoidEventChannelSO OnLoseEvent;
-
         public LevelManager LevelManager => _levelManager;
         public Transform WorldRoot => gridRoot != null ? gridRoot : transform;
+        public List<Vector2Int> AdjacentOffsets => adjacent;
+        public bool IsGameplayInputEnabled => _gameplayInputEnabled;
+        private bool _gameplayInputEnabled = true;
 
         private void Awake()
         {
@@ -51,12 +49,19 @@ namespace Game.View.Board
                 personMoveManager = GetComponent<PersonMover>();
         }
 
-        public void Initialize(LevelRuntimeData level)
+        public void Initialize(LevelRuntimeData level, LevelManager levelManager)
         {
             _currentLevel = level;
             _main = level?.MainGrid;
             _wait = level?.WaitGrid;
-            _levelManager = new LevelManager(level, adjacent, OnWinEvent, OnLoseEvent);
+            _levelManager = levelManager;
+        }
+
+        public void SetGameplayInputEnabled(bool enabled)
+        {
+            _gameplayInputEnabled = enabled;
+            foreach (CellView cellView in _cellViewMap.Values)
+                ApplyInputState(cellView);
         }
 
         public void ClearGrids()
@@ -93,6 +98,7 @@ namespace Game.View.Board
                 cellView.BindData(c, personMoveManager);
                 cellView.CurrentPersonView?.BindVfxPlayer(_vfxPlayer);
                 _cellViewMap[c] = cellView;
+                ApplyInputState(cellView);
 
                 if (c.CurrentPerson != null)
                     CheckPersonCondition(c, c.CurrentPerson, c.OwnGrid);
@@ -122,6 +128,7 @@ namespace Game.View.Board
                 cellView.BindData(c, personMoveManager);
                 cellView.CurrentPersonView?.BindVfxPlayer(_vfxPlayer);
                 _cellViewMap[c] = cellView;
+                ApplyInputState(cellView);
 
                 if (c.CurrentPerson != null)
                     CheckPersonCondition(c, c.CurrentPerson, c.OwnGrid);
@@ -154,7 +161,15 @@ namespace Game.View.Board
             CellView targetCell,
             PersonRuntimeData person)
         {
+            if (!_gameplayInputEnabled)
+                return false;
+
             return _levelManager?.TryMovePerson(sourceCell?.RuntimeData, targetCell?.RuntimeData, person) ?? false;
+        }
+
+        private void ApplyInputState(CellView cellView)
+        {
+            cellView?.SetInputEnabled(_gameplayInputEnabled);
         }
 
         public void CheckPersonCondition(CellRuntimeData containCell, PersonRuntimeData person, GridId cellGrid)

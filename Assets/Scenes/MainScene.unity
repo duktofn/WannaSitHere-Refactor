@@ -176,14 +176,10 @@ MonoBehaviour:
   mainSettingPanel: {fileID: 2145161255}
   gameSettingPanel: {fileID: 2113176202}
   _vfxPlayer: {fileID: 2200000000000000003}
-  OnPlayGameEvent: {fileID: 11400000, guid: d3f68d42fd245e0458e996461f1c99e5, type: 2}
   OnWinEvent: {fileID: 11400000, guid: e720f7945dc0bd74b808cc6edd387b9f, type: 2}
   OnLoseEvent: {fileID: 11400000, guid: 65ac03fb9c0e67c49a5b483f6f6fcf1d, type: 2}
-  OnNextLevelEvent: {fileID: 11400000, guid: 47cb6e655a6896b4e9f986a7e6013db4, type: 2}
-  OnRestartLevelEvent: {fileID: 11400000, guid: 4990bfa6a9efa8b4ea10951b55c4eeb4, type: 2}
   OnSettingShow: {fileID: 11400000, guid: 7c2b62909bb3c1342b5413fccd3018a3, type: 2}
   OnSettingHide: {fileID: 11400000, guid: a56cff54178e8a64e987c35afe95c608, type: 2}
-  OnBackToHome: {fileID: 11400000, guid: 09b229e9ff738ff4385a096a12b682f7, type: 2}
   onLevelChangedEvent: {fileID: 11400000, guid: 4d6f5f4f4f154383a8930ed7a411a361, type: 2}
   inventoryView: {fileID: 10276217}
   levelText: {fileID: 740535503}
@@ -269,8 +265,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.Bootstrap::Game.Bootstrap.GameManager
   _levelData:
   - {fileID: 11400000, guid: 590a4e9bc43a8ce44abcb618223b3ade, type: 2}
+  - {fileID: 11400000, guid: 9a8673287e103ce4a8d8a904ee3b6e15, type: 2}
+  - {fileID: 11400000, guid: 525d00c17acec83489b690c027438d11, type: 2}
   _economyConfig: {fileID: 11400000, guid: 2c48a835cf4cc354dbb3d802c5c44c4e, type: 2}
   _canSitAnywhereCondition: {fileID: 11400000, guid: 098c314aab69cc84cbd8d0f3381dfb38, type: 2}
+  _mechanicTutorials: []
+  _tutorialFont: {fileID: 11400000, guid: 81e60fa4276af5b49818bc4d51945840, type: 2}
+  _tutorialHandSprite: {fileID: 8403215288983880825, guid: e03fb587fdffc4e43921350f3c76ddbf, type: 3}
   _uiManager: {fileID: 10276214}
   _gridManager: {fileID: 788058380}
   _levelView: {fileID: 284943829}
@@ -282,10 +283,11 @@ MonoBehaviour:
   - {fileID: 2145161259}
   - {fileID: 2113176206}
   _onPlayGameEvent: {fileID: 11400000, guid: d3f68d42fd245e0458e996461f1c99e5, type: 2}
-  _onWinEvent: {fileID: 11400000, guid: e720f7945dc0bd74b808cc6edd387b9f, type: 2}
-  _onLoseEvent: {fileID: 11400000, guid: 65ac03fb9c0e67c49a5b483f6f6fcf1d, type: 2}
   _onNextLevelEvent: {fileID: 11400000, guid: 47cb6e655a6896b4e9f986a7e6013db4, type: 2}
   _onRestartLevelEvent: {fileID: 11400000, guid: 4990bfa6a9efa8b4ea10951b55c4eeb4, type: 2}
+  _onBackToHomeEvent: {fileID: 11400000, guid: 09b229e9ff738ff4385a096a12b682f7, type: 2}
+  _onWinEvent: {fileID: 11400000, guid: e720f7945dc0bd74b808cc6edd387b9f, type: 2}
+  _onLoseEvent: {fileID: 11400000, guid: 65ac03fb9c0e67c49a5b483f6f6fcf1d, type: 2}
   _onLevelChangedEvent: {fileID: 11400000, guid: 4d6f5f4f4f154383a8930ed7a411a361, type: 2}
   _onClaimWinRewardEvent: {fileID: 11400000, guid: 81026825805341b5a1524cfdf078ce52, type: 2}
   _onClaimAdsRewardEvent: {fileID: 11400000, guid: 93f14c42ac044d14bde7bfef242277a6, type: 2}
@@ -3090,6 +3092,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.UI.LevelView
   moveText: {fileID: 512175121}
+  boosterPanel: {fileID: 1532560428}
   moreMoveSlot: {fileID: 712808215}
   undoSlot: {fileID: 1878787030}
   removeSlot: {fileID: 566090202}
@@ -4582,7 +4585,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 11.000004}
-  m_SizeDelta: {x: 50, y: 50}
+  m_SizeDelta: {x: 100, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &512175121
 MonoBehaviour:
@@ -4876,7 +4879,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.Physics2DRaycaster
   m_EventMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967287
   m_MaxRayIntersections: 0
 --- !u!1 &532046481
 GameObject:
@@ -8979,8 +8982,6 @@ MonoBehaviour:
   gridRoot: {fileID: 788058378}
   _vfxPlayer: {fileID: 2200000000000000003}
   _audioPlayer: {fileID: 312201326}
-  OnWinEvent: {fileID: 11400000, guid: e720f7945dc0bd74b808cc6edd387b9f, type: 2}
-  OnLoseEvent: {fileID: 11400000, guid: 65ac03fb9c0e67c49a5b483f6f6fcf1d, type: 2}
 --- !u!1 &789834092
 GameObject:
   m_ObjectHideFlags: 0
@@ -9439,7 +9440,7 @@ RectTransform:
   m_Father: {fileID: 811000021}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -9549,8 +9550,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 811000041}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 52, y: 52}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -9838,7 +9839,7 @@ RectTransform:
   m_Father: {fileID: 812000021}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -9948,8 +9949,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 812000041}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 52, y: 52}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -13501,9 +13502,6 @@ MonoBehaviour:
   onAudioCue: {fileID: 11400000, guid: 03614158e3515c740831c0d3ca26e866, type: 2}
   onWinEvent: {fileID: 11400000, guid: e720f7945dc0bd74b808cc6edd387b9f, type: 2}
   onLoseEvent: {fileID: 11400000, guid: 65ac03fb9c0e67c49a5b483f6f6fcf1d, type: 2}
-  onPlayGameEvent: {fileID: 11400000, guid: d3f68d42fd245e0458e996461f1c99e5, type: 2}
-  onMainPanelEvent: {fileID: 11400000, guid: 92d3033c099e2ff4599e758a239582dc, type: 2}
-  onBackToHomeEvent: {fileID: 11400000, guid: 09b229e9ff738ff4385a096a12b682f7, type: 2}
   playMainMenuOnStart: 1
 --- !u!1 &1142752620
 GameObject:
@@ -22573,7 +22571,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -58.2, y: 42.8}
+  m_AnchoredPosition: {x: -58.19995, y: 42.800003}
   m_SizeDelta: {x: 64, y: 64}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2009583718
@@ -24008,7 +24006,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2145161256
 RectTransform:
   m_ObjectHideFlags: 0

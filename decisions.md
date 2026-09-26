@@ -287,7 +287,9 @@ Preserving the serialized meaning of existing level and condition assets is safe
 
 Date: 2026-09-17
 
-Status: Accepted
+Status: Superseded by DEC-008
+
+The former ownership split is retained here as historical context. DEC-008 kept the App/Unity dependency boundary and completed the move of runtime orchestration out of Bootstrapper.
 
 ### Problem
 
@@ -366,6 +368,8 @@ This preserves the current assembly dependency direction: App stays independent 
 Date: 2026-09-18
 
 Status: Accepted
+
+Ownership amendment (2026-09-25): DEC-008 moves successful application-outcome decisions from GameBootstrapper to GameManager. The hybrid event/direct-call strategy remains accepted; Bootstrapper binds accepted outcome outputs to existing result/audio endpoints. This migration is implemented.
 
 ### Problem
 
@@ -469,3 +473,99 @@ Migration has been fully completed: `PersonDataSO`, `CellDataSO.defaultPerson`, 
 - Invalid definitions, conditions, duplicate placements, grid coordinates, and target cells are reported before the active grids are cleared.
 - `CellDataSO` contains only cell configuration (type, food, sprite) without any person references.
 - All legacy `PersonDataSO` assets and temporary migration tooling have been cleanly retired.
+
+## DEC-008 — GameManager owns runtime orchestration; Bootstrapper only composes dependencies
+
+Date: 2026-09-25
+
+Status: Accepted and implemented
+
+The ownership direction is explicitly requested by the user and implemented. `game-manager-refactor-plan.md` records the migration and verification limits.
+
+### Problem
+
+GameBootstrapper currently owns runtime decisions for level flow, reward selection, shop mapping, booster follow-up, settings, and daily refresh. Adding mechanic tutorials would put more application policy in the composition root. Independently subscribed UI transitions and level loading also provide no single authoritative moment at which a level is ready for interaction.
+
+### Context
+
+DEC-005 intentionally left Unity presentation orchestration in Bootstrapper. The user now requires Bootstrapper to initialize, inject, and connect dependencies only, with GameManager owning game orchestration. Game.View already references Game.App, so moving concrete View/Data dependencies into GameManager would introduce invalid dependencies. Existing scenes, channels, save data, and editor tooling need a staged migration.
+
+### Options
+
+#### Option A — Retain runtime orchestration in GameBootstrapper
+
+Pros:
+
+- Preserves the current implementation and direct access to scene references.
+- Requires few new contracts.
+
+Cons:
+
+- Conflicts with the requested responsibility boundary.
+- Tutorial and game-flow policy would continue accumulating in the composition root.
+- Level loading and transition completion remain coordinated across independent listeners.
+
+#### Option B — Move concrete Unity operations into GameManager
+
+Pros:
+
+- GameManager would visibly contain all command execution in one class.
+- Direct calls are easy to follow locally.
+
+Cons:
+
+- References to LevelDataSO, GridManager, and UIManager would violate the assembly direction and create an App/View cycle.
+- Application behavior would become coupled to scene objects and asset lifetimes.
+
+#### Option C — GameManager orchestrates through App-owned contracts
+
+Pros:
+
+- Matches the user's requested ownership while preserving assembly direction.
+- Gives level readiness, outcome acceptance, and tutorial activation one application owner.
+- Allows command ordering and failure behavior to be exercised without scene objects.
+
+Cons:
+
+- Requires a small set of Unity adapters and explicit completion/failure contracts.
+- Existing UI/audio listeners and editor callers must be rewired to avoid duplicate command execution.
+
+### Decision
+
+Select Option C. GameManager owns runtime game commands and their ordering, active-session ownership, success/failure policy, and tutorial activation. Domain services retain their mechanics; TutorialService retains step execution; views retain rendering and animation implementation.
+
+GameBootstrapper constructs dependencies, converts authoring settings into application input, binds endpoints, forwards Unity lifecycle notifications, and cancels/unbinds owned work during teardown. It must not hide game-flow decisions in handlers or binding callbacks.
+
+Unity adapters implement interfaces defined in Game.App. GameManager must not reference Game.Data, Game.View, or Game.Bootstrap. One-way command/result wiring keeps requested actions separate from accepted application outcomes. Existing view-local audio/VFX ownership remains valid.
+
+### Reason
+
+This fulfills the explicit responsibility requirement without replacing the repository's layering model. The application can determine when a load actually succeeds and when a transition completes before activating tutorial behavior. Scene references and authoring data remain accessible to adapters composed by Bootstrapper, while orchestration no longer depends on event subscription order.
+
+### Consequences
+
+- Supersedes DEC-005's responsibility split; its historical reasoning is retained above.
+- Amends DEC-006's successful-outcome owner while preserving its hybrid communication strategy.
+- LevelManager ownership, level load results, transition completion, cancellation, and scene teardown are explicit in the implementation.
+- UIManager and AudioEventBinder consume presentation requests and accepted outputs without independently duplicating application flow.
+- CheatToolWindow issues application commands through `GameManager`; scene request/result references were rewired while preserving the component script identity.
+- `GameManager` now owns level-session sequencing, accepted outcomes, progression, economy/booster/settings/daily commands, and tutorial trigger policy through `ILevelLoader` and `IGamePresentation`.
+- `GameBootstrapper` is limited to composition, endpoint wiring, Unity lifecycle forwarding, and cancellation/save forwarding.
+- The tutorial lifecycle and completion persistence are wired, but no authored mechanic tutorial definitions or concrete tutorial-step assets exist yet.
+- Verification: Unity EditMode tests passed; App, Bootstrap, View, Editor, and EditMode test assemblies built with zero warnings/errors. Manual Play Mode flow checks were not run. `scripts/ci/lint-conventions.sh` is absent from this checkout.
+
+### Related
+
+- `game-manager-refactor-plan.md`
+- `Game.App.GameManager`
+- `Game.App.LevelManager`
+- `Game.Bootstrap.GameBootstrapper`
+- `Game.Bootstrap.LevelBootstrapper`
+- `Game.App.ILevelLoader`
+- `Game.App.IGamePresentation`
+- `Game.View.Board.GridManager`
+- `Game.View.UI.UIManager`
+- `Game.View.Audio.AudioEventBinder`
+- `Game.Editor.CheatToolWindow`
+- DEC-005
+- DEC-006

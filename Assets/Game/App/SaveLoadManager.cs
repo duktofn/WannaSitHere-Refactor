@@ -3,7 +3,13 @@ using UnityEngine;
 
 namespace Game.App.SaveAndLoad
 {
-    public class SaveLoadManager
+    public interface IGameDataStore
+    {
+        GameData GetGameData();
+        void SaveGameData(GameData data);
+    }
+
+    public class SaveLoadManager : IGameDataStore
     {
         public void SaveGameData(GameData data)
         {
@@ -18,6 +24,8 @@ namespace Game.App.SaveAndLoad
             {
                 return new GameData
                 {
+                    IsTutorialCompleted = false,
+                    IsFirstTimePlaying = true,
                     currentLevel = 1,
                     currentSoundVolume = 100,
                     currentMusicVolume = 100

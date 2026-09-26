@@ -1,27 +1,24 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Game.App;
-using Game.Core.Booster;
+using Game.App.Tutorial;
 using Game.Core.Economy;
 using Game.Data.Conditions;
 using Game.Data.Economy;
 using Game.Data.Levels;
-using Game.Data.People;
 using Game.Events;
-using Game.View.Board;
-using Game.View.People;
-using Game.View.UI;
-using Game.View.VFX;
 using Game.View.Audio;
+using Game.View.Board;
+using Game.View.UI;
+using Game.View.Tutorial;
+using Game.View.VFX;
+using TMPro;
 
 namespace Game.Bootstrap
 {
     /// <summary>
-    /// Scene composition root. Owns Unity lifecycle, serialized references, event-channel
-    /// subscriptions, and presentation orchestration while delegating application state and
-    /// transactions to <see cref="GameManager"/>.
+    /// Unity composition root. Creates application services and connects serialized scene endpoints.
     /// </summary>
     public sealed class GameBootstrapper : MonoBehaviour
     {
@@ -33,6 +30,11 @@ namespace Game.Bootstrap
 
         [Header("Conditions")]
         [SerializeField] private ConditionDataSO _canSitAnywhereCondition;
+
+        [Header("Tutorials")]
+        [SerializeField] private MechanicTutorial[] _mechanicTutorials;
+        [SerializeField] private TMP_FontAsset _tutorialFont;
+        [SerializeField] private Sprite _tutorialHandSprite;
 
         [Header("Scene References")]
         [SerializeField] private UIManager _uiManager;
@@ -48,12 +50,15 @@ namespace Game.Bootstrap
         [SerializeField] private AudioPlayer _audioPlayer;
         [SerializeField] private AudioSettingsView[] _audioSettingsViews;
 
-        [Header("Events - Game Flow")]
+        [Header("Events - Requests")]
         [SerializeField] private VoidEventChannelSO _onPlayGameEvent;
-        [SerializeField] private VoidEventChannelSO _onWinEvent;
-        [SerializeField] private VoidEventChannelSO _onLoseEvent;
         [SerializeField] private VoidEventChannelSO _onNextLevelEvent;
         [SerializeField] private VoidEventChannelSO _onRestartLevelEvent;
+        [SerializeField] private VoidEventChannelSO _onBackToHomeEvent;
+
+        [Header("Events - Results")]
+        [SerializeField] private VoidEventChannelSO _onWinEvent;
+        [SerializeField] private VoidEventChannelSO _onLoseEvent;
         [SerializeField] private IntEventChannelSO _onLevelChangedEvent;
 
         [Header("Events - Rewards")]
@@ -67,415 +72,162 @@ namespace Game.Bootstrap
         [SerializeField] private VoidEventChannelSO _onBuyUndoEvent;
         [SerializeField] private VoidEventChannelSO _onBuyMoreMovesEvent;
 
-        [Header("Events - Booster Use (In-Game)")]
+        [Header("Events - Booster Use")]
         [SerializeField] private VoidEventChannelSO _onUseMoreMovesEvent;
         [SerializeField] private VoidEventChannelSO _onUseUndoEvent;
         [SerializeField] private VoidEventChannelSO _onUseRemoveEvent;
 
-        [Header("Events - Economy Feedback")]
+        [Header("Events - Feedback")]
         [SerializeField] private OnItemReceiveSO _onItemReceive;
         [SerializeField] private OnItemSpendSO _onItemSpend;
-
-        [Header("Events - Audio")]
         [SerializeField] private AudioCueEventChannelSO _onAudioCue;
 
-        private readonly EventListener _listener = new();
+        private readonly EventListener _listener = new EventListener();
         private GameManager _gameManager;
-        private LevelBootstrapper _levelBootstrapper;
-        private DateTime _lastDailyCheckDateUtc = DateTime.MinValue;
 
-        public Inventory Inventory => _gameManager?.Inventory;
-        public EconomyManager EconomyManager => _gameManager?.EconomyManager;
-        public int CurrentLevel => _gameManager?.CurrentLevel ?? 1;
-        public int TotalLevels => _levelData != null ? _levelData.Count : 0;
-
-        public void SetLevel(int level)
-        {
-            if (_gameManager == null) return;
-
-            _gameManager.SetLevel(level);
-            RaiseCurrentLevelChanged();
-        }
-
-        public void TriggerWin()
-        {
-            _onWinEvent?.Raise();
-        }
-
-        public void TriggerLose()
-        {
-            _onLoseEvent?.Raise();
-        }
-
-        public void LoadLevel(int level)
-        {
-            if (_gameManager == null) return;
-
-            _gameManager.SetLevel(level);
-            _levelBootstrapper?.LoadLevel(CurrentLevel);
-            RaiseCurrentLevelChanged();
-        }
-
-        public void PlayLevel(int level)
-        {
-            if (_gameManager == null) return;
-
-            _gameManager.SetLevel(level);
-            RaiseCurrentLevelChanged();
-
-            if (_onPlayGameEvent != null)
-                _onPlayGameEvent.Raise();
-            else
-                _levelBootstrapper?.LoadLevel(CurrentLevel);
-        }
-
-        public void RestartCurrentLevel()
-        {
-            if (_onRestartLevelEvent != null)
-                _onRestartLevelEvent.Raise();
-            else
-                RestartLevel();
-        }
-
-        public void UpdateWeeklyLoginUI()
-        {
-            if (_weeklyLogin != null && _economyConfig != null && _economyConfig.weeklyReward != null && EconomyManager != null)
-            {
-                _weeklyLogin.SetRewardData(
-                    _economyConfig.weeklyReward.ToList(),
-                    EconomyManager.CurrentLoginDay,
-                    EconomyManager.IsWeeklyRewardClaimed,
-                    _economyConfig.dailyReward,
-                    EconomyManager.IsDailyRewardClaimed
-                );
-            }
-
-            _shopPanel?.Refresh();
-        }
-
-        public void SaveGame()
-        {
-            _gameManager?.SaveGame();
-            _shopPanel?.Refresh();
-        }
+        public GameManager GameManager => _gameManager;
 
         private void Awake()
         {
-            int[] goldShopLimits = _economyConfig != null && _economyConfig.goldShopLimit != null
-                ? _economyConfig.goldShopLimit
-                : new[] { 5, 5, 5 };
+            GameManagerConfig config = CreateConfig();
+            ILevelLoader levelLoader = new LevelBootstrapper(_levelData, _gridManager, _levelView);
+            IGamePresentation presentation = new UnityGamePresentation(
+                _uiManager,
+                _gridManager,
+                _levelView,
+                _weeklyLogin,
+                _shopPanel,
+                _vfxPlayer,
+                _audioPlayer,
+                _onItemReceive,
+                _onItemSpend,
+                _onAudioCue);
+            MechanicTutorial[] tutorials = GetTutorialsWithFirstTimeDefault(out FirstTimeTutorialStep firstTimeTutorialStep);
+            TutorialService tutorialService = new TutorialService(tutorials, presentation);
 
-            DateTime nowUtc = DateTime.UtcNow;
-            _gameManager = new GameManager(goldShopLimits);
-            _gameManager.InitializeLoginState(nowUtc);
-            _lastDailyCheckDateUtc = nowUtc.Date;
-            ApplyAudioSettings();
+            _gameManager = new GameManager(config, levelLoader, presentation, tutorialService);
+            firstTimeTutorialStep?.Configure(
+                _gameManager,
+                _gridManager,
+                _levelView,
+                _uiManager != null ? _uiManager.InGameCanvasTransform : null,
+                _tutorialFont,
+                _tutorialHandSprite);
+            ((UnityGamePresentation)presentation).Initialize(
+                _gameManager.Inventory,
+                _gameManager.EconomyManager,
+                config,
+                request => _gameManager.TryPurchaseShopRequest(request));
+
             BindAudioSettingsViews();
-            _levelBootstrapper = new LevelBootstrapper(_levelData, _gridManager, _levelView);
-            _shopPanel = ResolveShopPanel();
-
-            _uiManager?.Initialize(Inventory);
-            _shopPanel?.Bind(
-                _economyConfig?.goldShopPrice,
-                _economyConfig?.goldShopLimit,
-                _economyConfig?.gemShopPrice,
-                EconomyManager,
-                HandleShopPurchase
-            );
-            UpdateWeeklyLoginUI();
-        }
-
-        private void Update()
-        {
-            RefreshDailyStateIfNeeded();
-        }
-
-        private void Start()
-        {
-            RaiseCurrentLevelChanged();
+            _gameManager.InitializeLoginState(DateTime.UtcNow);
         }
 
         private void OnEnable()
         {
-            _listener.Listen(_onPlayGameEvent, HandlePlayGame);
-            _listener.Listen(_onWinEvent, HandleWin);
-            _listener.Listen(_onLoseEvent, HandleLose);
-            _listener.Listen(_onNextLevelEvent, NextLevel);
-            _listener.Listen(_onRestartLevelEvent, RestartLevel);
+            _listener.Listen(_onPlayGameEvent, _gameManager.RequestPlayCurrentLevel);
+            _listener.Listen(_onNextLevelEvent, _gameManager.RequestNextLevel);
+            _listener.Listen(_onRestartLevelEvent, _gameManager.RequestRestartLevel);
+            _listener.Listen(_onBackToHomeEvent, _gameManager.RequestBackToHome);
 
-            _listener.Listen(_onClaimWinRewardEvent, HandleClaimWinReward);
-            _listener.Listen(_onClaimAdsRewardEvent, HandleClaimAdsReward);
-            _listener.Listen(_onClaimDailyRewardEvent, HandleClaimDailyReward);
-            _listener.Listen(_onClaimWeeklyRewardEvent, HandleClaimWeeklyReward);
+            _listener.Listen(_onClaimWinRewardEvent, _gameManager.ClaimWinReward);
+            _listener.Listen(_onClaimAdsRewardEvent, _gameManager.ClaimAdsReward);
+            _listener.Listen(_onClaimDailyRewardEvent, _gameManager.ClaimDailyReward);
+            _listener.Listen(_onClaimWeeklyRewardEvent, _gameManager.ClaimWeeklyReward);
 
-            _listener.Listen(_onBuyRemoveEvent, HandleBuyRemove);
-            _listener.Listen(_onBuyUndoEvent, HandleBuyUndo);
-            _listener.Listen(_onBuyMoreMovesEvent, HandleBuyMoreMoves);
+            _listener.Listen(_onBuyRemoveEvent, _gameManager.BuyRemove);
+            _listener.Listen(_onBuyUndoEvent, _gameManager.BuyUndo);
+            _listener.Listen(_onBuyMoreMovesEvent, _gameManager.BuyMoreMoves);
 
-            _listener.Listen(_onUseMoreMovesEvent, HandleUseMoreMoves);
-            _listener.Listen(_onUseUndoEvent, HandleUseUndo);
-            _listener.Listen(_onUseRemoveEvent, HandleUseRemove);
+            _listener.Listen(_onUseMoreMovesEvent, _gameManager.UseMoreMoves);
+            _listener.Listen(_onUseUndoEvent, _gameManager.UseUndo);
+            _listener.Listen(_onUseRemoveEvent, _gameManager.UseRemove);
+
+            if (_gameManager != null)
+            {
+                _gameManager.WinAccepted += RaiseWinResult;
+                _gameManager.LoseAccepted += RaiseLoseResult;
+                _gameManager.LevelNumberChanged += RaiseLevelNumberChanged;
+            }
         }
 
         private void OnDisable()
         {
             _listener.UnbindAll();
-        }
-
-        private void HandlePlayGame()
-        {
-            int levelToLoad = CurrentLevel > 0 ? CurrentLevel : 1;
-            _levelBootstrapper?.LoadLevel(levelToLoad);
-            _levelView?.BindBoosters(Inventory);
-            _onLevelChangedEvent?.Raise(levelToLoad);
-
-            Debug.Log($"[GameBootstrapper] Started Level: {levelToLoad}");
-        }
-
-        private void HandleWin()
-        {
-            if (_gameManager == null) return;
-
-            _gameManager.AdvanceLevel();
-            RaiseCurrentLevelChanged();
-            Debug.Log($"[GameBootstrapper] Win! Next level: {CurrentLevel}");
-        }
-
-        private static void HandleLose()
-        {
-            Debug.Log("[GameBootstrapper] Lose! Player can retry.");
-        }
-
-        private void NextLevel()
-        {
-            _levelBootstrapper?.LoadLevel(CurrentLevel);
-            RaiseCurrentLevelChanged();
-        }
-
-        private void RestartLevel()
-        {
-            int levelToLoad = CurrentLevel > 0 ? CurrentLevel : 1;
-            _levelBootstrapper?.LoadLevel(levelToLoad);
-            _onLevelChangedEvent?.Raise(levelToLoad);
-        }
-
-        private void HandleClaimWinReward()
-        {
-            if (_economyConfig == null || _gameManager == null) return;
-
-            Reward reward = _economyConfig.levelWinReward;
-            _gameManager.GrantReward(reward);
-            _onItemReceive?.Raise(reward);
-            _onAudioCue?.Raise(AudioCueId.Claim);
-            Debug.Log($"[GameBootstrapper] Claimed win reward: {reward.amount} {reward.type}");
-        }
-
-        private void HandleClaimAdsReward()
-        {
-            if (_economyConfig == null || _gameManager == null) return;
-
-            Reward reward = _economyConfig.levelAdsWinReward;
-            _gameManager.GrantReward(reward);
-            _onItemReceive?.Raise(reward);
-            _onAudioCue?.Raise(AudioCueId.Claim);
-            Debug.Log($"[GameBootstrapper] Claimed ads reward: {reward.amount} {reward.type}");
-        }
-
-        private void HandleClaimDailyReward()
-        {
-            if (_economyConfig == null || _gameManager == null) return;
-
-            Reward reward = _economyConfig.dailyReward;
-            if (!_gameManager.TryClaimDailyReward(reward))
-            {
-                Debug.LogWarning("[GameBootstrapper] Daily reward already claimed today!");
-                return;
-            }
-
-            _onItemReceive?.Raise(reward);
-            _onAudioCue?.Raise(AudioCueId.Claim);
-            UpdateWeeklyLoginUI();
-            Debug.Log($"[GameBootstrapper] Claimed daily reward: {reward.amount} {reward.type}");
-        }
-
-        private void HandleClaimWeeklyReward()
-        {
-            if (_economyConfig == null || _gameManager == null || _economyConfig.weeklyReward == null || _economyConfig.weeklyReward.Length == 0)
+            if (_gameManager == null)
                 return;
 
-            int currentDay = EconomyManager.CurrentLoginDay;
-            if (currentDay < 0 || currentDay >= _economyConfig.weeklyReward.Length)
-                currentDay = 0;
-
-            Reward reward = _economyConfig.weeklyReward[currentDay];
-            if (!_gameManager.TryClaimWeeklyReward(reward))
-            {
-                Debug.LogWarning($"[GameBootstrapper] Weekly reward for Day {currentDay + 1} already claimed today!");
-                return;
-            }
-
-            _onItemReceive?.Raise(reward);
-            _onAudioCue?.Raise(AudioCueId.Claim);
-            UpdateWeeklyLoginUI();
-            Debug.Log($"[GameBootstrapper] Claimed weekly reward (Day {currentDay + 1}): {reward.amount} {reward.type}");
+            _gameManager.WinAccepted -= RaiseWinResult;
+            _gameManager.LoseAccepted -= RaiseLoseResult;
+            _gameManager.LevelNumberChanged -= RaiseLevelNumberChanged;
+            _gameManager.CancelPendingOperations();
         }
 
-        private bool TryPurchase(Reward cost, Reward item, int goldShopSlotIndex = -1)
+        private void Start()
         {
-            if (_gameManager == null || EconomyManager == null) return false;
-
-            if (goldShopSlotIndex >= 0 && !EconomyManager.CanPurchaseGoldShopItem(goldShopSlotIndex))
-            {
-                Debug.LogWarning($"[GameBootstrapper] Purchase limit reached for slot {goldShopSlotIndex} today!");
-                return false;
-            }
-
-            if (!_gameManager.TryPurchase(cost, item, goldShopSlotIndex))
-            {
-                _onItemSpend?.Raise(cost);
-                Debug.LogWarning($"[GameBootstrapper] Not enough {cost.type}! Need {cost.amount}, have {Inventory.GetAmount(cost.type)}");
-                return false;
-            }
-
-            _onAudioCue?.Raise(AudioCueId.Spend);
-            _onItemReceive?.Raise(item);
-            _shopPanel?.Refresh();
-            Debug.Log($"[GameBootstrapper] Purchased {item.amount} {item.type} for {cost.amount} {cost.type}");
-            return true;
+            _gameManager?.PublishCurrentLevel();
+            _gameManager?.OnApplicationReady();
         }
 
-        private void HandleShopPurchase(ShopPurchaseRequest request)
+        private void Update()
         {
-            if (_economyConfig == null || request.SlotIndex < 0)
-                return;
+            _gameManager?.Tick(DateTime.UtcNow);
+        }
 
-            Reward[] prices = request.UsesGold
-                ? _economyConfig.goldShopPrice
-                : _economyConfig.gemShopPrice;
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus)
+                _gameManager?.Tick(DateTime.UtcNow);
+        }
 
-            if (prices == null || request.SlotIndex >= prices.Length)
-                return;
+        private void OnApplicationQuit()
+        {
+            _gameManager?.CancelPendingOperations();
+            _gameManager?.SaveGame();
+        }
 
-            Reward item = request.ItemType switch
+        private GameManagerConfig CreateConfig()
+        {
+            return new GameManagerConfig
             {
-                ItemType.MoreMoves => new Reward { type = ItemType.MoreMoves, amount = GameConfig.MORE_MOVE_AMOUNT },
-                ItemType.Remove => new Reward { type = ItemType.Remove, amount = 1 },
-                ItemType.Undo => new Reward { type = ItemType.Undo, amount = 1 },
-                _ => default
+                GoldShopLimits = _economyConfig?.goldShopLimit ?? new[] { 5, 5, 5 },
+                GoldShopPrices = _economyConfig?.goldShopPrice ?? Array.Empty<Reward>(),
+                GemShopPrices = _economyConfig?.gemShopPrice ?? Array.Empty<Reward>(),
+                LevelWinReward = _economyConfig != null ? _economyConfig.levelWinReward : default(Reward),
+                LevelAdsWinReward = _economyConfig != null ? _economyConfig.levelAdsWinReward : default(Reward),
+                DailyReward = _economyConfig != null ? _economyConfig.dailyReward : default(Reward),
+                WeeklyRewards = _economyConfig?.weeklyReward ?? Array.Empty<Reward>(),
+                CanSitAnywhereCondition = _canSitAnywhereCondition?.ToRuntimeData(),
+                AdjacentOffsets = _gridManager != null ? _gridManager.AdjacentOffsets : null
             };
-
-            if (item.amount <= 0)
-                return;
-
-            TryPurchase(
-                prices[request.SlotIndex],
-                item,
-                request.UsesGold ? request.SlotIndex : -1
-            );
         }
 
-        private ShopPanelView ResolveShopPanel()
+        private MechanicTutorial[] GetTutorialsWithFirstTimeDefault(out FirstTimeTutorialStep firstTimeTutorialStep)
         {
-            if (_shopPanel != null)
-                return _shopPanel;
+            firstTimeTutorialStep = null;
+            List<MechanicTutorial> tutorials = _mechanicTutorials == null
+                ? new List<MechanicTutorial>()
+                : new List<MechanicTutorial>(_mechanicTutorials);
 
-            GameObject shopPanelObject = GameObject.Find("ShopPanel");
-            if (shopPanelObject == null)
-                return null;
-
-            ShopPanelView resolved = shopPanelObject.GetComponent<ShopPanelView>();
-            if (resolved == null)
-                resolved = shopPanelObject.AddComponent<ShopPanelView>();
-
-            return resolved;
-        }
-
-        private void HandleBuyRemove()
-        {
-            Reward cost = _economyConfig != null && _economyConfig.gemShopPrice != null && _economyConfig.gemShopPrice.Length > 0
-                ? _economyConfig.gemShopPrice[0]
-                : new Reward { type = ItemType.Gem, amount = 50 };
-
-            TryPurchase(cost, new Reward { type = ItemType.Remove, amount = 1 });
-        }
-
-        private void HandleBuyUndo()
-        {
-            Reward cost = _economyConfig != null && _economyConfig.gemShopPrice != null && _economyConfig.gemShopPrice.Length > 1
-                ? _economyConfig.gemShopPrice[1]
-                : new Reward { type = ItemType.Gem, amount = 50 };
-
-            TryPurchase(cost, new Reward { type = ItemType.Undo, amount = 1 });
-        }
-
-        private void HandleBuyMoreMoves()
-        {
-            Reward cost = _economyConfig != null && _economyConfig.goldShopPrice != null && _economyConfig.goldShopPrice.Length > 2
-                ? _economyConfig.goldShopPrice[2]
-                : new Reward { type = ItemType.Gold, amount = 100 };
-
-            TryPurchase(
-                cost,
-                new Reward { type = ItemType.MoreMoves, amount = GameConfig.MORE_MOVE_AMOUNT },
-                goldShopSlotIndex: 2
-            );
-        }
-
-        private void HandleUseMoreMoves()
-        {
-            LevelManager levelManager = _gridManager?.LevelManager;
-            if (_gameManager == null || !_gameManager.TryUseMoreMoves(levelManager, GameConfig.MORE_MOVE_AMOUNT))
-                return;
-
-            _onAudioCue?.Raise(AudioCueId.BoosterUsed);
-            Debug.Log($"[GameBootstrapper] Used MoreMoves booster: +{GameConfig.MORE_MOVE_AMOUNT} moves");
-        }
-
-        private void HandleUseUndo()
-        {
-            LevelManager levelManager = _gridManager?.LevelManager;
-            if (_gameManager == null || !_gameManager.TryUseUndo(levelManager, out MoveRecord record))
-                return;
-
-            _onAudioCue?.Raise(AudioCueId.BoosterUsed);
-            _gridManager?.RevertMoveView(record);
-            levelManager.CheckAllPersonConditions();
-            Debug.Log("[GameBootstrapper] Used Undo booster: reverted last move");
-        }
-
-        private void HandleUseRemove()
-        {
-            LevelManager levelManager = _gridManager?.LevelManager;
-            if (_gameManager == null || _canSitAnywhereCondition == null)
+            for (int i = 0; i < tutorials.Count; i++)
             {
-                if (_canSitAnywhereCondition == null)
-                    Debug.LogError("[GameBootstrapper] CanSitAnywhere condition is not configured.", this);
-                return;
+                if (tutorials[i] != null && tutorials[i].Trigger == TutorialTrigger.FirstTimePlaying)
+                    return tutorials.ToArray();
             }
 
-            if (!_gameManager.TryUseRemove(
-                    levelManager,
-                    _canSitAnywhereCondition.ToRuntimeData(),
-                    out var targetPerson))
-            {
-                return;
-            }
-
-            _onAudioCue?.Raise(AudioCueId.BoosterUsed);
-            PersonView targetPersonView = _gridManager?.FindPersonView(targetPerson);
-            _vfxPlayer?.PlayAtWorld(VfxId.RemoveBooster, targetPersonView?.transform);
-            levelManager.CheckAllPersonConditions();
-            Debug.Log($"[GameBootstrapper] Used Remove booster: replaced conditions with CanSitAnywhere for {targetPerson?.PersonName}");
-        }
-
-        private void RaiseCurrentLevelChanged()
-        {
-            _onLevelChangedEvent?.Raise(CurrentLevel);
+            MechanicTutorial tutorial = gameObject.AddComponent<MechanicTutorial>();
+            firstTimeTutorialStep = gameObject.AddComponent<FirstTimeTutorialStep>();
+            tutorial.Configure(
+                MechanicTutorialID.Drag,
+                TutorialTrigger.FirstTimePlaying,
+                new TutorialStep[] { firstTimeTutorialStep });
+            tutorials.Add(tutorial);
+            return tutorials.ToArray();
         }
 
         private void BindAudioSettingsViews()
         {
-            if (_audioSettingsViews == null || _gameManager == null)
+            if (_audioSettingsViews == null)
                 return;
 
             for (int i = 0; i < _audioSettingsViews.Length; i++)
@@ -485,60 +237,13 @@ namespace Game.Bootstrap
                     _gameManager.IsSoundMuted,
                     _gameManager.MusicVolume,
                     _gameManager.IsMusicMuted,
-                    HandleSoundSettingsChanged,
-                    HandleMusicSettingsChanged
-                );
+                    _gameManager.SetSoundSettings,
+                    _gameManager.SetMusicSettings);
             }
         }
 
-        private void HandleSoundSettingsChanged(int volume, bool muted)
-        {
-            _gameManager?.SetSoundSettings(volume, muted);
-            ApplyAudioSettings();
-        }
-
-        private void HandleMusicSettingsChanged(int volume, bool muted)
-        {
-            _gameManager?.SetMusicSettings(volume, muted);
-            ApplyAudioSettings();
-        }
-
-        private void ApplyAudioSettings()
-        {
-            if (_audioPlayer == null || _gameManager == null)
-                return;
-
-            _audioPlayer.ApplySettings(
-                _gameManager.SoundVolume,
-                _gameManager.IsSoundMuted,
-                _gameManager.MusicVolume,
-                _gameManager.IsMusicMuted
-            );
-        }
-
-        private void OnApplicationQuit()
-        {
-            SaveGame();
-        }
-
-        private void OnApplicationFocus(bool hasFocus)
-        {
-            if (hasFocus)
-                RefreshDailyStateIfNeeded();
-        }
-
-        private void RefreshDailyStateIfNeeded()
-        {
-            if (_gameManager == null)
-                return;
-
-            DateTime nowUtc = DateTime.UtcNow;
-            if (_lastDailyCheckDateUtc.Date == nowUtc.Date)
-                return;
-
-            _lastDailyCheckDateUtc = nowUtc.Date;
-            if (_gameManager.RefreshDailyState(nowUtc))
-                UpdateWeeklyLoginUI();
-        }
+        private void RaiseWinResult() => _onWinEvent?.Raise();
+        private void RaiseLoseResult() => _onLoseEvent?.Raise();
+        private void RaiseLevelNumberChanged(int levelNumber) => _onLevelChangedEvent?.Raise(levelNumber);
     }
 }

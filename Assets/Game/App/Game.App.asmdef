@@ -3,7 +3,8 @@
     "rootNamespace": "Game.App",
     "references": [
         "Game.Core",
-        "Game.Events"
+        "Game.Events",
+        "Game.Debug"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -15,4 +16,3 @@
     "versionDefines": [],
     "noEngineReferences": false
 }
-

@@ -9,12 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04e0ac5b57e01c648b98376410138b70, type: 3}
-  m_Name: HateHamburger
-  m_EditorClassIdentifier: Game.Data::Game.Data.Conditions.ConditionDataSO
+  m_Script: {fileID: 11500000, guid: 36d0383138abb0e4a82deb90d01c4f41, type: 3}
+  m_Name: WaitSeat
+  m_EditorClassIdentifier: Game.Data::Game.Data.Board.CellDataSO
   type: 0
-  target: 0
-  targetTrait: 0
-  foodTarget: 0
-  description: I hate Hamburger
-  angryDescription: 
+  food: 0
+  sprite: {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}

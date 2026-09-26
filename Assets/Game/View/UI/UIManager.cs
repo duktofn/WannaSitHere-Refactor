@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Game.Events;
 using Game.Core.Economy;
@@ -29,14 +31,10 @@ namespace Game.View.UI
         [SerializeField] private VfxPlayer _vfxPlayer;
 
         [Header("Game Events")]
-        [SerializeField] private VoidEventChannelSO OnPlayGameEvent;
         [SerializeField] private VoidEventChannelSO OnWinEvent;
         [SerializeField] private VoidEventChannelSO OnLoseEvent;
-        [SerializeField] private VoidEventChannelSO OnNextLevelEvent;
-        [SerializeField] private VoidEventChannelSO OnRestartLevelEvent;
         [SerializeField] private VoidEventChannelSO OnSettingShow;
         [SerializeField] private VoidEventChannelSO OnSettingHide;
-        [SerializeField] private VoidEventChannelSO OnBackToHome;
         [SerializeField] private IntEventChannelSO onLevelChangedEvent;
 
         [Header("UI Components")]
@@ -47,16 +45,14 @@ namespace Game.View.UI
         private readonly EventListener _listener = new();
         private int _currentLevel = 1;
 
+        public Transform InGameCanvasTransform => InGameUICanvas != null ? InGameUICanvas.transform : null;
+
         private void OnEnable()
         {
-            _listener.Listen(OnPlayGameEvent, PlayGame);
             _listener.Listen(OnWinEvent, ShowWin);
             _listener.Listen(OnLoseEvent, ShowLose);
-            _listener.Listen(OnNextLevelEvent, NextLevel);
-            _listener.Listen(OnRestartLevelEvent, RestartLevel);
             _listener.Listen(OnSettingShow, ShowSetting);
             _listener.Listen(OnSettingHide, HideSetting);
-            _listener.Listen(OnBackToHome, BackToHome);
             _listener.Listen<int>(onLevelChangedEvent, UpdateLevelText);
         }
 
@@ -93,24 +89,21 @@ namespace Game.View.UI
                 levelText.text = $"Level {level}";
         }
 
-        private void BackToHome()
+        public async Task CloseTransitionAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (transitionController != null)
-            {
-                BackToHomeWithTransition().Forget();
-            }
-            else
-            {
-                ApplyBackToHome();
-            }
+                await transitionController.CloseAsync().AttachExternalCancellation(cancellationToken);
         }
 
-        private async UniTaskVoid BackToHomeWithTransition()
+        public async Task OpenTransitionAsync(CancellationToken cancellationToken)
         {
-            await transitionController.DoTransitionAsync(ApplyBackToHome);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (transitionController != null)
+                await transitionController.OpenAsync().AttachExternalCancellation(cancellationToken);
         }
 
-        private void ApplyBackToHome()
+        public void ShowHomeScreen(int levelNumber)
         {
             MainMenuCanvas?.SetActive(true);
             InGameUICanvas?.SetActive(false);
@@ -118,29 +111,11 @@ namespace Game.View.UI
 
             HideWin();
             HideLose();
-            UpdateLevelText(_currentLevel);
+            HideSetting();
+            UpdateLevelText(levelNumber);
         }
 
-        private void PlayGame()
-        {
-            if (transitionController != null)
-            {
-                PlayGameWithTransition().Forget();
-            }
-            else
-            {
-                ApplyPlayGame();
-            }
-
-            gameSettingPanel.SetActive(false);
-        }
-
-        private async UniTaskVoid PlayGameWithTransition()
-        {
-            await transitionController.DoTransitionAsync(ApplyPlayGame);
-        }
-
-        private void ApplyPlayGame()
+        public void ShowGameScreen(int levelNumber)
         {
             MainMenuCanvas?.SetActive(false);
             InGameUICanvas?.SetActive(true);
@@ -148,55 +123,8 @@ namespace Game.View.UI
 
             HideWin();
             HideLose();
-        }
-
-        private void NextLevel()
-        {
-            if (transitionController != null)
-            {
-                NextLevelWithTransition().Forget();
-            }
-            else
-            {
-                ApplyNextLevel();
-            }
-        }
-
-        private async UniTaskVoid NextLevelWithTransition()
-        {
-            await transitionController.DoTransitionAsync(ApplyNextLevel);
-        }
-
-        private void ApplyNextLevel()
-        {
-            CurrencyCanvas?.SetActive(false);
-            HideWin();
-            UpdateLevelText(_currentLevel);
-        }
-
-        private void RestartLevel()
-        {
-            if (transitionController != null)
-            {
-                RestartLevelWithTransition().Forget();
-            }
-            else
-            {
-                ApplyRestartLevel();
-            }
-
-            gameSettingPanel.SetActive(false);
-        }
-
-        private async UniTaskVoid RestartLevelWithTransition()
-        {
-            await transitionController.DoTransitionAsync(ApplyRestartLevel);
-        }
-
-        private void ApplyRestartLevel()
-        {
-            CurrencyCanvas?.SetActive(false);
-            HideLose();
+            HideSetting();
+            UpdateLevelText(levelNumber);
         }
 
         public void ShowWin()
@@ -211,25 +139,25 @@ namespace Game.View.UI
 
         public void ShowSetting()
         {
-            if (MainMenuCanvas.activeInHierarchy) {
-                mainSettingPanel.SetActive(true);
+            if (MainMenuCanvas != null && MainMenuCanvas.activeInHierarchy) {
+                mainSettingPanel?.SetActive(true);
                 return;
             }
 
-            if (InGameUICanvas.activeInHierarchy)
+            if (InGameUICanvas != null && InGameUICanvas.activeInHierarchy)
             {
-                gameSettingPanel.SetActive(true);
+                gameSettingPanel?.SetActive(true);
             }
         }
 
         public void HideSetting()
         {
-            if (mainSettingPanel.activeInHierarchy) {
+            if (mainSettingPanel != null && mainSettingPanel.activeInHierarchy) {
                 mainSettingPanel.SetActive(false);
                 return;
             }
 
-            if (gameSettingPanel.activeInHierarchy)
+            if (gameSettingPanel != null && gameSettingPanel.activeInHierarchy)
             {
                 gameSettingPanel.SetActive(false);
             }
@@ -250,7 +178,7 @@ namespace Game.View.UI
 
         private void HideLose()
         {
-            levelLosePanel.SetActive(false);
+            levelLosePanel?.SetActive(false);
         }
     }
 }

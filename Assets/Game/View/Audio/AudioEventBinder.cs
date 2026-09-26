@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Game.View.Audio
 {
     /// <summary>
-    /// Bridges existing game-flow channels and the typed gameplay audio cue channel to the
+    /// Bridges accepted outcome channels and the typed gameplay audio cue channel to the
     /// scene-owned <see cref="AudioPlayer"/>.
     /// </summary>
     public sealed class AudioEventBinder : MonoBehaviour
@@ -15,9 +15,6 @@ namespace Game.View.Audio
         [Header("Game Flow")]
         [SerializeField] private VoidEventChannelSO onWinEvent;
         [SerializeField] private VoidEventChannelSO onLoseEvent;
-        [SerializeField] private VoidEventChannelSO onPlayGameEvent;
-        [SerializeField] private VoidEventChannelSO onMainPanelEvent;
-        [SerializeField] private VoidEventChannelSO onBackToHomeEvent;
         [SerializeField] private bool playMainMenuOnStart = true;
 
         private readonly EventListener _listener = new();
@@ -33,15 +30,12 @@ namespace Game.View.Audio
             _listener.Listen(onAudioCue, HandleAudioCue);
             _listener.Listen(onWinEvent, HandleWin);
             _listener.Listen(onLoseEvent, HandleLose);
-            _listener.Listen(onPlayGameEvent, HandlePlayGame);
-            _listener.Listen(onMainPanelEvent, HandleMainPanel);
-            _listener.Listen(onBackToHomeEvent, HandleMainPanel);
         }
 
         private void Start()
         {
             if (playMainMenuOnStart)
-                HandleMainPanel();
+                audioPlayer?.PlayMusic(MusicId.MainMenu);
         }
 
         private void OnDisable()
@@ -64,14 +58,5 @@ namespace Game.View.Audio
             audioPlayer?.Play(AudioCueId.Lose);
         }
 
-        private void HandlePlayGame()
-        {
-            audioPlayer?.PlayMusic(MusicId.InGame);
-        }
-
-        private void HandleMainPanel()
-        {
-            audioPlayer?.PlayMusic(MusicId.MainMenu);
-        }
     }
 }

@@ -2,24 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Game.App;
 using Game.Core.Economy;
 
 namespace Game.View.UI
 {
-    public readonly struct ShopPurchaseRequest
-    {
-        public bool UsesGold { get; }
-        public int SlotIndex { get; }
-        public ItemType ItemType { get; }
-
-        public ShopPurchaseRequest(bool usesGold, int slotIndex, ItemType itemType)
-        {
-            UsesGold = usesGold;
-            SlotIndex = slotIndex;
-            ItemType = itemType;
-        }
-    }
-
     /// <summary>
     /// Binds EconomyConfig-derived offers to the six shop slots and keeps the UI synchronized
     /// with inventory changes and gold-shop purchase counts.

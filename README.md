@@ -4,7 +4,7 @@ Unity project cho gameplay sắp xếp người vào ghế (Puzzle Seat Sorting)
 
 Dự án sử dụng **Unity `6000.3.18f1`** và áp dụng kiến trúc phân tầng rõ ràng (**Clean / Layered Architecture**) kết hợp **Event-Driven Architecture (ScriptableObject Event Channels)**.
 
----
+-
 
 ## 🏗 Cấu trúc Kiến trúc & Assembly Definitions
 
@@ -43,7 +43,7 @@ Game.Events   Game.Data          Game.App               │
 
 ---
 
-## 📦 Chi tiết các Layer & Trách nhiệm
+## Chi tiết các Layer & Trách nhiệm
 
 ### 1. `Game.Core` (Domain Layer)
 Chứa các thực thể, luật chơi và trạng thái lúc runtime:

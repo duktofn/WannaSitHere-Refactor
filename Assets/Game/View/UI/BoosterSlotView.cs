@@ -18,6 +18,7 @@ namespace Game.View.UI
         [SerializeField] private VoidEventChannelSO onUseBoosterEvent;
 
         private Func<int> _getCount;
+        private bool _tutorialEnabled = true;
 
         /// <summary>
         /// Binds a count source. Call once during level setup.
@@ -40,7 +41,13 @@ namespace Game.View.UI
                 countText.text = count.ToString();
 
             if (button != null)
-                button.interactable = count > 0;
+                button.interactable = count > 0 && _tutorialEnabled;
+        }
+
+        public void SetTutorialEnabled(bool enabled)
+        {
+            _tutorialEnabled = enabled;
+            UpdateCount();
         }
 
         private void OnEnable()
@@ -61,4 +68,3 @@ namespace Game.View.UI
         }
     }
 }
-

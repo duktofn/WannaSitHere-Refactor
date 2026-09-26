@@ -4,6 +4,7 @@ using Game.Core.People;
 using Game.Events;
 using Game.View.Audio;
 using Game.View.VFX;
+using Game.View.Input;
 
 namespace Game.View.People
 {
@@ -25,6 +26,9 @@ namespace Game.View.People
         private VfxPlayer _vfxPlayer;
         private AudioPlayer _audioPlayer;
         private bool _isSubscribed;
+
+        public PersonRuntimeData RuntimeData => _person;
+        public PersonTooltip Tooltip => personTooltip;
 
         private void Awake()
         {
@@ -80,6 +84,12 @@ namespace Game.View.People
         public void BindAudioPlayer(AudioPlayer audioPlayer)
         {
             _audioPlayer = audioPlayer;
+        }
+
+        public void SetInputEnabled(bool enabled)
+        {
+            GetComponent<PersonDragManager>()?.SetInputEnabled(enabled);
+            personTooltip?.SetInputEnabled(enabled);
         }
 
         private void SubscribeToStateChanges()

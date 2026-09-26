@@ -1,3 +1,4 @@
+using System;
 using PrimeTween;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -23,8 +24,15 @@ namespace Game.View.Input
         private CellView currentCell;
         private Vector3 lastDragWorldPos;
         private bool hasLastDragWorldPos;
+        private bool _inputEnabled = true;
 
         public CellView CurrentCell => currentCell;
+        public event Action DragStarted;
+
+        public void SetInputEnabled(bool enabled)
+        {
+            _inputEnabled = enabled;
+        }
 
         public void Initialize(
             PersonMover moveManager,
@@ -41,6 +49,15 @@ namespace Game.View.Input
             currentCell = cell;
         }
 
+        public bool TryMoveToCell(CellView targetCell)
+        {
+            if (!_inputEnabled || personMove == null || currentCell == null || targetCell == null)
+                return false;
+
+            personMove.BeginMove(transform, col, transform.position, currentCell);
+            return personMove.MoveToCell(transform, person, targetCell);
+        }
+
         private void Awake()
         {
             col = GetComponent<Collider2D>();
@@ -48,8 +65,10 @@ namespace Game.View.Input
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (personMove == null)
+            if (!_inputEnabled || personMove == null)
                 return;
+
+            DragStarted?.Invoke();
 
             if (personTooltip != null)
                 personTooltip.Hide();
@@ -63,7 +82,7 @@ namespace Game.View.Input
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (personMove == null)
+            if (!_inputEnabled || personMove == null)
                 return;
 
             Vector3 targetWorldPos = GetPointerWorldPos(eventData);
@@ -86,6 +105,12 @@ namespace Game.View.Input
 
             if (personMove == null)
                 return;
+
+            if (!_inputEnabled)
+            {
+                personMove.MoveToCell(transform, person, null);
+                return;
+            }
 
             CellView targetCell = personMove.GetOverlappingCell(transform);
             personMove.MoveToCell(transform, person, targetCell);

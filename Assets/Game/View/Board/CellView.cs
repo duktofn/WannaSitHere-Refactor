@@ -1,13 +1,16 @@
+using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Game.Core.Board;
 using Game.View.Audio;
 using Game.View.People;
 
 namespace Game.View.Board
 {
-    public class CellView : MonoBehaviour
+    public class CellView : MonoBehaviour, IPointerClickHandler
     {
         private CellRuntimeData _cell;
+        private bool _inputEnabled = true;
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private FoodTooltips foodTooltips;
         [SerializeField] private PersonSpawner personSpawner;
@@ -15,6 +18,8 @@ namespace Game.View.Board
 
         public CellRuntimeData RuntimeData => _cell;
         public PersonView CurrentPersonView => personView;
+        public FoodTooltips FoodTooltips => foodTooltips;
+        public event Action<CellView> Tapped;
 
         public CellType GetCellType() => _cell != null ? _cell.Type : CellType.Block;
 
@@ -51,9 +56,9 @@ namespace Game.View.Board
                 return;
             }
 
-            if (_cell.DefaultPerson != null && personSpawner != null)
+            if (_cell.CurrentPerson != null && personSpawner != null)
             {
-                personView = personSpawner.SpawnPerson(_cell.DefaultPerson, this, personMoveManager);
+                personView = personSpawner.SpawnPerson(_cell.CurrentPerson, this, personMoveManager);
             }
         }
 
@@ -66,6 +71,24 @@ namespace Game.View.Board
         {
             personSpawner?.BindAudioPlayer(audioPlayer);
             personView?.BindAudioPlayer(audioPlayer);
+        }
+
+        public void SetInputEnabled(bool enabled)
+        {
+            _inputEnabled = enabled;
+            foodTooltips?.SetInputEnabled(enabled);
+            personView?.SetInputEnabled(enabled);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (!_inputEnabled || eventData.dragging ||
+                Vector2.Distance(eventData.pressPosition, eventData.position) > 5f)
+            {
+                return;
+            }
+
+            Tapped?.Invoke(this);
         }
 
         public Vector2Int GetCellIndex()
