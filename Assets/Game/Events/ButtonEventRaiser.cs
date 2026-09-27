@@ -43,6 +43,12 @@ namespace Game.Events
             }
         }
 
+        public void ResetOneShot()
+        {
+            if (isPressedOnce && button != null)
+                button.interactable = true;
+        }
+
         public void RaiseImmediately()
         {
             foreach (var channel in eventChannels)

@@ -66,7 +66,14 @@ namespace Game.View.UI
                 _rewardCanvasGroup.interactable = true;
                 _rewardCanvasGroup.blocksRaycasts = true;
             }
-            if (reward != null) reward.SetActive(true);
+            if (reward != null)
+            {
+                reward.SetActive(true);
+                ButtonEventRaiser[] rewardButtonEventRaisers =
+                    reward.GetComponentsInChildren<ButtonEventRaiser>(true);
+                for (int i = 0; i < rewardButtonEventRaisers.Length; i++)
+                    rewardButtonEventRaisers[i].ResetOneShot();
+            }
 
             if (_navigationCanvasGroup != null)
             {
