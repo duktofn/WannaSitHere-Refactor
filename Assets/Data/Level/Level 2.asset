@@ -29,7 +29,7 @@ MonoBehaviour:
   waitGrid:
     _gridSize: {x: 2, y: 1}
     _cellSize: {x: 0.5, y: 0.5}
-    _cellDistance: {x: 0.15, y: 0.15}
+    _cellDistance: {x: 0.2, y: 0.2}
     _posX: 0.5
     _posY: 0.25
     _gridContent:

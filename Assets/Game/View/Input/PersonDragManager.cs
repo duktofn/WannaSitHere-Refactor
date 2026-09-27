@@ -28,6 +28,7 @@ namespace Game.View.Input
 
         public CellView CurrentCell => currentCell;
         public event Action DragStarted;
+        public event Action DragEnded;
 
         public void SetInputEnabled(bool enabled)
         {
@@ -104,16 +105,21 @@ namespace Game.View.Input
             Tween.Scale(transform, 1f, playTime, scaleEase);
 
             if (personMove == null)
+            {
+                DragEnded?.Invoke();
                 return;
+            }
 
             if (!_inputEnabled)
             {
                 personMove.MoveToCell(transform, person, null);
+                DragEnded?.Invoke();
                 return;
             }
 
             CellView targetCell = personMove.GetOverlappingCell(transform);
             personMove.MoveToCell(transform, person, targetCell);
+            DragEnded?.Invoke();
         }
 
         private Vector3 GetPointerWorldPos(PointerEventData eventData)

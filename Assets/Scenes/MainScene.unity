@@ -271,6 +271,7 @@ MonoBehaviour:
   _canSitAnywhereCondition: {fileID: 11400000, guid: 098c314aab69cc84cbd8d0f3381dfb38, type: 2}
   _mechanicTutorials: []
   _tutorialFont: {fileID: 11400000, guid: 81e60fa4276af5b49818bc4d51945840, type: 2}
+  _tutorialFontMaterial: {fileID: 2100000, guid: 5293c1170d643fc4b92612e9cc681e53, type: 2}
   _tutorialHandSprite: {fileID: 8403215288983880825, guid: e03fb587fdffc4e43921350f3c76ddbf, type: 3}
   _uiManager: {fileID: 10276214}
   _gridManager: {fileID: 788058380}

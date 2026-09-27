@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Game.App;
 using Game.App.Tutorial;
@@ -11,6 +12,7 @@ using Game.View.People;
 using Game.View.UI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Game.View.Tutorial
@@ -42,6 +44,7 @@ namespace Game.View.Tutorial
         private LevelView _levelView;
         private Transform _overlayParent;
         private TMP_FontAsset _tutorialFont;
+        private Material _tutorialFontMaterial;
         private Sprite _tutorialHandSprite;
         private TutorialOverlayView _overlay;
         private LevelManager _activeLevelManager;
@@ -68,12 +71,14 @@ namespace Game.View.Tutorial
             LevelView levelView,
             Transform overlayParent,
             TMP_FontAsset tutorialFont,
+            Material tutorialFontMaterial,
             Sprite tutorialHandSprite)
         {
             _gameManager = gameManager;
             _gridManager = gridManager;
             _levelView = levelView;
             _tutorialFont = tutorialFont;
+            _tutorialFontMaterial = tutorialFontMaterial;
             _tutorialHandSprite = tutorialHandSprite;
             _overlayParent = overlayParent != null
                 ? overlayParent
@@ -113,7 +118,11 @@ namespace Game.View.Tutorial
             SubscribeToFoodTaps(level.MainGrid);
 
             if (_overlay == null && _overlayParent != null)
-                _overlay = new TutorialOverlayView(_overlayParent, _tutorialFont, _tutorialHandSprite);
+                _overlay = new TutorialOverlayView(
+                    _overlayParent,
+                    _tutorialFont,
+                    _tutorialFontMaterial,
+                    _tutorialHandSprite);
 
             if (_overlay == null)
                 GameLogger.LogWarning("FirstTimeTutorialStep: tutorial overlay parent is missing.");
@@ -205,7 +214,9 @@ namespace Game.View.Tutorial
                 "Try tap on this guy to see what he want",
                 PersonInstructionBounds,
                 _personView.transform,
-                null);
+                null,
+                false,
+                _personView.transform);
         }
 
         private void HandlePersonTapped()
@@ -244,6 +255,9 @@ namespace Game.View.Tutorial
                 "Try press on these foods to see\nwhich one is the burger",
                 FoodInstructionBounds,
                 firstFood,
+                _hamburgerCell.transform,
+                true,
+                firstFood,
                 _hamburgerCell.transform);
         }
 
@@ -267,11 +281,18 @@ namespace Game.View.Tutorial
             _stage = Stage.SeatPerson;
             SubscribeToSeatTaps();
             _activeLevelManager.MoveSucceeded += HandleMoveSucceeded;
+            Transform[] spotlightTargets = new Transform[_seatCells.Count + 1];
+            spotlightTargets[0] = _personView.transform;
+            for (int i = 0; i < _seatCells.Count; i++)
+                spotlightTargets[i + 1] = _seatCells[i] != null ? _seatCells[i].transform : null;
+
             _overlay?.Show(
                 "Maybe he want this burger,\ndrag him to the somewhere\nhe can sit to eat this burger",
                 SeatInstructionBounds,
                 _personView.transform,
-                seatTarget);
+                seatTarget,
+                false,
+                spotlightTargets);
             GameLogger.Log("FirstTimeTutorialStep: drag step started.");
 
             if (_person.State == PersonState.Happy)
@@ -430,37 +451,54 @@ namespace Game.View.Tutorial
             CompleteStep();
         }
 
-        private sealed class TutorialOverlayView
+        internal sealed class TutorialOverlayView
         {
             private const float HandSize = 164f;
+            private const float DimAlpha = 0.72f;
+            private const float SpotlightPaddingX = 12f;
+            private const float SpotlightPaddingY = 12f;
+            private const float FallbackSpotlightSize = 88f;
             // The index fingertip is offset from the sprite's top-left corner by these Figma pixels.
             private const float HandTipOffsetX = 75f;
             private const float HandTipOffsetY = 23f;
             private const float HandShiftRight = 20f;
-            private const float TextBackgroundPaddingX = 12f;
-            private const float TextBackgroundPaddingY = 8f;
-
             private readonly GameObject _root;
             private readonly RectTransform _rootRect;
             private readonly CanvasGroup _canvasGroup;
             private readonly Image _background;
             private readonly RectTransform _pointerRect;
             private readonly Image _pointerImage;
-            private readonly GameObject _messageBackgroundObject;
-            private readonly RectTransform _messageBackgroundRect;
+            private readonly EventTrigger _tapAnywhereTrigger;
             private readonly GameObject _messageObject;
             private readonly RectTransform _messageRect;
             private readonly TextMeshProUGUI _message;
             private readonly Canvas _canvas;
             private readonly TMP_FontAsset _font;
+            private readonly List<FocusTarget> _focusTargets = new List<FocusTarget>();
+            private readonly List<Rect> _focusBounds = new List<Rect>();
+            private readonly List<Rect> _activeFocusBounds = new List<Rect>();
+            private readonly List<float> _verticalEdges = new List<float>();
+            private readonly List<RectTransform> _dimPanels = new List<RectTransform>();
+            private readonly Vector3[] _worldCorners = new Vector3[4];
+            private readonly Vector3[] _targetRectCorners = new Vector3[4];
             private Transform _firstTarget;
             private Transform _secondTarget;
+            private bool _groupFocusTargets;
 
-            public TutorialOverlayView(Transform parent, TMP_FontAsset font, Sprite handSprite)
+            public TutorialOverlayView(
+                Transform parent,
+                TMP_FontAsset font,
+                Material fontMaterial,
+                Sprite handSprite)
             {
                 _canvas = parent.GetComponentInParent<Canvas>();
                 _font = font;
-                _root = new GameObject("TutorialOverlay", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+                _root = new GameObject(
+                    "TutorialOverlay",
+                    typeof(RectTransform),
+                    typeof(CanvasGroup),
+                    typeof(Image),
+                    typeof(EventTrigger));
                 _rootRect = _root.GetComponent<RectTransform>();
                 _rootRect.SetParent(parent, false);
                 _rootRect.anchorMin = Vector2.zero;
@@ -475,17 +513,7 @@ namespace Game.View.Tutorial
                 _background = _root.GetComponent<Image>();
                 _background.color = Color.clear;
                 _background.raycastTarget = false;
-
-                _messageBackgroundObject = new GameObject(
-                    "InstructionBackground",
-                    typeof(RectTransform),
-                    typeof(CanvasRenderer),
-                    typeof(Image));
-                _messageBackgroundRect = _messageBackgroundObject.GetComponent<RectTransform>();
-                _messageBackgroundRect.SetParent(_rootRect, false);
-                Image messageBackground = _messageBackgroundObject.GetComponent<Image>();
-                messageBackground.color = Color.black;
-                messageBackground.raycastTarget = false;
+                _tapAnywhereTrigger = _root.GetComponent<EventTrigger>();
 
                 _messageObject = new GameObject(
                     "InstructionText",
@@ -496,6 +524,8 @@ namespace Game.View.Tutorial
                 _messageRect.SetParent(_rootRect, false);
                 _message = _messageObject.GetComponent<TextMeshProUGUI>();
                 _message.font = _font;
+                if (fontMaterial != null)
+                    _message.fontSharedMaterial = fontMaterial;
                 _message.color = Color.white;
                 _message.enableAutoSizing = false;
                 _message.enableWordWrapping = true;
@@ -521,37 +551,87 @@ namespace Game.View.Tutorial
                 _root.SetActive(false);
             }
 
-            public void Show(string message, Rect messageBounds, Transform firstTarget, Transform secondTarget)
+            public void Show(
+                string message,
+                Rect messageBounds,
+                Transform firstTarget,
+                Transform secondTarget,
+                bool groupFocusTargets,
+                params Transform[] focusTargets)
             {
+                ClearTapAnywhereCallback();
                 _message.text = message;
-                _messageBackgroundObject.SetActive(true);
                 _messageObject.SetActive(true);
-                _background.color = new Color(0f, 0f, 0f, 0.72f);
+                _background.color = Color.clear;
                 _background.raycastTarget = false;
                 SetInputBlocked(false);
-                Rect backgroundBounds = new Rect(
-                    messageBounds.x - TextBackgroundPaddingX,
-                    messageBounds.y - TextBackgroundPaddingY,
-                    messageBounds.width + TextBackgroundPaddingX * 2f,
-                    messageBounds.height + TextBackgroundPaddingY * 2f);
-                PositionFromDesign(_messageBackgroundRect, backgroundBounds);
                 PositionFromDesign(_messageRect, messageBounds);
                 _message.fontSize = 24f * (_rootRect.rect.height / TutorialArtboardHeight);
                 _firstTarget = firstTarget;
                 _secondTarget = secondTarget;
+                _groupFocusTargets = groupFocusTargets;
+                SetFocusTargets(focusTargets);
                 _root.SetActive(true);
                 _rootRect.SetAsLastSibling();
                 _pointerRect.gameObject.SetActive(_pointerImage.sprite != null && firstTarget != null);
                 UpdatePointer();
             }
 
+            public void ShowClear(string message, Rect messageBounds)
+            {
+                ClearTapAnywhereCallback();
+                _message.text = message;
+                _messageObject.SetActive(true);
+                _background.color = Color.clear;
+                SetInputBlocked(false);
+                PositionFromDesign(_messageRect, messageBounds);
+                _message.fontSize = 24f * (_rootRect.rect.height / TutorialArtboardHeight);
+                _firstTarget = null;
+                _secondTarget = null;
+                _focusTargets.Clear();
+                HideDimPanels();
+                _pointerRect.gameObject.SetActive(false);
+                _root.SetActive(true);
+                _rootRect.SetAsLastSibling();
+            }
+
+            public void ShowDimmedClear(string message, Rect messageBounds)
+            {
+                ShowClear(message, messageBounds);
+                _background.color = new Color(0f, 0f, 0f, DimAlpha);
+            }
+
+            public void SetTapAnywhereCallback(Action callback)
+            {
+                ClearTapAnywhereCallback();
+                if (callback == null)
+                    return;
+
+                EventTrigger.Entry entry = new EventTrigger.Entry
+                {
+                    eventID = EventTriggerType.PointerClick
+                };
+                entry.callback.AddListener(_ => callback());
+                if (_tapAnywhereTrigger.triggers == null)
+                    _tapAnywhereTrigger.triggers = new List<EventTrigger.Entry>();
+                _tapAnywhereTrigger.triggers.Add(entry);
+                SetInputBlocked(true);
+            }
+
+            private void ClearTapAnywhereCallback()
+            {
+                _tapAnywhereTrigger.triggers?.Clear();
+            }
+
             public void ShowHold()
             {
-                _messageBackgroundObject.SetActive(false);
+                ClearTapAnywhereCallback();
                 _messageObject.SetActive(false);
                 _pointerRect.gameObject.SetActive(false);
                 _firstTarget = null;
                 _secondTarget = null;
+                _focusTargets.Clear();
+                HideDimPanels();
                 _background.color = Color.clear;
                 _root.SetActive(true);
                 _rootRect.SetAsLastSibling();
@@ -570,6 +650,12 @@ namespace Game.View.Tutorial
                 if (!_root.activeSelf)
                     return;
 
+                Camera eventCamera = _canvas != null && _canvas.renderMode != RenderMode.ScreenSpaceOverlay
+                    ? _canvas.worldCamera
+                    : null;
+                Camera worldCamera = Camera.main;
+                UpdateDimPanels(worldCamera, eventCamera);
+
                 if (!_pointerRect.gameObject.activeSelf || _firstTarget == null)
                 {
                     _pointerRect.gameObject.SetActive(false);
@@ -584,10 +670,6 @@ namespace Game.View.Tutorial
                     targetPosition = Vector3.Lerp(targetPosition, _secondTarget.position, blend);
                 }
 
-                Camera eventCamera = _canvas != null && _canvas.renderMode != RenderMode.ScreenSpaceOverlay
-                    ? _canvas.worldCamera
-                    : null;
-                Camera worldCamera = Camera.main;
                 if (worldCamera == null)
                     return;
 
@@ -606,6 +688,387 @@ namespace Game.View.Tutorial
                     _pointerRect.anchoredPosition = localPosition + new Vector2(
                         (-HandTipOffsetX + HandShiftRight) * horizontalScale,
                         HandTipOffsetY * verticalScale - tapOffset);
+                }
+            }
+
+            private void SetFocusTargets(Transform[] targets)
+            {
+                _focusTargets.Clear();
+                if (targets == null)
+                    return;
+
+                for (int i = 0; i < targets.Length; i++)
+                {
+                    Transform target = targets[i];
+                    if (target == null)
+                        continue;
+
+                    bool alreadyAdded = false;
+                    for (int j = 0; j < _focusTargets.Count; j++)
+                    {
+                        if (_focusTargets[j].Target == target)
+                        {
+                            alreadyAdded = true;
+                            break;
+                        }
+                    }
+
+                    if (!alreadyAdded)
+                        _focusTargets.Add(new FocusTarget(target));
+                }
+            }
+
+            private void UpdateDimPanels(Camera worldCamera, Camera eventCamera)
+            {
+                if (_focusTargets.Count == 0)
+                {
+                    HideDimPanels();
+                    return;
+                }
+
+                _focusBounds.Clear();
+                for (int i = 0; i < _focusTargets.Count; i++)
+                {
+                    if (TryGetFocusBounds(_focusTargets[i], worldCamera, eventCamera, out Rect bounds))
+                        _focusBounds.Add(bounds);
+                }
+
+                if (_groupFocusTargets && _focusBounds.Count > 1)
+                {
+                    Rect groupedBounds = _focusBounds[0];
+                    for (int i = 1; i < _focusBounds.Count; i++)
+                    {
+                        Rect bounds = _focusBounds[i];
+                        groupedBounds = Rect.MinMaxRect(
+                            Mathf.Min(groupedBounds.xMin, bounds.xMin),
+                            Mathf.Min(groupedBounds.yMin, bounds.yMin),
+                            Mathf.Max(groupedBounds.xMax, bounds.xMax),
+                            Mathf.Max(groupedBounds.yMax, bounds.yMax));
+                    }
+
+                    _focusBounds.Clear();
+                    _focusBounds.Add(groupedBounds);
+                }
+
+                float rootWidth = _rootRect.rect.width;
+                float rootHeight = _rootRect.rect.height;
+                _verticalEdges.Clear();
+                AddVerticalEdge(0f, rootHeight);
+                AddVerticalEdge(rootHeight, rootHeight);
+                for (int i = 0; i < _focusBounds.Count; i++)
+                {
+                    AddVerticalEdge(_focusBounds[i].yMin, rootHeight);
+                    AddVerticalEdge(_focusBounds[i].yMax, rootHeight);
+                }
+
+                int panelCount = 0;
+                for (int row = 0; row < _verticalEdges.Count - 1; row++)
+                {
+                    float top = _verticalEdges[row];
+                    float panelHeight = _verticalEdges[row + 1] - top;
+                    if (panelHeight <= 0.01f)
+                        continue;
+
+                    float rowCenter = top + panelHeight * 0.5f;
+                    _activeFocusBounds.Clear();
+                    for (int i = 0; i < _focusBounds.Count; i++)
+                    {
+                        Rect bounds = _focusBounds[i];
+                        if (rowCenter >= bounds.yMin && rowCenter <= bounds.yMax)
+                            InsertFocusBoundsByX(bounds);
+                    }
+
+                    float left = 0f;
+                    for (int i = 0; i < _activeFocusBounds.Count; i++)
+                    {
+                        Rect bounds = _activeFocusBounds[i];
+                        float focusLeft = Mathf.Clamp(bounds.xMin, 0f, rootWidth);
+                        float focusRight = Mathf.Clamp(bounds.xMax, 0f, rootWidth);
+                        if (focusLeft > left)
+                        {
+                            SetDimPanel(panelCount++, new Rect(left, top, focusLeft - left, panelHeight));
+                        }
+
+                        left = Mathf.Max(left, focusRight);
+                    }
+
+                    if (left < rootWidth)
+                        SetDimPanel(panelCount++, new Rect(left, top, rootWidth - left, panelHeight));
+                }
+
+                for (int i = panelCount; i < _dimPanels.Count; i++)
+                {
+                    if (_dimPanels[i].gameObject.activeSelf)
+                        _dimPanels[i].gameObject.SetActive(false);
+                }
+            }
+
+            private bool TryGetFocusBounds(
+                FocusTarget focusTarget,
+                Camera worldCamera,
+                Camera eventCamera,
+                out Rect focusBounds)
+            {
+                focusBounds = default;
+                float minLocalX = float.PositiveInfinity;
+                float minLocalY = float.PositiveInfinity;
+                float maxLocalX = float.NegativeInfinity;
+                float maxLocalY = float.NegativeInfinity;
+                bool hasPoint = false;
+
+                if (focusTarget.RectTransform != null)
+                {
+                    focusTarget.RectTransform.GetWorldCorners(_targetRectCorners);
+                    for (int i = 0; i < _targetRectCorners.Length; i++)
+                    {
+                        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(
+                            eventCamera,
+                            _targetRectCorners[i]);
+                        EncapsulateScreenPoint(
+                            screenPoint,
+                            eventCamera,
+                            ref minLocalX,
+                            ref minLocalY,
+                            ref maxLocalX,
+                            ref maxLocalY,
+                            ref hasPoint);
+                    }
+                }
+                else if (focusTarget.TryGetTargetBounds(out Bounds rendererBounds) && worldCamera != null)
+                {
+                    Vector3 min = rendererBounds.min;
+                    Vector3 max = rendererBounds.max;
+                    float z = rendererBounds.center.z;
+                    _worldCorners[0] = new Vector3(min.x, min.y, z);
+                    _worldCorners[1] = new Vector3(min.x, max.y, z);
+                    _worldCorners[2] = new Vector3(max.x, max.y, z);
+                    _worldCorners[3] = new Vector3(max.x, min.y, z);
+
+                    for (int i = 0; i < _worldCorners.Length; i++)
+                    {
+                        Vector3 screenPosition = worldCamera.WorldToScreenPoint(_worldCorners[i]);
+                        EncapsulateScreenPoint(
+                            new Vector2(screenPosition.x, screenPosition.y),
+                            eventCamera,
+                            ref minLocalX,
+                            ref minLocalY,
+                            ref maxLocalX,
+                            ref maxLocalY,
+                            ref hasPoint);
+                    }
+                }
+                else if (worldCamera != null)
+                {
+                    Vector3 screenPosition = worldCamera.WorldToScreenPoint(focusTarget.Target.position);
+                    EncapsulateScreenPoint(
+                        new Vector2(screenPosition.x, screenPosition.y),
+                        eventCamera,
+                        ref minLocalX,
+                        ref minLocalY,
+                        ref maxLocalX,
+                        ref maxLocalY,
+                        ref hasPoint);
+                }
+
+                if (!hasPoint)
+                    return false;
+
+                float horizontalScale = _rootRect.rect.width / TutorialArtboardWidth;
+                float verticalScale = _rootRect.rect.height / TutorialArtboardHeight;
+                if (Mathf.Approximately(minLocalX, maxLocalX))
+                {
+                    float halfWidth = FallbackSpotlightSize * horizontalScale * 0.5f;
+                    minLocalX -= halfWidth;
+                    maxLocalX += halfWidth;
+                }
+
+                if (Mathf.Approximately(minLocalY, maxLocalY))
+                {
+                    float halfHeight = FallbackSpotlightSize * verticalScale * 0.5f;
+                    minLocalY -= halfHeight;
+                    maxLocalY += halfHeight;
+                }
+
+                float paddingX = SpotlightPaddingX * horizontalScale;
+                float paddingY = SpotlightPaddingY * verticalScale;
+                float left = Mathf.Clamp(minLocalX + _rootRect.rect.width * 0.5f - paddingX, 0f, _rootRect.rect.width);
+                float right = Mathf.Clamp(maxLocalX + _rootRect.rect.width * 0.5f + paddingX, 0f, _rootRect.rect.width);
+                float top = Mathf.Clamp(_rootRect.rect.height * 0.5f - maxLocalY - paddingY, 0f, _rootRect.rect.height);
+                float bottom = Mathf.Clamp(_rootRect.rect.height * 0.5f - minLocalY + paddingY, 0f, _rootRect.rect.height);
+                if (right <= left || bottom <= top)
+                    return false;
+
+                focusBounds = new Rect(left, top, right - left, bottom - top);
+                return true;
+            }
+
+            private void EncapsulateScreenPoint(
+                Vector2 screenPoint,
+                Camera eventCamera,
+                ref float minLocalX,
+                ref float minLocalY,
+                ref float maxLocalX,
+                ref float maxLocalY,
+                ref bool hasPoint)
+            {
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        _rootRect,
+                        screenPoint,
+                        eventCamera,
+                        out Vector2 localPoint))
+                {
+                    return;
+                }
+
+                minLocalX = Mathf.Min(minLocalX, localPoint.x);
+                minLocalY = Mathf.Min(minLocalY, localPoint.y);
+                maxLocalX = Mathf.Max(maxLocalX, localPoint.x);
+                maxLocalY = Mathf.Max(maxLocalY, localPoint.y);
+                hasPoint = true;
+            }
+
+            private void AddVerticalEdge(float edge, float rootHeight)
+            {
+                edge = Mathf.Clamp(edge, 0f, rootHeight);
+                for (int i = 0; i < _verticalEdges.Count; i++)
+                {
+                    if (Mathf.Abs(_verticalEdges[i] - edge) <= 0.01f)
+                        return;
+
+                    if (_verticalEdges[i] > edge)
+                    {
+                        _verticalEdges.Insert(i, edge);
+                        return;
+                    }
+                }
+
+                _verticalEdges.Add(edge);
+            }
+
+            private void InsertFocusBoundsByX(Rect bounds)
+            {
+                for (int i = 0; i < _activeFocusBounds.Count; i++)
+                {
+                    if (_activeFocusBounds[i].xMin > bounds.xMin)
+                    {
+                        _activeFocusBounds.Insert(i, bounds);
+                        return;
+                    }
+                }
+
+                _activeFocusBounds.Add(bounds);
+            }
+
+            private void SetDimPanel(int index, Rect bounds)
+            {
+                RectTransform panel = GetDimPanel(index);
+                Vector2 position = new Vector2(
+                    bounds.x + bounds.width * 0.5f - _rootRect.rect.width * 0.5f,
+                    _rootRect.rect.height * 0.5f - bounds.y - bounds.height * 0.5f);
+                Vector2 size = new Vector2(bounds.width, bounds.height);
+                if (!panel.gameObject.activeSelf)
+                    panel.gameObject.SetActive(true);
+
+                if ((panel.anchoredPosition - position).sqrMagnitude > 0.01f)
+                    panel.anchoredPosition = position;
+                if ((panel.sizeDelta - size).sqrMagnitude > 0.01f)
+                    panel.sizeDelta = size;
+            }
+
+            private RectTransform GetDimPanel(int index)
+            {
+                while (_dimPanels.Count <= index)
+                {
+                    GameObject panelObject = new GameObject(
+                        "TutorialDimPanel",
+                        typeof(RectTransform),
+                        typeof(CanvasRenderer),
+                        typeof(Image));
+                    RectTransform panelRect = panelObject.GetComponent<RectTransform>();
+                    panelRect.SetParent(_rootRect, false);
+                    panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+                    panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+                    panelRect.pivot = new Vector2(0.5f, 0.5f);
+                    Image panelImage = panelObject.GetComponent<Image>();
+                    panelImage.color = new Color(0f, 0f, 0f, DimAlpha);
+                    panelImage.raycastTarget = false;
+                    panelRect.SetAsFirstSibling();
+                    _dimPanels.Add(panelRect);
+                }
+
+                return _dimPanels[index];
+            }
+
+            private void HideDimPanels()
+            {
+                for (int i = 0; i < _dimPanels.Count; i++)
+                {
+                    if (_dimPanels[i].gameObject.activeSelf)
+                        _dimPanels[i].gameObject.SetActive(false);
+                }
+            }
+
+            private sealed class FocusTarget
+            {
+                public readonly Transform Target;
+                public readonly RectTransform RectTransform;
+                private readonly Collider2D[] _colliders;
+                private readonly Renderer[] _renderers;
+
+                public FocusTarget(Transform target)
+                {
+                    Target = target;
+                    RectTransform = target as RectTransform;
+                    _colliders = target.GetComponents<Collider2D>();
+                    _renderers = RectTransform == null ? target.GetComponentsInChildren<Renderer>() : null;
+                }
+
+                public bool TryGetTargetBounds(out Bounds bounds)
+                {
+                    bounds = default;
+                    bool hasBounds = false;
+
+                    for (int i = 0; i < _colliders.Length; i++)
+                    {
+                        Collider2D collider = _colliders[i];
+                        if (collider == null || !collider.enabled)
+                            continue;
+
+                        if (!hasBounds)
+                        {
+                            bounds = collider.bounds;
+                            hasBounds = true;
+                        }
+                        else
+                        {
+                            bounds.Encapsulate(collider.bounds);
+                        }
+                    }
+
+                    if (hasBounds)
+                        return true;
+
+                    if (_renderers == null)
+                        return false;
+
+                    for (int i = 0; i < _renderers.Length; i++)
+                    {
+                        Renderer renderer = _renderers[i];
+                        if (renderer == null || !renderer.enabled)
+                            continue;
+
+                        if (!hasBounds)
+                        {
+                            bounds = renderer.bounds;
+                            hasBounds = true;
+                        }
+                        else
+                        {
+                            bounds.Encapsulate(renderer.bounds);
+                        }
+                    }
+
+                    return hasBounds;
                 }
             }
 
@@ -628,6 +1091,7 @@ namespace Game.View.Tutorial
 
             public void Hide()
             {
+                ClearTapAnywhereCallback();
                 SetInputBlocked(false);
                 _root.SetActive(false);
                 _firstTarget = null;

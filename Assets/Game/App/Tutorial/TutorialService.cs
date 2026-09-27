@@ -93,7 +93,8 @@ namespace Game.App.Tutorial
         SuccessfulMove,
         MoreMovesBoosterUsed,
         UndoBoosterUsed,
-        RemoveBoosterUsed
+        RemoveBoosterUsed,
+        LevelTwoReady
     }
 
     public enum MechanicTutorialID

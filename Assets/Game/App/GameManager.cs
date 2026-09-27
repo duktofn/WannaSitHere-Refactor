@@ -561,7 +561,10 @@ namespace Game.App
                     LevelNumberChanged?.Invoke(levelNumber);
                     LevelReady?.Invoke(levelNumber);
                     TryStartFirstTimeTutorial(levelNumber);
-                    _tutorialService.TryStart(TutorialTrigger.LevelReady);
+                    bool levelTwoTutorialStarted = levelNumber == 2 &&
+                                                   _tutorialService.TryStart(TutorialTrigger.LevelTwoReady);
+                    if (!levelTwoTutorialStarted)
+                        _tutorialService.TryStart(TutorialTrigger.LevelReady);
                 }
                 catch (OperationCanceledException)
                 {
