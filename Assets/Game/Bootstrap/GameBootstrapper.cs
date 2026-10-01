@@ -10,8 +10,8 @@ using Game.Data.Levels;
 using Game.Events;
 using Game.View.Audio;
 using Game.View.Board;
-using Game.View.UI;
 using Game.View.Tutorial;
+using Game.View.UI;
 using Game.View.VFX;
 using TMPro;
 
@@ -103,27 +103,10 @@ namespace Game.Bootstrap
                 _onItemReceive,
                 _onItemSpend,
                 _onAudioCue);
-            MechanicTutorial[] tutorials = GetTutorialsWithDefaults(
-                out FirstTimeTutorialStep firstTimeTutorialStep,
-                out LevelTwoTutorialStep levelTwoTutorialStep);
-            TutorialService tutorialService = new TutorialService(tutorials, presentation);
+            TutorialService tutorialService = new TutorialService(_mechanicTutorials, presentation);
 
             _gameManager = new GameManager(config, levelLoader, presentation, tutorialService);
-            firstTimeTutorialStep?.Configure(
-                _gameManager,
-                _gridManager,
-                _levelView,
-                _uiManager != null ? _uiManager.InGameCanvasTransform : null,
-                _tutorialFont,
-                _tutorialFontMaterial,
-                _tutorialHandSprite);
-            levelTwoTutorialStep?.Configure(
-                _gameManager,
-                _gridManager,
-                _uiManager != null ? _uiManager.InGameCanvasTransform : null,
-                _tutorialFont,
-                _tutorialFontMaterial,
-                _tutorialHandSprite);
+            ConfigureTutorialSteps();
             ((UnityGamePresentation)presentation).Initialize(
                 _gameManager.Inventory,
                 _gameManager.EconomyManager,
@@ -178,6 +161,7 @@ namespace Game.Bootstrap
         {
             _gameManager?.PublishCurrentLevel();
             _gameManager?.OnApplicationReady();
+            
         }
 
         private void Update()
@@ -213,59 +197,39 @@ namespace Game.Bootstrap
             };
         }
 
-        private MechanicTutorial[] GetTutorialsWithDefaults(
-            out FirstTimeTutorialStep firstTimeTutorialStep,
-            out LevelTwoTutorialStep levelTwoTutorialStep)
+        private void ConfigureTutorialSteps()
         {
-            firstTimeTutorialStep = null;
-            levelTwoTutorialStep = null;
-            List<MechanicTutorial> tutorials = _mechanicTutorials == null
-                ? new List<MechanicTutorial>()
-                : new List<MechanicTutorial>(_mechanicTutorials);
+            if (_mechanicTutorials == null)
+                return;
 
-            bool hasFirstTimeTutorial = false;
-            bool hasLevelTwoTutorial = false;
-            for (int i = 0; i < tutorials.Count; i++)
+            for (int i = 0; i < _mechanicTutorials.Length; i++)
             {
-                MechanicTutorial tutorial = tutorials[i];
+                MechanicTutorial tutorial = _mechanicTutorials[i];
                 if (tutorial == null)
                     continue;
 
                 if (tutorial.Trigger == TutorialTrigger.FirstTimePlaying)
                 {
-                    hasFirstTimeTutorial = true;
-                    firstTimeTutorialStep = tutorial.GetComponentInChildren<FirstTimeTutorialStep>(true);
+                    tutorial.GetComponentInChildren<FirstTimeTutorialStep>(true)?.Configure(
+                        _gameManager,
+                        _gridManager,
+                        _levelView,
+                        _uiManager != null ? _uiManager.InGameCanvasTransform : null,
+                        _tutorialFont,
+                        _tutorialFontMaterial,
+                        _tutorialHandSprite);
                 }
                 else if (tutorial.Trigger == TutorialTrigger.LevelTwoReady)
                 {
-                    hasLevelTwoTutorial = true;
-                    levelTwoTutorialStep = tutorial.GetComponentInChildren<LevelTwoTutorialStep>(true);
+                    tutorial.GetComponentInChildren<LevelTwoTutorialStep>(true)?.Configure(
+                        _gameManager,
+                        _gridManager,
+                        _uiManager != null ? _uiManager.InGameCanvasTransform : null,
+                        _tutorialFont,
+                        _tutorialFontMaterial,
+                        _tutorialHandSprite);
                 }
             }
-
-            if (!hasFirstTimeTutorial)
-            {
-                MechanicTutorial tutorial = gameObject.AddComponent<MechanicTutorial>();
-                firstTimeTutorialStep = gameObject.AddComponent<FirstTimeTutorialStep>();
-                tutorial.Configure(
-                    MechanicTutorialID.Drag,
-                    TutorialTrigger.FirstTimePlaying,
-                    new TutorialStep[] { firstTimeTutorialStep });
-                tutorials.Add(tutorial);
-            }
-
-            if (!hasLevelTwoTutorial)
-            {
-                MechanicTutorial tutorial = gameObject.AddComponent<MechanicTutorial>();
-                levelTwoTutorialStep = gameObject.AddComponent<LevelTwoTutorialStep>();
-                tutorial.Configure(
-                    MechanicTutorialID.Condition,
-                    TutorialTrigger.LevelTwoReady,
-                    new TutorialStep[] { levelTwoTutorialStep });
-                tutorials.Add(tutorial);
-            }
-
-            return tutorials.ToArray();
         }
 
         private void BindAudioSettingsViews()

@@ -217,3 +217,39 @@ Tất cả các bài kiểm tra được viết dưới dạng **EditMode Tests*
   - Di chuyển nội bộ WaitLine sang WaitLine $\rightarrow$ **Không bị ghi nhận (Skip)**.
 
 Để chạy kiểm thử: Mở Unity Editor $\rightarrow$ `Window > General > Test Runner` $\rightarrow$ Chạy tab **EditMode**.
+
+
+
+
+
+Hãy sắp xếp các level hiện có trong Assets/Data/Level: Level 1, Level 2 và Level 3. Giữ nguyên TestLevel.
+
+Trước khi sửa:
+- Đọc AGENTS.md và kiểm tra cấu trúc LevelDataSO, CellDataSO, PersonDefinitionSO, ConditionDataSO.
+- Ghi nhận kích thước và loại cell tại từng tọa độ của Main Grid để đối chiếu sau khi sửa.
+
+Giới hạn bắt buộc:
+
+1. Main Grid
+- Giữ nguyên kích thước grid và trạng thái có/không có cell tại từng tọa độ.
+- Giữ nguyên vị trí và loại cell Block, Seat; không thay chúng bằng cell khác.
+- Cell Food chỉ được đổi sang một món ăn khác bằng SO Food đã có. Cell đó vẫn phải là Food và giữ nguyên vị trí.
+- Không thêm, xóa, di chuyển cell, hoặc đổi cell sang loại khác.
+- Vị trí cố định ở 0.5 và 0.5
+
+2. Person và Condition
+- Mỗi level có tối đa 12 Person.
+- Chỉ ghép các PersonDefinitionSO và ConditionDataSO đang có trong dự án.
+- Không tạo SO Person, Condition, Cell hay asset dữ liệu mới.
+- Mỗi Person có tối đa 2 điều kiện.
+- Person phải nằm trong grid, trên Seat, không trùng vị trí với Person khác; mọi tham chiếu phải hợp lệ.
+
+3. Wait Grid và thông số hai grid
+- Wait Grid có tối đa 6 cột và 2 hàng (`x <= 6`, `y <= 2`).
+- Với cả Main Grid và Wait Grid, giữ `CellSize = (0.5, 0.5)` và `CellDistance = (0.12, 0.12)`.
+- Đảm bảo nội dung Wait Grid khớp kích thước grid sau khi sắp xếp.
+- Vị trí cố định là 0.5 và 0.25
+
+Sau khi sửa, kiểm tra lại loại và vị trí cell Main Grid so với baseline; xác nhận giới hạn Person, kích thước Wait Grid, thông số hai grid và các tham chiếu SO. Không chạy Unity tests. Nếu không thể đáp ứng một giới hạn mà không phá cấu trúc Main Grid, dừng và báo rõ thay vì tự ý đổi cấu trúc.
+
+Khi báo cáo, nêu các file đã sửa, số lượng/tên Person từng level, kích thước Wait Grid và kết quả đối chiếu Main Grid.

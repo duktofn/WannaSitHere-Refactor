@@ -132,6 +132,10 @@ GameObject:
   - component: {fileID: 10276214}
   - component: {fileID: 10276215}
   - component: {fileID: 10276217}
+  - component: {fileID: 10276221}
+  - component: {fileID: 10276220}
+  - component: {fileID: 10276219}
+  - component: {fileID: 10276218}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -267,9 +271,58 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 590a4e9bc43a8ce44abcb618223b3ade, type: 2}
   - {fileID: 11400000, guid: 9a8673287e103ce4a8d8a904ee3b6e15, type: 2}
   - {fileID: 11400000, guid: 525d00c17acec83489b690c027438d11, type: 2}
+  - {fileID: 11400000, guid: 80b1d0b9b26d3c947818df1cb36984d2, type: 2}
+  - {fileID: 11400000, guid: b0619d5f98a7b484e980329d4f8f702e, type: 2}
+  - {fileID: 11400000, guid: dca6d258281f79949b07b7c0308e7325, type: 2}
+  - {fileID: 11400000, guid: 45619213dc5ac3f439feea6f7e481520, type: 2}
+  - {fileID: 11400000, guid: 51bfbfafe5f0d9743b328de77cb567ed, type: 2}
+  - {fileID: 11400000, guid: 407f85523f5cba448b94f88439cf296a, type: 2}
+  - {fileID: 11400000, guid: 074cf8f7514c08b4d9b8fefb5468fdb4, type: 2}
+  - {fileID: 11400000, guid: feb3ec35d165c4941a094b7caf22041e, type: 2}
+  - {fileID: 11400000, guid: 5bdb874e4c6708843a6cc56c6befebc2, type: 2}
+  - {fileID: 11400000, guid: 92afb5ad19fbb404192ae0e770d43a8c, type: 2}
+  - {fileID: 11400000, guid: 7c10f0a1fdc9c5b4aafd4de796672308, type: 2}
+  - {fileID: 11400000, guid: 14714851c2471844a8da3b0910154864, type: 2}
+  - {fileID: 11400000, guid: 193587fa27b93a54f8be6c5726d5ef3d, type: 2}
+  - {fileID: 11400000, guid: 96f253b8dddd5914ea5314fce363c146, type: 2}
+  - {fileID: 11400000, guid: 894b37504a7777b4a9ea5b9d2b23d92d, type: 2}
+  - {fileID: 11400000, guid: 47c1de8623ca5584ab6b1e0aa426511f, type: 2}
+  - {fileID: 11400000, guid: e121e26dd5b3d134cae7d54cbe18dcee, type: 2}
+  - {fileID: 11400000, guid: 7e005d5ac7b6d2f43a9ed97605a50d23, type: 2}
+  - {fileID: 11400000, guid: 0d54e5d9b17c6ea4c9b23c6684a90447, type: 2}
+  - {fileID: 11400000, guid: cbbd4acc49d438d47a0d951d357495e0, type: 2}
+  - {fileID: 11400000, guid: f04812a0be99ae6449102ec3cf81c327, type: 2}
+  - {fileID: 11400000, guid: faa810798d043c440b6f23764fe91e74, type: 2}
+  - {fileID: 11400000, guid: 1447356ae07e7ac4b9fe9e66a9269fe9, type: 2}
+  - {fileID: 11400000, guid: 69dcef4dd9f29b5449f1de8ca48e9f84, type: 2}
+  - {fileID: 11400000, guid: 27dabd563d71e3e419f51a261e4a826e, type: 2}
+  - {fileID: 11400000, guid: 92b98f7ccbf75eb47832f01d428ae389, type: 2}
+  - {fileID: 11400000, guid: 119ae1f8c7c38d04cae5eca95591ee2c, type: 2}
+  - {fileID: 11400000, guid: 254b940caef22234b9d5e576648653be, type: 2}
+  - {fileID: 11400000, guid: 70b717937187e424eba11c852b83e1dd, type: 2}
+  - {fileID: 11400000, guid: 24a0970fb2bceb44480502d0d09a5ae7, type: 2}
+  - {fileID: 11400000, guid: baca3877ff4b97f4b8e7b10acac82f0a, type: 2}
+  - {fileID: 11400000, guid: a1c818a8cba33b4419091c2095058e8a, type: 2}
+  - {fileID: 11400000, guid: 1b057a17bcb664c4987940cefd53c4ac, type: 2}
+  - {fileID: 11400000, guid: 40e3a8fae4a78504fb0a125ee1a2ada4, type: 2}
+  - {fileID: 11400000, guid: 17ed6366577ad4c4192c42c2783ae4e1, type: 2}
+  - {fileID: 11400000, guid: 809d3e3103fac3444b46b8987176fa6a, type: 2}
+  - {fileID: 11400000, guid: 4d66341d81362c244afcaa0ea867fcc6, type: 2}
+  - {fileID: 11400000, guid: 88fa283a8fee98c47869fed13e0ddd9e, type: 2}
+  - {fileID: 11400000, guid: dc4746cc5dfc6b8469f97bd035b1d8b0, type: 2}
+  - {fileID: 11400000, guid: f89ecff3cf29de5489683c5e4027c62d, type: 2}
+  - {fileID: 11400000, guid: b982333034cc7a948895a51ec8a3cb8f, type: 2}
+  - {fileID: 11400000, guid: f28f1639a4c97d841a87249329b5d25a, type: 2}
+  - {fileID: 11400000, guid: f9d080c9d30946b42a705c17c65d248a, type: 2}
+  - {fileID: 11400000, guid: d0489ff103aa8654badd8235074e8e1d, type: 2}
+  - {fileID: 11400000, guid: 221be64fc0dc5a24d818c3611dbda818, type: 2}
+  - {fileID: 11400000, guid: 7164adf4d5a60dd47a786bf66ad78ae0, type: 2}
+  - {fileID: 11400000, guid: 80432af8d1430ff4cb8126378772a8b8, type: 2}
   _economyConfig: {fileID: 11400000, guid: 2c48a835cf4cc354dbb3d802c5c44c4e, type: 2}
   _canSitAnywhereCondition: {fileID: 11400000, guid: 098c314aab69cc84cbd8d0f3381dfb38, type: 2}
-  _mechanicTutorials: []
+  _mechanicTutorials:
+  - {fileID: 10276221}
+  - {fileID: 10276219}
   _tutorialFont: {fileID: 11400000, guid: 81e60fa4276af5b49818bc4d51945840, type: 2}
   _tutorialFontMaterial: {fileID: 2100000, guid: 5293c1170d643fc4b92612e9cc681e53, type: 2}
   _tutorialHandSprite: {fileID: 8403215288983880825, guid: e03fb587fdffc4e43921350f3c76ddbf, type: 3}
@@ -319,6 +372,62 @@ MonoBehaviour:
   gemView: {fileID: 1638260820}
   duration: 1
   ease: 0
+--- !u!114 &10276218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10276210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40e6058e3eb24a559dc0a7a89bec7a1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Tutorial.LevelTwoTutorialStep
+--- !u!114 &10276219
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10276210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e37673a5f4a19a49819ce38c030baf0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.App::Game.App.Tutorial.MechanicTutorial
+  _id: 1
+  _trigger: 6
+  _steps:
+  - {fileID: 10276218}
+--- !u!114 &10276220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10276210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9925ed9adcab6a4fb2c460cf75d1601, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Tutorial.FirstTimeTutorialStep
+--- !u!114 &10276221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10276210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e37673a5f4a19a49819ce38c030baf0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.App::Game.App.Tutorial.MechanicTutorial
+  _id: 0
+  _trigger: 0
+  _steps:
+  - {fileID: 10276220}
 --- !u!1 &20629358
 GameObject:
   m_ObjectHideFlags: 0
@@ -15411,7 +15520,7 @@ MonoBehaviour:
   eventChannels:
   - {fileID: 11400000, guid: 47cb6e655a6896b4e9f986a7e6013db4, type: 2}
   delay: 0
-  isPressedOnce: 1
+  isPressedOnce: 0
   button: {fileID: 0}
 --- !u!114 &1339047571
 MonoBehaviour:
