@@ -1,7 +1,6 @@
 # AGENTS.md
 
 ---
-
 ## 0. Agent Behavioral Rules
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
@@ -138,17 +137,16 @@ Game.Features.GachaMerge/
 └── Game.Features.GachaMerge.asmdef
 ```
 
----
+___
 ## 4. Coding Conventions (Quick Reference)
-
 | Element | Convention | Example |
-|---|---|---|
+| :--- | :--- | :--- |
 | Classes / Structs | PascalCase | `MergeService` |
-| Interfaces | `I` + PascalCase | `IMergeAnimator` |
+| Interfaces | `I` + **Pascal Case** | `IMergeAnimator` |
 | Private fields | `_camelCase` | `_currentHealth` |
 | Serialized fields (Unity only) | `[SerializeField] private` | `[SerializeField] private PullConfigSO config` |
 | Async methods | Suffix `Async` | `ApplyMergePlanAsync()` |
-| ScriptableObjects | Suffix `SO` | `PullConfigSO` |
+| ScriptableObjects | Suffix SO` | `PullConfigSO` |
 | Event Channels | Suffix `ChannelSO` | `SpawnHeroChannelSO` |
 | Services | Suffix `Service` | `MergeService` |
 | ViewModels | Suffix `ViewModel` | `GachaViewModel` |
@@ -161,3 +159,9 @@ Game.Features.GachaMerge/
 - No `GameObject.Find`, `FindObjectOfType`, `Singleton`, `Resources.Load`.
 - No LINQ in hot paths (Update, animation tick, R3 subscriptions).
 - Subscribe events in `OnEnable`, unsubscribe in `OnDisable`.
+
+---
+
+## 5. Difficulty Analyzer
+
+Khi phân tích, so sánh hoặc chỉnh độ khó Level bằng tool, đọc [hướng dẫn dành cho Agents](Difficulty%20Analyzer%20-%20Agents.md) để dùng GUI/API, diễn giải trạng thái và kiểm tra kết quả.

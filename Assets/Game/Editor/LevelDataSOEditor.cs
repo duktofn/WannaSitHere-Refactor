@@ -15,9 +15,12 @@ namespace Game.Editor
         private bool _waitGridFoldout = true;
         private bool _personConfigsFoldout = true;
         private bool _validationFoldout = true;
+        private bool _layoutPreviewFoldout = true;
 
         private Vector2 _mainScrollPos;
         private Vector2 _waitScrollPos;
+        private Vector2 _layoutPreviewMainScrollPos;
+        private Vector2 _layoutPreviewWaitScrollPos;
 
         private Vector2Int _prevMainSize;
         private Vector2Int _prevWaitSize;
@@ -28,6 +31,7 @@ namespace Game.Editor
 
         private CellDataSO _mainFillCellData;
         private CellDataSO _waitFillCellData;
+        private GUIStyle _layoutPreviewCellStyle;
 
         private void OnEnable()
         {
@@ -51,7 +55,11 @@ namespace Game.Editor
             serializedObject.Update();
 
             EditorGUILayout.Space(5);
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Level Configuration", EditorStyles.boldLabel);
+            if (GUILayout.Button("Export JSON", GUILayout.Width(100f)))
+                LevelDataJsonExporter.Export(target as LevelDataSO);
+            EditorGUILayout.EndHorizontal();
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("levelMove"), new GUIContent("Level Move Limit"));
@@ -80,7 +88,115 @@ namespace Game.Editor
             DrawPersonConfigSection(personConfigsProp, mainGridProp, waitGridProp);
 
             serializedObject.ApplyModifiedProperties();
+            EditorGUILayout.Space(15);
+            DrawLayoutPreview();
             DrawValidationSummary();
+        }
+
+        private void DrawLayoutPreview()
+        {
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            _layoutPreviewFoldout = EditorGUILayout.Foldout(
+                _layoutPreviewFoldout,
+                "Level Layout Preview",
+                true,
+                EditorStyles.foldoutHeader);
+
+            if (!_layoutPreviewFoldout)
+            {
+                EditorGUILayout.EndVertical();
+                return;
+            }
+
+            LevelDataSO level = target as LevelDataSO;
+            if (level == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "Select a LevelDataSO to preview its layout.",
+                    MessageType.Warning);
+                EditorGUILayout.EndVertical();
+                return;
+            }
+
+            DrawLayoutPreviewGrid(
+                "MainGrid",
+                level.mainGrid,
+                ref _layoutPreviewMainScrollPos);
+            DrawLayoutPreviewGrid(
+                "WaitGrid",
+                level.waitGrid,
+                ref _layoutPreviewWaitScrollPos);
+            EditorGUILayout.LabelField(
+                "Hover over a cell to see its grid coordinates and type.",
+                EditorStyles.miniLabel);
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawLayoutPreviewGrid(
+            string gridName,
+            Grid<CellDataSO> grid,
+            ref Vector2 scrollPosition)
+        {
+            if (grid == null || grid.GridSize.x <= 0 || grid.GridSize.y <= 0)
+                return;
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField(gridName, EditorStyles.boldLabel);
+
+            float availableWidth = Mathf.Max(100f, EditorGUIUtility.currentViewWidth - 44f);
+            float cellSize = Mathf.Clamp(availableWidth / grid.GridSize.x, 22f, 72f);
+            float contentWidth = cellSize * grid.GridSize.x;
+            float contentHeight = cellSize * grid.GridSize.y;
+            bool allowHorizontalScroll = contentWidth > availableWidth;
+            bool allowVerticalScroll = contentHeight > 350f;
+            float viewportHeight = Mathf.Min(350f, contentHeight + 4f);
+
+            scrollPosition = EditorGUILayout.BeginScrollView(
+                scrollPosition,
+                allowHorizontalScroll,
+                allowVerticalScroll,
+                GUILayout.Height(viewportHeight));
+
+            Rect area = GUILayoutUtility.GetRect(
+                contentWidth,
+                contentHeight,
+                GUILayout.ExpandWidth(false));
+
+            _layoutPreviewCellStyle ??= new GUIStyle(EditorStyles.miniLabel)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                wordWrap = true
+            };
+            _layoutPreviewCellStyle.normal.textColor = Color.white;
+
+            for (int y = grid.GridSize.y - 1; y >= 0; y--)
+            {
+                for (int x = 0; x < grid.GridSize.x; x++)
+                {
+                    CellDataSO cell = grid.Get(x, y);
+                    string text = cell == null
+                        ? "·"
+                        : cell.type == CellType.Food ? cell.food.ToString() : cell.type.ToString();
+                    Color color = cell == null
+                        ? new Color(0.25f, 0.25f, 0.25f)
+                        : cell.type == CellType.Food
+                            ? new Color(0.42f, 0.29f, 0.12f)
+                            : cell.type == CellType.Seat
+                                ? new Color(0.13f, 0.27f, 0.37f)
+                                : new Color(0.25f, 0.25f, 0.25f);
+                    Rect rect = new(
+                        area.x + x * cellSize,
+                        area.y + (grid.GridSize.y - 1 - y) * cellSize,
+                        cellSize - 2f,
+                        cellSize - 2f);
+                    string tooltip = $"{gridName} ({x},{y}): {text}";
+
+                    EditorGUI.DrawRect(rect, color);
+                    GUI.Label(rect, new GUIContent(text, tooltip), _layoutPreviewCellStyle);
+                }
+            }
+
+            EditorGUILayout.EndScrollView();
         }
 
         private void DrawGridMatrixSection(string label, SerializedProperty gridProp, GridId gridId, bool isMainGrid,

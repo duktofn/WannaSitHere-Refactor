@@ -5,7 +5,8 @@
         "Game.Core",
         "Game.App",
         "Game.Events",
-        "Game.Data"
+        "Game.Data",
+        "Game.Editor"
     ],
     "includePlatforms": [
         "Editor"
