@@ -131,10 +131,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: LV11-15 Prefabs
       objectReference: {fileID: 0}
-    - target: {fileID: 2312634962693960690, guid: ab9523217d43b734087d13521e6db79d, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8134924669362829770, guid: ab9523217d43b734087d13521e6db79d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -249,18 +245,6 @@ PrefabInstance:
     - target: {fileID: 2667617272019986250, guid: 1d08f9f0619543e469d3f5e732244869, type: 3}
       propertyPath: m_Name
       value: LV1-2 Prefabs
-      objectReference: {fileID: 0}
-    - target: {fileID: 2667617272019986250, guid: 1d08f9f0619543e469d3f5e732244869, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6860336190570470226, guid: 1d08f9f0619543e469d3f5e732244869, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.76340926
-      objectReference: {fileID: 0}
-    - target: {fileID: 6860336190570470226, guid: 1d08f9f0619543e469d3f5e732244869, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.0031
       objectReference: {fileID: 0}
     - target: {fileID: 7021594869177903025, guid: 1d08f9f0619543e469d3f5e732244869, type: 3}
       propertyPath: m_LocalPosition.x
@@ -456,10 +440,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: LV16-20 Prefabs
       objectReference: {fileID: 0}
-    - target: {fileID: 7853217654820805058, guid: 685c3b6882f094e4fb9299449fe7b836, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8934694842860898722, guid: 685c3b6882f094e4fb9299449fe7b836, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -517,30 +497,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: LV3-5 Prefabs
       objectReference: {fileID: 0}
-    - target: {fileID: 2667617272019986250, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3182853056195403969, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
-      propertyPath: m_SortingOrder
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6860336190570470226, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.75226927
-      objectReference: {fileID: 0}
-    - target: {fileID: 6860336190570470226, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.8188147
-      objectReference: {fileID: 0}
-    - target: {fileID: 6860336190570470226, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.0036
-      objectReference: {fileID: 0}
-    - target: {fileID: 6860336190570470226, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0.0876
-      objectReference: {fileID: 0}
     - target: {fileID: 7021594869177903025, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -581,14 +537,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7739216087230801793, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
-      propertyPath: m_SortingOrder
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8220901094939978537, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
-      propertyPath: m_SortingOrder
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -605,10 +553,6 @@ PrefabInstance:
     - target: {fileID: 3225800093798621365, guid: 5b35b991040556b45b2718f82d9bcae6, type: 3}
       propertyPath: m_Name
       value: :V26-30 Prefabs
-      objectReference: {fileID: 0}
-    - target: {fileID: 3225800093798621365, guid: 5b35b991040556b45b2718f82d9bcae6, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5320121596910525827, guid: 5b35b991040556b45b2718f82d9bcae6, type: 3}
       propertyPath: m_LocalPosition.x
@@ -667,10 +611,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: LV36-40 Prefabs
       objectReference: {fileID: 0}
-    - target: {fileID: 3895985104420045510, guid: a9ccf7273c426554cbb30b5e7c026d97, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8367206021677830408, guid: a9ccf7273c426554cbb30b5e7c026d97, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -727,10 +667,6 @@ PrefabInstance:
     - target: {fileID: 4029099034220750983, guid: df5d29a6509c30e40b6c794ef4b68353, type: 3}
       propertyPath: m_Name
       value: LV6-10 Prefabs
-      objectReference: {fileID: 0}
-    - target: {fileID: 4029099034220750983, guid: df5d29a6509c30e40b6c794ef4b68353, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6310883872831273461, guid: df5d29a6509c30e40b6c794ef4b68353, type: 3}
       propertyPath: m_LocalPosition.x
@@ -789,10 +725,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: :V21-25 Prefabs
       objectReference: {fileID: 0}
-    - target: {fileID: 2233933237736563249, guid: e5970219a9c423547aa0371c89236d72, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7324391029114961521, guid: e5970219a9c423547aa0371c89236d72, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.33199
@@ -849,10 +781,6 @@ PrefabInstance:
     - target: {fileID: 587935613400528765, guid: 460ce4101796ae14e862b1b29d7d9cf0, type: 3}
       propertyPath: m_Name
       value: LV31-35 Prefabs
-      objectReference: {fileID: 0}
-    - target: {fileID: 587935613400528765, guid: 460ce4101796ae14e862b1b29d7d9cf0, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1769883108002214889, guid: 460ce4101796ae14e862b1b29d7d9cf0, type: 3}
       propertyPath: m_LocalPosition.x
@@ -951,10 +879,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: LV41-45 Prefabs
       objectReference: {fileID: 0}
-    - target: {fileID: 6047799621499006866, guid: 73949af9e66f1254ca0be48a431a41cc, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -971,10 +895,6 @@ PrefabInstance:
     - target: {fileID: 932914343975028278, guid: 2e3ca8ec34fd1c64aa68cbab5da98300, type: 3}
       propertyPath: m_Name
       value: 'LV46-50 Prefabs '
-      objectReference: {fileID: 0}
-    - target: {fileID: 932914343975028278, guid: 2e3ca8ec34fd1c64aa68cbab5da98300, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7307846907163025532, guid: 2e3ca8ec34fd1c64aa68cbab5da98300, type: 3}
       propertyPath: m_LocalPosition.x
