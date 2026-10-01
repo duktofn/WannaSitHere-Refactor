@@ -38,7 +38,8 @@ namespace Game.Core.Conditions
             if (condition.Target == ConditionTarget.Food)
             {
                 return cell.Type == CellType.Food &&
-                       cell.Food == condition.FoodTarget;
+                       (condition.FoodTarget == Food.Any ||
+                        cell.Food == condition.FoodTarget);
             }
 
             if (condition.Target == ConditionTarget.Person)

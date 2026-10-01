@@ -247,7 +247,7 @@ namespace Game.View.Tutorial
         private void StartFoodStep()
         {
             LevelRuntimeData level = _activeLevelManager != null ? _activeLevelManager.CurrentLevel : null;
-            CellView friesCell = level != null ? FindFoodCellView(level.MainGrid, Food.FrenchFries) : null;
+            CellView friesCell = level != null ? FindFoodCellView(level.MainGrid, Food.Fries) : null;
             Transform firstFood = friesCell != null ? friesCell.transform : _hamburgerCell.transform;
 
             _stage = Stage.ChooseBurger;

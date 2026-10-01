@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c76f705406684297a6e5e35d2da1420f, type: 3}
+  m_Name: Geny
+  m_EditorClassIdentifier: Game.Data::Game.Data.People.PersonDefinitionSO
+  personName: Geny
+  trait: 5
+  baseSprite: {fileID: 8729867678470270973, guid: 302db4f461a6a3a43817c7cfa621fde2, type: 3}

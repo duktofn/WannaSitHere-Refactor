@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 36d0383138abb0e4a82deb90d01c4f41, type: 3}
-  m_Name: HamburgerFoodCell
+  m_Name: CornFoodCell
   m_EditorClassIdentifier: Game.Data::Game.Data.Board.CellDataSO
   type: 1
-  food: 2
-  sprite: {fileID: -7483554341461126079, guid: 5c3c33c72e621c44ab98d0b0969b8718, type: 3}
+  food: 8
+  sprite: {fileID: -6521346793507321066, guid: 2f65944a1a3244f44ae51650ae5a5ec5, type: 3}

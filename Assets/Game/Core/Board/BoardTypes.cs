@@ -2,9 +2,19 @@ namespace Game.Core.Board
 {
     public enum Food
     {
-        Hamburger = 0,
-        FrenchFries = 1,
-        Any = 2
+        Any = 0,
+        Fries = 1,
+        Hamburger = 2,
+        ChungCake = 3,
+        Watermelon = 4,
+        Cheese = 5,
+        Donut = 6,
+        Cake = 7,
+        Corn = 8,
+        Soda = 9, 
+        Milk = 10,
+        Pudding = 11,
+        Sandwich = 12
     }
 
     public enum CellType

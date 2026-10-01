@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04e0ac5b57e01c648b98376410138b70, type: 3}
-  m_Name: LikeHamburger
+  m_Name: HateElegant
   m_EditorClassIdentifier: Game.Data::Game.Data.Conditions.ConditionDataSO
-  type: 1
-  target: 0
-  targetTrait: 0
-  foodTarget: 2
-  description: I like Hamburger
+  type: 0
+  target: 1
+  targetTrait: 5
+  foodTarget: 6
+  description: I hate Elegant
   angryDescription: 

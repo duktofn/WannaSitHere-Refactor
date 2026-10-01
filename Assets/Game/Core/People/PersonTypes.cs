@@ -6,7 +6,8 @@ namespace Game.Core.People
         Sick = 1,
         Dirty = 2,
         Loud = 3,
-        Quiet = 4
+        Quiet = 4,
+        Elegant = 5
     }
 
     public enum PersonState
