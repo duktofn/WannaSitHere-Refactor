@@ -168,8 +168,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: -1076005217
-  m_SortingLayer: 2
+  m_SortingLayerID: 1856284923
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2890144827375977303, guid: fe49d86963ffee94aaa97ca7107370b3, type: 3}
@@ -374,7 +374,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7021594869177903025}
   m_Layer: 0
-  m_Name: LV1Prefabs
+  m_Name: LV1-2 Prefabs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -573,8 +573,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: -1076005217
-  m_SortingLayer: 2
+  m_SortingLayerID: 1856284923
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2890144827375977303, guid: fe49d86963ffee94aaa97ca7107370b3, type: 3}
@@ -795,8 +795,8 @@ Transform:
   m_GameObject: {fileID: 5852903534585124187}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.013000011, y: -0.063, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -0.013000011, y: -0.0748, z: 0}
+  m_LocalScale: {x: 1, y: 0.8341299, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7021594869177903025}
@@ -846,8 +846,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: -1076005217
-  m_SortingLayer: 2
+  m_SortingLayerID: 1856284923
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: -3927285671776144049, guid: 534a75b1ea112ca4ca25666a5028c7f5, type: 3}

@@ -14,38 +14,50 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.Data::Game.Data.Levels.LevelDataSO
   levelMove: 20
   mainGrid:
-    _gridSize: {x: 2, y: 3}
+    _gridSize: {x: 4, y: 3}
     _cellSize: {x: 0.5, y: 0.5}
     _cellDistance: {x: 0.12, y: 0.12}
     _posX: 0.5
     _posY: 0.5
     _gridContent:
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
-    - {fileID: 11400000, guid: a1b2c3d4e5f60718293a4b5c6d7e8f90, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
     - {fileID: 11400000, guid: b2c3d4e5f60718293a4b5c6d7e8f90a1, type: 2}
+    - {fileID: 11400000, guid: 9dd2e607c8867bc4f864cf3bab112d89, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
   waitGrid:
-    _gridSize: {x: 2, y: 1}
+    _gridSize: {x: 3, y: 1}
     _cellSize: {x: 0.5, y: 0.5}
-    _cellDistance: {x: 0.15, y: 0.15}
+    _cellDistance: {x: 0.12, y: 0.12}
     _posX: 0.5
     _posY: 0.25
     _gridContent:
+    - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
     - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
     - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
   personConfigs:
   - definition: {fileID: 11400000, guid: 3b394cda865540e44ba627efad38532b, type: 2}
     conditions:
     - {fileID: 11400000, guid: 7b4a02bb7c462774ea56c3203a0c985a, type: 2}
+    - {fileID: 11400000, guid: e8874c51199a46079f33737e9f90406e, type: 2}
     gridId: 1
     position: {x: 0, y: 0}
   - definition: {fileID: 11400000, guid: 73bcbed022f58094b9316964ae64084c, type: 2}
     conditions:
-    - {fileID: 11400000, guid: 56be8f26cc282174c8fdee2508ac07b9, type: 2}
-    - {fileID: 11400000, guid: 35513317b99a8c7489a5d74186f428cd, type: 2}
+    - {fileID: 11400000, guid: 5bb08dc4a8374d048f64329a438faad0, type: 2}
     gridId: 1
     position: {x: 1, y: 0}
+  - definition: {fileID: 11400000, guid: 9523296b1b52d6f428b666cc6e51ced4, type: 2}
+    conditions:
+    - {fileID: 11400000, guid: 8c387350275c4de29bbf929e11bc98fa, type: 2}
+    gridId: 1
+    position: {x: 2, y: 0}
   levelEnvironmentPrefabs:
-  - {fileID: 2667617272019986250, guid: 1d08f9f0619543e469d3f5e732244869, type: 3}
+  - {fileID: 2667617272019986250, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}

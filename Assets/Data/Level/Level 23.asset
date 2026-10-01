@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dafde19f4b6c67459ae741a97b9ce4f, type: 3}
+  m_Name: Level 23
+  m_EditorClassIdentifier: Game.Data::Game.Data.Levels.LevelDataSO
+  levelMove: 20
+  mainGrid:
+    _gridSize: {x: 6, y: 7}
+    _cellSize: {x: 0.5, y: 0.5}
+    _cellDistance: {x: 0.12, y: 0.12}
+    _posX: 0.5
+    _posY: 0.55
+    _gridContent:
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: a1b2c3d4e5f60718293a4b5c6d7e8f90, type: 2}
+    - {fileID: 11400000, guid: b2c3d4e5f60718293a4b5c6d7e8f90a1, type: 2}
+    - {fileID: 11400000, guid: 8265ab8b51f32f9408f440fe7a8f37e1, type: 2}
+    - {fileID: 11400000, guid: 142eea32a066c19448fab06ea5b3c6a9, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 142eea32a066c19448fab06ea5b3c6a9, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 952581fe814f93e4081cfe2a12f232e7, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 473d96a137bbce6499c0b7ffdfe2d4a4, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 228c202bcccc9204f9152ebfa47593ca, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 9dd2e607c8867bc4f864cf3bab112d89, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 5b7545e8482ae83439d710cd88aaf5ac, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 8265ab8b51f32f9408f440fe7a8f37e1, type: 2}
+    - {fileID: 11400000, guid: 228c202bcccc9204f9152ebfa47593ca, type: 2}
+    - {fileID: 11400000, guid: 952581fe814f93e4081cfe2a12f232e7, type: 2}
+    - {fileID: 11400000, guid: d602d194e65cd7f4098c72dd0c9944ac, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
+    - {fileID: 11400000, guid: 632f39c359eb5e14ca85291f776f7a51, type: 2}
+  waitGrid:
+    _gridSize: {x: 4, y: 2}
+    _cellSize: {x: 0.5, y: 0.5}
+    _cellDistance: {x: 0.12, y: 0.12}
+    _posX: 0.5
+    _posY: 0.25
+    _gridContent:
+    - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
+    - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
+    - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
+    - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
+    - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
+    - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
+    - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
+    - {fileID: 0}
+  personConfigs:
+  - definition: {fileID: 11400000, guid: 1c2bbd4630cc4bc9b5354b48b864f290, type: 2}
+    conditions:
+    - {fileID: 11400000, guid: 6ced08057fdf2ea49995dc562201a1c2, type: 2}
+    - {fileID: 11400000, guid: 770cea00f9a9441db9545f77e4f44122, type: 2}
+    gridId: 1
+    position: {x: 0, y: 0}
+  - definition: {fileID: 11400000, guid: f6f64bf471d84d5ba84ff8e81278e00e, type: 2}
+    conditions:
+    - {fileID: 11400000, guid: 0a842a9cb9b14bc3b2897597548963a9, type: 2}
+    - {fileID: 11400000, guid: 02fdf4cc0f9245699b27863ca2c37b24, type: 2}
+    gridId: 1
+    position: {x: 1, y: 0}
+  - definition: {fileID: 11400000, guid: 73bcbed022f58094b9316964ae64084c, type: 2}
+    conditions:
+    - {fileID: 11400000, guid: 6ced08057fdf2ea49995dc562201a1c2, type: 2}
+    - {fileID: 11400000, guid: 71ba3a249cb44fc3a915aff9930b2211, type: 2}
+    gridId: 1
+    position: {x: 2, y: 0}
+  - definition: {fileID: 11400000, guid: 74f2b12748d44f0dac24d63d4189b114, type: 2}
+    conditions:
+    - {fileID: 11400000, guid: 35513317b99a8c7489a5d74186f428cd, type: 2}
+    - {fileID: 11400000, guid: 30982bc6f9df4973a99e25db8b539778, type: 2}
+    gridId: 1
+    position: {x: 0, y: 1}
+  - definition: {fileID: 11400000, guid: ef9c979cd1e24a27a5e2ce2012f01812, type: 2}
+    conditions:
+    - {fileID: 11400000, guid: fec2120a9041434987da9f6d8b03288a, type: 2}
+    - {fileID: 11400000, guid: 182d6f3f64c4402cb8a4654a578d97c5, type: 2}
+    gridId: 1
+    position: {x: 1, y: 1}
+  - definition: {fileID: 11400000, guid: 17f260b087794fc58d53e04c6b0b786f, type: 2}
+    conditions:
+    - {fileID: 11400000, guid: c8b897cb29523da4e97a0b074e1131bc, type: 2}
+    - {fileID: 11400000, guid: 38934d0ac92a4c348c20829958176100, type: 2}
+    gridId: 1
+    position: {x: 2, y: 1}
+  levelEnvironmentPrefabs:
+  - {fileID: 2233933237736563249, guid: e5970219a9c423547aa0371c89236d72, type: 3}
