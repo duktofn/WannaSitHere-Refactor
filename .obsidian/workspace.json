@@ -1,0 +1,243 @@
+{
+  "main": {
+    "id": "1ea076104d22ea65",
+    "type": "split",
+    "children": [
+      {
+        "id": "12009661bf27605f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2e3ae3334275b25c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "WannaSitHere_GDD.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "WannaSitHere_GDD"
+            }
+          },
+          {
+            "id": "929f823fa11b358f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "WannaSitHere_GDD.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "WannaSitHere_GDD"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "6de1e005f6b07cf1",
+    "type": "split",
+    "children": [
+      {
+        "id": "ed9bbd1f8c5d24e6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ddace8aac77c7f43",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "18974ef062affa12",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "c82724974bd3b106",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "d15e79e7e15d0504",
+    "type": "split",
+    "children": [
+      {
+        "id": "ed35e3ef86b45c7b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f0f1c51464eb6c25",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "WannaSitHere_GDD.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "afafad99d0ffcf09",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "WannaSitHere_GDD.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "a2b38416425cfe86",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "39c5919f3284067f",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "a4deee853ffeb105",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "WannaSitHere_GDD.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "929f823fa11b358f",
+  "lastOpenFiles": [
+    "Library/Artifacts/fa/fa22e15671cac3344780673505cebe6c",
+    "Library/Artifacts/d7/d7591fb7d423a7bbd7ec22ffc2287452",
+    "Library/TempArtifacts/Extra/f5c7f94fb2cf710499d9206209ec0362.b.index",
+    "Logs/shadercompiler-AssetImportWorker1-0.log",
+    "Logs/shadercompiler-AssetImportWorker0-0.log",
+    "Temp/FSTimeGet-46c3cb0a22cafcd45930886f6e73d56f",
+    "Temp/FSTimeGet-e45646dc5253c864a900531995328e79",
+    "Logs/AssetImportWorker0.log",
+    "Logs/AssetImportWorker1.log",
+    "Library/AssistantRunCommand/Unity.AI.Assistant.RunCommand.Dynamic.0682a7fb29124e5ead2396c8f1e8a092.dll",
+    "Difficulty Analyzer - Agents.md",
+    "Library/AssistantRunCommand/Unity.AI.Assistant.RunCommand.Dynamic.e6719a5b0f5e4366b0d1f4cb5ffb5491.dll",
+    "Assets/Art/Level/Picnic/den.png",
+    "Assets/Art/Level/Picnic/cho ngoi.png",
+    "Assets/Art/Level/Picnic/bg.png",
+    "Assets/Art/Level/Picnic/ban ngan.png",
+    "Assets/Art/Level/Picnic/tham.png",
+    "Assets/Art/Level/Restaurant/khan.png",
+    "Assets/Art/Level/Restaurant/ghe.png",
+    "Assets/Art/Level/Restaurant/bep.png",
+    "Assets/Art/Level/Restaurant/ban.png",
+    "Assets/Art/Level/Restaurant/ban l.png",
+    "README.md",
+    "game-manager-refactor-plan.md",
+    "codebase.md",
+    "Difficulty Formula.md",
+    "WannaSitHere_GDD.md",
+    "Temp/DifficultyFormula.before-report.md",
+    "Difficulty Analyzer.md",
+    "difficulty-analyzer-alpha-plan.md",
+    "difficulty-analyzer-plan.md",
+    "Wanna Sit Here/GDD.md",
+    "decisions.md",
+    "AGENTS.md"
+  ]
+}
