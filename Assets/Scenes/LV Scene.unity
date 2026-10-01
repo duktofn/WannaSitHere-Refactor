@@ -237,7 +237,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 407f85523f5cba448b94f88439cf296a, type: 2}
   - {fileID: 11400000, guid: 1b057a17bcb664c4987940cefd53c4ac, type: 2}
   - {fileID: 11400000, guid: f9d080c9d30946b42a705c17c65d248a, type: 2}
-  levelIndex: 3
+  levelIndex: 4
 --- !u!1001 &887631263
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -517,6 +517,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LV3-5 Prefabs
       objectReference: {fileID: 0}
+    - target: {fileID: 2667617272019986250, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3182853056195403969, guid: 77d1b719469fea443b20a02b47634d3f, type: 3}
       propertyPath: m_SortingOrder
       value: 0
@@ -726,7 +730,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4029099034220750983, guid: df5d29a6509c30e40b6c794ef4b68353, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6310883872831273461, guid: df5d29a6509c30e40b6c794ef4b68353, type: 3}
       propertyPath: m_LocalPosition.x
