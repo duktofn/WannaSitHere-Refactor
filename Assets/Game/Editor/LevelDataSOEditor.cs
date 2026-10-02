@@ -19,8 +19,10 @@ namespace Game.Editor
 
         private Vector2 _mainScrollPos;
         private Vector2 _waitScrollPos;
-        private Vector2 _layoutPreviewMainScrollPos;
-        private Vector2 _layoutPreviewWaitScrollPos;
+
+        private const float LayoutPreviewMaxCellSize = 36f;
+        private const float LayoutPreviewMaxWidth = 360f;
+        private const float LayoutPreviewMaxHeight = 240f;
 
         private Vector2Int _prevMainSize;
         private Vector2Int _prevWaitSize;
@@ -118,14 +120,8 @@ namespace Game.Editor
                 return;
             }
 
-            DrawLayoutPreviewGrid(
-                "MainGrid",
-                level.mainGrid,
-                ref _layoutPreviewMainScrollPos);
-            DrawLayoutPreviewGrid(
-                "WaitGrid",
-                level.waitGrid,
-                ref _layoutPreviewWaitScrollPos);
+            DrawLayoutPreviewGrid("MainGrid", level.mainGrid, level, GridId.MainGrid);
+            DrawLayoutPreviewGrid("WaitGrid", level.waitGrid, level, GridId.WaitGrid);
             EditorGUILayout.LabelField(
                 "Hover over a cell to see its grid coordinates and type.",
                 EditorStyles.miniLabel);
@@ -135,7 +131,8 @@ namespace Game.Editor
         private void DrawLayoutPreviewGrid(
             string gridName,
             Grid<CellDataSO> grid,
-            ref Vector2 scrollPosition)
+            LevelDataSO level,
+            GridId gridId)
         {
             if (grid == null || grid.GridSize.x <= 0 || grid.GridSize.y <= 0)
                 return;
@@ -143,19 +140,16 @@ namespace Game.Editor
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField(gridName, EditorStyles.boldLabel);
 
-            float availableWidth = Mathf.Max(100f, EditorGUIUtility.currentViewWidth - 44f);
-            float cellSize = Mathf.Clamp(availableWidth / grid.GridSize.x, 22f, 72f);
+            float availableWidth = Mathf.Max(1f, EditorGUIUtility.currentViewWidth - 44f);
+            float cellSize = Mathf.Min(
+                LayoutPreviewMaxCellSize,
+                Mathf.Min(
+                    availableWidth / grid.GridSize.x,
+                    Mathf.Min(
+                        LayoutPreviewMaxWidth / grid.GridSize.x,
+                        LayoutPreviewMaxHeight / grid.GridSize.y)));
             float contentWidth = cellSize * grid.GridSize.x;
             float contentHeight = cellSize * grid.GridSize.y;
-            bool allowHorizontalScroll = contentWidth > availableWidth;
-            bool allowVerticalScroll = contentHeight > 350f;
-            float viewportHeight = Mathf.Min(350f, contentHeight + 4f);
-
-            scrollPosition = EditorGUILayout.BeginScrollView(
-                scrollPosition,
-                allowHorizontalScroll,
-                allowVerticalScroll,
-                GUILayout.Height(viewportHeight));
 
             Rect area = GUILayoutUtility.GetRect(
                 contentWidth,
@@ -177,6 +171,9 @@ namespace Game.Editor
                     string text = cell == null
                         ? "·"
                         : cell.type == CellType.Food ? cell.food.ToString() : cell.type.ToString();
+                    string personName = GetPersonNamesAt(level, gridId, new Vector2Int(x, y));
+                    if (!string.IsNullOrEmpty(personName))
+                        text += "\n" + personName;
                     Color color = cell == null
                         ? new Color(0.25f, 0.25f, 0.25f)
                         : cell.type == CellType.Food
@@ -187,8 +184,8 @@ namespace Game.Editor
                     Rect rect = new(
                         area.x + x * cellSize,
                         area.y + (grid.GridSize.y - 1 - y) * cellSize,
-                        cellSize - 2f,
-                        cellSize - 2f);
+                        Mathf.Max(1f, cellSize - 2f),
+                        Mathf.Max(1f, cellSize - 2f));
                     string tooltip = $"{gridName} ({x},{y}): {text}";
 
                     EditorGUI.DrawRect(rect, color);
@@ -196,7 +193,28 @@ namespace Game.Editor
                 }
             }
 
-            EditorGUILayout.EndScrollView();
+        }
+
+        private static string GetPersonNamesAt(LevelDataSO level, GridId gridId, Vector2Int position)
+        {
+            if (level.personConfigs == null)
+                return string.Empty;
+
+            string names = string.Empty;
+            foreach (LevelPersonConfig config in level.personConfigs)
+            {
+                if (config == null || config.gridId != gridId || config.position != position)
+                    continue;
+
+                string personName = config.definition == null
+                    ? "Missing Definition"
+                    : string.IsNullOrEmpty(config.definition.personName)
+                        ? config.definition.name
+                        : config.definition.personName;
+                names = string.IsNullOrEmpty(names) ? personName : names + ", " + personName;
+            }
+
+            return names;
         }
 
         private void DrawGridMatrixSection(string label, SerializedProperty gridProp, GridId gridId, bool isMainGrid,

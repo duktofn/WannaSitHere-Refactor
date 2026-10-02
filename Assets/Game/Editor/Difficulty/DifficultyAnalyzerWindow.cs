@@ -25,6 +25,9 @@ namespace Game.Editor.Difficulty
         private static readonly Color ConditionColor = new(0.25f, 0.65f, 0.90f);
         private static readonly Color DependencyColor = new(0.70f, 0.50f, 0.90f);
         private static readonly Color MoveColor = new(0.95f, 0.65f, 0.25f);
+        private const float MaxBoardCellSize = 36f;
+        private const float MaxBoardWidth = 360f;
+        private const float MaxBoardHeight = 240f;
 
         [MenuItem("Tools/Wanna Sit Here/Difficulty Analyzer")]
         private static void Open() => GetWindow<DifficultyAnalyzerWindow>("Difficulty Analyzer");
@@ -217,7 +220,9 @@ namespace Game.Editor.Difficulty
                 for (int i = 0; i < choices.Length; i++) choices[i] = $"#{i} {_result.People[i].Name}";
                 _selectedPerson = EditorGUILayout.Popup("Q(x) của Person", Math.Clamp(_selectedPerson, 0, choices.Length - 1), choices);
             }
-            float cellSize = Math.Min(72, Math.Max(18, (position.width - 44) / width));
+            float availableWidth = Math.Max(1f, position.width - 44f);
+            float cellSize = Math.Min(MaxBoardCellSize,
+                Math.Min(availableWidth / width, Math.Min(MaxBoardWidth / width, MaxBoardHeight / height)));
             Rect area = GUILayoutUtility.GetRect(cellSize * width, cellSize * height);
             foreach (var cell in _result.Cells)
             {

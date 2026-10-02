@@ -90,6 +90,9 @@ namespace Game.Bootstrap
 
         private void Awake()
         {
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = 60;
+
             GameManagerConfig config = CreateConfig();
             ILevelLoader levelLoader = new LevelBootstrapper(_levelData, _gridManager, _levelView);
             IGamePresentation presentation = new UnityGamePresentation(
