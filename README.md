@@ -1,255 +1,176 @@
-# Wanna Sit Here — Refactor
+# Wanna Sit Here?
 
-Unity project cho gameplay sắp xếp người vào ghế (Puzzle Seat Sorting). Người chơi kéo và đổi chỗ các nhân vật giữa các ô ghế; mỗi nhân vật có các điều kiện thích/ghét người hoặc đồ ăn lân cận. Level thắng khi mọi điều kiện đều được thỏa mãn trước khi hết lượt đi.
+## Tổng quan về Game
 
-Dự án sử dụng **Unity `6000.3.18f1`** và áp dụng kiến trúc phân tầng rõ ràng (**Clean / Layered Architecture**) kết hợp **Event-Driven Architecture (ScriptableObject Event Channels)**.
+**Wanna Sit Here?** là trò chơi giải đố sắp xếp chỗ ngồi, nơi mỗi vị khách mang theo những yêu cầu riêng. Một người muốn ở cạnh món ăn yêu thích, người khác không chịu được hàng xóm ồn ào. Công việc của bạn là tìm ra cách bố trí để tất cả cùng hài lòng.
 
--
+Với thao tác kéo thả và đổi chỗ, người chơi từng bước đưa khách từ hàng chờ vào bàn. Câu đố nằm ở cách các yêu cầu tác động lẫn nhau: đưa một người đến đúng ghế có thể giải quyết nhiều vấn đề cùng lúc, nhưng cũng có thể làm một người đang vui trở nên khó chịu. Số lượt di chuyển có hạn khiến thứ tự sắp xếp trở thành một phần của lời giải.
 
-## 🏗 Cấu trúc Kiến trúc & Assembly Definitions
+Repository này là phiên bản **Refactor** của [WannaSitHere](https://github.com/gcc-dtung/WannaSitHere), được phát triển bằng Unity và C#. Phiên bản này tiếp tục phát triển ý tưởng giải đố chỗ ngồi với luật về người ngồi cạnh, món ăn và các vật phẩm hỗ trợ.
 
-Mã nguồn trong `Assets/Game` được phân tách chặt chẽ theo từng Assembly Definition (`.asmdef`) nhằm ngăn chặn circular dependency và đảm bảo tính đóng gói:
+| Đặc điểm | Nội dung |
+| --- | --- |
+| Thể loại | Puzzle · Casual · Giải đố logic |
+| Hình thức | Game 2D, chơi theo từng màn |
+| Tương tác chính | Kéo thả nhân vật, di chuyển và hoán đổi chỗ ngồi |
+| Thử thách | Thỏa mãn đồng thời yêu cầu của mọi người trong số lượt giới hạn |
 
-```text
-Assets/Game/
-├── Core/            (Game.Core)        Rule gameplay, dữ liệu runtime, logic thuần C# (Không phụ thuộc ai)
-├── Events/          (Game.Events)      ScriptableObject Event Channels để decouple giao tiếp
-├── Data/            (Game.Data)        ScriptableObjects cấu hình level, nhân vật và kinh tế (Data Authoring)
-├── App/             (Game.App)         Điều phối ứng dụng, level và lưu/tải dữ liệu
-├── View/            (Game.View)        MonoBehaviour, UI, VFX, Audio, Input, Render và Animation
-├── Bootstrap/       (Game.Bootstrap)   Composition Root (GameBootstrapper, LevelBootstrapper)
-├── Editor/          (Game.Editor)      Custom Inspector, Cheat Tool và Tooling editor
-└── Tests/           (Game.Tests.*)     Unit tests (EditMode)
-```
+## Một màn chơi diễn ra như thế nào?
 
-### Sơ đồ phụ thuộc giữa các tầng (Dependency Flow):
+Bạn bắt đầu bằng việc quan sát bàn ăn: những ghế nào còn trống, đồ ăn nằm ở đâu và từng vị khách muốn gì. Từ đó, bạn chọn vị trí cho những người có yêu cầu khó đáp ứng, sắp xếp các nhân vật còn lại và theo dõi phản ứng của cả bàn sau mỗi thao tác.
 
-```text
-Game.Core (Board, Conditions, Levels, People, Economy, Booster)
-   ▲          ▲                     ▲                   ▲
-   │          │                     │                   │
-Game.Events   Game.Data          Game.App               │
-   ▲                                ▲                   │
-   │                                │                   │
-   └──────────────┬─────────────────┴───────────── Game.View
-                  │                                     ▲
-                  │                                     │
-                  └────────────────────────────── Game.Bootstrap
-```
+Vòng chơi gồm năm bước:
 
-- **`Game.Core`** là trung tâm domain: Hoàn toàn không phụ thuộc bất kỳ layer nào khác, không dùng MonoBehaviour.
-- **`Game.View`** không được phép tham chiếu trực tiếp đến `Game.Data`. Việc đọc data cấu hình và chuyển đổi thành runtime state thuộc trách nhiệm của `Game.Bootstrap`.
-- **`Game.Bootstrap`** là nơi duy nhất biết toàn bộ các layer để làm nhiệm vụ ráp nối (Dependency Injection / Composition Root).
+1. **Đọc yêu cầu:** xác định thứ nhân vật thích và muốn tránh.
+2. **Chọn chỗ:** tìm ghế có hàng xóm và món ăn phù hợp.
+3. **Kéo thả hoặc đổi chỗ:** thực hiện một nước đi, tiêu tốn lượt nếu vị trí thay đổi hợp lệ.
+4. **Quan sát phản hồi:** kiểm tra ai đã hài lòng và ai còn điều kiện chưa đạt.
+5. **Hoàn thiện cách sắp xếp:** tiếp tục điều chỉnh cho đến khi mọi người đều vui hoặc hết lượt.
 
----
+## Không gian giải đố
 
-## Chi tiết các Layer & Trách nhiệm
+### Bàn ăn
 
-### 1. `Game.Core` (Domain Layer)
-Chứa các thực thể, luật chơi và trạng thái lúc runtime:
-- **`Board`**: `Grid<T>`, `CellRuntimeData`, `CellType` (Seat, Block, Food), `Food` (Any, Hamburger, FrenchFries), `GridId` (MainGrid, WaitGrid).
-- **`People`**: `PersonRuntimeData`, `PersonState` (Normal, Happy, Angry), `PersonTrait`. Hỗ trợ `ClearConditions()`, `ReplaceConditions()` và sự kiện `OnConditionsCleared`.
-- **`Conditions`**: `ConditionRuntimeData`, `ConditionChecker`, `LevelConditionEvaluator`. `Like + Food.Any` là condition `CanSitAnywhere`, luôn đúng khi ngồi trên MainGrid.
-- **`Levels`**: `LevelRuntimeData` (quản lý số lượt đi còn lại `CurrentMove`, event `OnMoveChanged`).
-- **`Economy`**: `Inventory` (Gold, Gem, Remove, Undo, MoreMoves), `Reward`, `ItemType`, `EconomyManager`.
-- **`Booster`**:
-  - `Booster`: Lớp cơ sở áp dụng **Template Method Pattern** (`TryUse()` kiểm tra `CanUse()` trước khi gọi `Execute()`, chỉ phát `OnBoosterUsed` khi thành công).
-  - `MoreMoveBooster`: Cộng thêm số lượt đi vào level hiện tại.
-  - `UndoBooster`: Rút nước đi gần nhất từ `MoveHistory`, hoàn trả nhân vật về vị trí cũ và hoàn lại 1 lượt đi.
-  - `RemoveBooster`: Thay toàn bộ điều kiện của nhân vật bằng `CanSitAnywhere` (ưu tiên người đang Angry trên MainGrid, fallback sang WaitGrid); bỏ qua Person đã có condition này.
-  - `MoveRecord` & `MoveHistory`: Cấu trúc Stack-based lưu trữ snapshot các bước di chuyển phục vụ hoàn tác.
+Bàn ăn là nơi các yêu cầu của nhân vật được đánh giá. Có ba loại ô tạo nên bố cục của mỗi màn:
 
-### 2. `Game.Events` (Event-Driven Messaging)
-Hệ thống Event Channel dựa trên ScriptableObject giúp tách rời hoàn toàn View, UI và Logic:
-- **`EventChannelSO`**: Base abstract class chứa `event Action OnRaised` và method `Raise()`.
-- **`VoidEventChannelSO`**: Event không mang payload:
-  - Game Flow: `OnPlayGame`, `OnWinLevelEvent`, `OnLoseLevelEvent`, `OnNextLevel`, `OnRestartLevel`.
-  - Rewards: `OnClaimWinReward`, `OnClaimAdsReward`, `OnClaimDailyReward`, `OnClaimWeeklyReward`.
-  - Shop: `OnBuyRemove`, `OnBuyUndo`, `OnBuyMoreMoves`.
-  - **In-Game Booster Use**: `OnUseMoreMoves`, `OnUseUndo`, `OnUseRemove`.
-- **`EventChannelSO<T>`**: Base abstract class cho event có kèm dữ liệu payload:
-  - `OnItemReceiveSO` (`EventChannelSO<Reward>`): Bắn khi người chơi được cộng vật phẩm.
-  - `OnItemSpendSO` (`EventChannelSO<Reward>`): Bắn khi người chơi chi tiêu hoặc giao dịch thất bại.
+| Loại ô | Vai trò trong câu đố |
+| --- | --- |
+| **Ghế — Seat** | Chỗ ngồi cho một nhân vật. Có thể đưa người vào ghế trống hoặc đổi chỗ với người đang ngồi. |
+| **Đồ ăn — Food** | Món ăn cố định để người ngồi cạnh yêu thích hoặc tránh né. Không thể đặt người lên ô này. |
+| **Ô chặn — Block** | Vị trí không thể ngồi, làm giới hạn những phương án sắp xếp. |
 
-### 3. `Game.Data` (Configuration Layer)
-ScriptableObject dành cho Game Designer cấu hình trên Inspector:
-- `LevelDataSO`: Cấu hình bố cục ô, ghế, vật cản và người trong level. Hỗ trợ chuyển đổi sang `LevelRuntimeData` qua `ToRuntimeData()`.
-- `PersonDataSO`, `ConditionDataSO`, `CellDataSO`.
-- `EconomyConfigSO`: Cấu hình thưởng thắng màn (`levelWinReward`), thưởng xem quảng cáo (`levelAdsWinReward`), điểm danh (`dailyReward`, `weeklyReward`), giá shop.
-- `GameConfig`: Chứa các hằng số game như `MORE_MOVE_AMOUNT = 3`, `MAX_CONDITION_PER_PERSON = 2`.
+Đồ ăn không di chuyển theo thao tác của người chơi. Bạn phải tìm cách bố trí khách quanh những vị trí đã có, chẳng hạn dành ghế cạnh Hamburger cho người thích món này và tránh xếp người ghét Hamburger vào đó.
 
-### 4. `Game.App` (Application Layer)
-- **`GameManager`**: Service thuần C# sở hữu `GameData`, `Inventory`, `EconomyManager`, persistence, reward/shop transaction và thực thi core booster. Không tham chiếu `Game.Data` hoặc `Game.View`; cấu hình và presentation được nhận/xử lý từ Bootstrap.
-- **`LevelManager`**:
-  - Quản lý logic điều phối di chuyển của người trong level (`TryMovePerson`).
-  - Ghi nhận lịch sử di chuyển vào `MoveHistory`: **chỉ bỏ qua (skip) khi di chuyển nội bộ trong hàng chờ** (`WaitGrid -> WaitGrid`); các lượt đi từ hàng chờ lên bàn cờ (`WaitGrid -> MainGrid`) hoặc giữa các ghế bàn cờ đều được lưu lại để hỗ trợ hoàn tác.
-  - Kiểm tra điều kiện thắng/thua (`CheckAllPersonConditions`) và bắn `OnWinEvent` / `OnLoseEvent`.
-- **`SaveLoadManager`**: Quản lý đọc/ghi tiến trình người chơi và tài sản vào file JSON (`data.json`) tại `Application.persistentDataPath`.
-- **`GameData`**: DTO lưu trữ level hiện tại, số lượng Gold, Gem, số lượng 3 loại Booster (`currentRemove`, `currentUndo`, `currentMoreMoves`).
+### Hàng chờ
 
-### 5. `Game.View` (Presentation & UI Layer)
-- **`Board`**:
-  - `GridManager`: Sinh cell từ prefab, định vị toạ độ viewport, lưu bản đồ tra cứu `_cellViewMap` (`CellRuntimeData -> CellView`), hỗ trợ hoàn tác hiển thị qua `RevertMoveView(MoveRecord)`.
-  - `CellView`: Hiển thị ô ghế/đồ ăn, liên kết với `PersonView`.
-- **`People`**:
-  - `PersonMover`: Tính toán va chạm và di chuyển tween bằng PrimeTween; hỗ trợ `RevertMove(sourceCell, targetCell)` để diễn hoạt hoàn tác người về vị trí cũ.
-  - `PersonDragManager`: Nhận input kéo thả từ người chơi.
-  - `PersonView`: Hiển thị sprite nhân vật và biểu cảm theo trạng thái.
-  - `PersonTooltip`: Hiển thị điều kiện; tự động lắng nghe `OnConditionsCleared` để làm mới text và resize khung khi danh sách điều kiện được thay đổi bằng booster.
-- **`UI`**:
-  - `UIManager`: UI Facade quản lý các panel (`MainMenu`, `InGameUI`, `WinPanel`, `LosePanel`), khởi tạo sub-views.
-  - `InventoryView`: Hiển thị số dư tiền/gem, tự động cập nhật và chạy animation số nhảy mượt mà qua PrimeTween khi `Inventory.OnInventoryUpdate` kích hoạt.
-  - `BoosterSlotView`: Component quản lý từng nút booster trong gameplay, hiển thị số lượng từ `Inventory`, disable nút khi số lượng = 0, phát event channel khi click.
-  - `LevelView`: Hiển thị số lượt đi còn lại (`moveText`) và liên kết 3 slot booster (`moreMoveSlot`, `undoSlot`, `removeSlot`), tự động đồng bộ qua `BindBoosters(Inventory)`.
-  - `LevelEndPanel`, `LevelEndText`: Hiệu ứng mở panel kết thúc màn và chữ nhảy (scale pop).
-  - `ButtonPunchShake`: Script visual tạo hiệu ứng nảy nút (Punch Scale) khi click.
-  - `ButtonEventRaiser`: Component logic gắn trên button để phát event channel sau một khoảng delay tùy chọn.
-  - `TransitionController`: Hiệu ứng chuyển cảnh Circle Cutout Wipe giữa các màn chơi.
+Hàng chờ giữ những nhân vật chưa có chỗ ngồi hoàn chỉnh và có thể được dùng làm nơi tạm chuyển người trong quá trình sắp xếp. Các yêu cầu ngồi cạnh nhau không được xét tại đây.
 
-### 6. `Game.Bootstrap` (Composition Root)
-- **`GameBootstrapper`**: MonoBehaviour composition root giữ toàn bộ serialized scene/config/event reference, điều phối lifecycle và UI/VFX:
-  - Khởi tạo `Game.App.GameManager` với dữ liệu cấu hình đã chuyển đổi.
-  - Lắng nghe Game Flow, Rewards, Shop và 3 event sử dụng booster in-game.
-  - Gọi service `GameManager` cho state, persistence và transaction; giữ load level, UI binding, event-channel dispatch và VFX ở Bootstrap.
-- **`LevelBootstrapper`**: POCO class hỗ trợ nạp level theo index, reset grid cũ (`ClearGrids()`), khởi tạo data runtime và kết nối `LevelView`.
+Người ở hàng chờ luôn mang trạng thái **Normal**. Vì vậy, dù bố cục trên bàn đã hợp lý, màn chơi vẫn chưa hoàn thành nếu còn bất kỳ ai trong hàng chờ.
 
-### 7. `Game.Editor` (Editor Tooling)
-- **`CheatToolWindow`** (`Tools > Cheat Tool` hoặc `Window > Cheat Tool`): Cửa sổ Editor cho phép xem và can thiệp nhanh dữ liệu save game: chỉnh sửa Level, Gold, Gem, và số lượng 3 loại Booster ngay trong Editor.
+## Mỗi vị khách muốn gì?
 
----
+### Đặc điểm và sở thích
 
-## ⚡ Hệ Thống 3 Booster Gameplay
+Mỗi nhân vật có một đặc điểm để những người khác nhận biết khi xét người ngồi cạnh: **Cool, Sick, Dirty, Loud, Quiet hoặc Elegant**.
 
-Hệ thống Booster hỗ trợ người chơi giải quyết các tình huống khó khăn trong màn chơi:
+Đặc điểm không quyết định sở thích. Một người Quiet có thể thích Hamburger, muốn ngồi cạnh người Elegant hoặc ghét ở gần người Loud. Mỗi nhân vật có tối đa **hai điều kiện** trong một màn, và cả hai phải cùng được đáp ứng.
 
-| Booster | Tác Dụng | Quy Tắc Thực Thi & Giới Hạn |
-|---|---|---|
-| **More Moves** | Cộng thêm lượt đi (`+3` moves theo `GameConfig.MORE_MOVE_AMOUNT`). | Chỉ dùng khi màn chơi đang diễn ra (`!IsOutOfMove`). Trừ 1 item trong kho khi dùng thành công. |
-| **Undo** | Hoàn tác lại nước đi vừa thực hiện. Hoán đổi nhân vật về vị trí cũ (có tween bay mượt mà) và hoàn lại `+1` move. | - Hỗ trợ cả di chuyển giữa các ghế trên bàn cờ và di chuyển từ hàng chờ (`WaitLine`) lên ghế.<br>- **Bỏ qua (skip)** các lượt di chuyển nội bộ trong hàng chờ (`WaitLine -> WaitLine`).<br>- Tự động đánh giá lại trạng thái Happy/Angry của tất cả nhân vật sau khi hoàn tác. |
-| **Remove** | Thay toàn bộ điều kiện của 1 nhân vật ngẫu nhiên bằng `CanSitAnywhere`. | - **Ưu tiên 1**: Chọn ngẫu nhiên 1 người đang **Angry** trên bàn cờ (`MainGrid`) có điều kiện và chưa có `CanSitAnywhere`.<br>- **Ưu tiên 2**: Nếu không có ai Angry, chọn ngẫu nhiên 1 người trên hàng chờ (`WaitGrid`) có điều kiện và chưa có `CanSitAnywhere`.<br>- Person đã có `CanSitAnywhere` không thể bị chọn. Person được thay điều kiện sẽ được đánh giá lại và Happy khi đang ở MainGrid. |
+Điều kiện có thể nhắm đến:
 
----
+- **Đồ ăn:** muốn ngồi cạnh hoặc tránh một món cụ thể.
+- **Người:** muốn ngồi cạnh hoặc tránh người có một đặc điểm cụ thể.
 
-## 🔄 Các Luồng Hoạt Động Chính (Game Flows)
+### Thích và ghét
 
-### 1. Khởi động Game (App Start & Initialization)
-1. `GameBootstrapper.Awake()` tạo `Game.App.GameManager`, nơi nạp `GameData`, tạo `Inventory`/`EconomyManager` và đồng bộ trạng thái login.
-2. Bootstrap tạo `LevelBootstrapper`, gọi `UIManager.Initialize(Inventory)` và đồng bộ `WeeklyLogin`.
-3. `GameBootstrapper.OnEnable()` đăng ký toàn bộ Event Channel.
+| Điều kiện | Khi nào được thỏa mãn? |
+| --- | --- |
+| **Like — Thích** | Có ít nhất một đối tượng phù hợp ở ô liền kề. |
+| **Hate — Ghét** | Không có đối tượng cần tránh ở bất kỳ ô liền kề nào. |
 
-### 2. Bắt đầu màn chơi (Main Menu → In-Game)
-1. Người chơi bấm nút **Play**:
-   - `ButtonPunchShake` thực hiện hiệu ứng rung nảy nút.
-   - `ButtonEventRaiser` chờ 0.25s rồi bắn event `OnPlayGame`.
-2. `UIManager` ẩn `MainMenu`, hiển thị `InGameUI`.
-3. `GameBootstrapper.HandlePlayGame()`:
-   - Gọi `LevelBootstrapper.LoadLevel()` dọn sạch grid cũ, sinh ghế và người, kết nối `LevelView.BindData()`.
-   - Gọi `LevelView.BindBoosters(Inventory)` để liên kết số lượng booster hiện có và cập nhật trạng thái các nút booster.
+Các ô liền kề được xét theo **trên, dưới, trái và phải** trên bàn ăn. Ô chéo góc không được tính là ngồi cạnh. Nhân vật ở hàng chờ cũng không được tính là hàng xóm của người trên bàn.
 
-### 3. Kéo thả nhân vật & Đánh giá luật chơi
-1. Người chơi kéo `PersonView` $\rightarrow$ `PersonDragManager` gọi `PersonMover`.
-2. Khi thả tay, `PersonMover` tìm `CellView` gần nhất và gọi `GridManager.TryMovePerson()`.
-3. `LevelManager` xác thực nước đi:
-   - Nếu hợp lệ: Hoán đổi vị trí nhân vật, trừ 1 lượt đi (`CurrentMove - 1`).
-   - Nếu không phải di chuyển nội bộ hàng chờ (`WaitGrid -> WaitGrid`), ghi nhận vào `MoveHistory`.
-   - Cập nhật lại biểu cảm nhân vật qua `LevelConditionEvaluator.UpdateAllPersonStates()`.
-4. Nếu tất cả nhân vật đều thỏa mãn điều kiện $\rightarrow$ bắn `OnWinLevelEvent`.
-5. Nếu chưa hoàn thành và hết lượt đi (`IsOutOfMove`) $\rightarrow$ bắn `OnLoseLevelEvent`.
+Ví dụ, một người **thích Hamburger và ghét Loud** cần một ghế cạnh Hamburger, đồng thời không có người Loud ở cả bốn phía. Đáp ứng được yêu cầu về món ăn mà vẫn ngồi cạnh người Loud thì nhân vật chưa hài lòng.
 
-### 4. Sử dụng Booster trong màn chơi
-1. Người chơi bấm nút booster bất kỳ (`BoosterSlotView`):
-   - Nút phát sự kiện tương ứng (`OnUseMoreMoves`, `OnUseUndo`, hoặc `OnUseRemove`).
-2. `GameBootstrapper` tiếp nhận event, sau đó ủy quyền logic item/booster cho `Game.App.GameManager`:
-   - Kiểm tra xem người chơi có đang trong level và còn lượt đi hay không.
-   - Kiểm tra xem số dư booster trong `Inventory` có đủ $\ge 1$ không.
-   - Khởi tạo instance booster tương ứng và gọi `TryUse()`.
-   - Nếu thực thi thành công: Trừ 1 item qua `_inventory.TrySpendItem()`, đồng bộ hiển thị View (Undo revert tween hoặc Remove condition refresh), đánh giá lại điều kiện và lưu game tự động.
+Quan hệ này không tự động có tính hai chiều. A muốn ngồi cạnh B không có nghĩa B cũng muốn ngồi cạnh A; mỗi người có bộ yêu cầu riêng cần được kiểm tra.
 
-### 5. Thắng / Thua & Nhận thưởng
-- **Thắng (`OnWinLevelEvent`)**:
-  - `GameBootstrapper` yêu cầu `GameManager` tăng `currentLevel++` và lưu game.
-  - `UIManager` hiển thị `LevelWinPanel` với animation chữ và hiệu ứng mở dần.
-  - Người chơi bấm **Nhận thưởng (40 Gold)** $\rightarrow$ bắn `OnClaimWinReward` $\rightarrow$ `GameBootstrapper` lấy cấu hình thưởng, `GameManager` cộng vào `Inventory` và lưu game, sau đó Bootstrap bắn `OnItemReceive` để UI nhảy số.
-  - Người chơi bấm **Màn tiếp theo** $\rightarrow$ bắn `OnNextLevel` $\rightarrow$ load màn chơi mới.
-- **Thua (`OnLoseLevelEvent`)**:
-  - `UIManager` hiển thị `LevelLosePanel`.
-  - Người chơi bấm **Chơi lại** $\rightarrow$ bắn `OnRestartLevel` $\rightarrow$ load lại màn chơi hiện tại.
+### Một ví dụ về quyết định đổi chỗ
 
-### 6. Kinh tế & Cửa hàng (Shop Transaction)
-- Khi bấm mua vật phẩm (búa gỡ ghế, lượt đi, hoàn tác):
-  - Nút bấm phát các Void Event như `OnBuyRemove`, `OnBuyUndo`, `OnBuyMoreMoves`.
-  - `GameBootstrapper` chuyển transaction sang `GameManager.TryPurchase(cost, item)`:
-    - Nếu đủ tiền trong `Inventory`: Trừ chi phí $\rightarrow$ Cộng vật phẩm $\rightarrow$ Bắn `OnItemReceive` $\rightarrow$ Lưu game.
-    - Nếu không đủ tiền: Không cộng vật phẩm $\rightarrow$ Bắn `OnItemSpend` thông báo thất bại.
+Giả sử A thích Hamburger và ghét người Loud. B mang đặc điểm Loud đang ngồi ở ghế cạnh Hamburger, trong khi C mang đặc điểm Quiet đang ở một vị trí khác.
 
----
+Đưa A đến gần Hamburger mới giải quyết được một phần câu đố. Bạn còn phải bố trí B sao cho không liền kề A, rồi kiểm tra xem vị trí mới có đáp ứng yêu cầu của B và C hay không. Một lần đổi chỗ tốt có thể giúp nhiều người cùng hài lòng; một lần đổi chỗ thiếu cân nhắc có thể làm mất điều kiện đã đạt trước đó.
 
-## 🎨 Quy chuẩn Thiết kế UI Button
+### Chỗ nào cũng được
 
-Để tách biệt hoàn toàn giữa **Hiệu ứng Hình ảnh** và **Logic Nghiệp vụ**, mỗi UI Button trong game áp dụng mô hình phân tách component rõ ràng:
+**Can Sit Anywhere** là điều kiện đặc biệt cho phép nhân vật hài lòng ở bất kỳ ghế nào trên bàn, không cần xét người hoặc món ăn xung quanh.
 
-1. **Hiệu ứng visual (`ButtonPunchShake`)**:
-   - Đăng ký vào sự kiện `Button.onClick`.
-   - Chỉ chịu trách nhiệm tween scale/rung nút qua PrimeTween.
-   - **Tuyệt đối không gọi hay phụ thuộc bất kỳ hàm logic nào**.
+Nhân vật có điều kiện này vẫn phải được đưa ra khỏi hàng chờ. Họ cũng giữ nguyên đặc điểm của mình, nên vẫn có thể ảnh hưởng đến yêu cầu của những người ngồi cạnh.
 
-2. **Phát sự kiện logic (`ButtonEventRaiser` hoặc `BoosterSlotView`)**:
-   - Gắn component phát sự kiện riêng biệt.
-   - Thiết lập danh sách các ScriptableObject `EventChannelSO` cần kích hoạt.
+## Di chuyển, đổi chỗ và lượt đi
 
----
+Kéo nhân vật đến một ghế trống để di chuyển. Nếu ghế đích đã có người, hai nhân vật sẽ hoán đổi vị trí. Một lần đổi chỗ tiêu tốn một lượt, dù cả hai người đều thay đổi chỗ ngồi.
 
-## 🧪 Kiểm thử Đơn vị (Unit Testing)
+| Thao tác | Chi phí |
+| --- | --- |
+| Chuyển sang một ghế trống khác | 1 lượt |
+| Đổi chỗ với nhân vật khác | 1 lượt |
+| Chuyển giữa bàn ăn và hàng chờ | 1 lượt |
+| Chuyển giữa hai ghế khác nhau trong hàng chờ | 1 lượt |
+| Thả lại đúng vị trí ban đầu | Không mất lượt |
+| Thả vào ô đồ ăn hoặc ô chặn | Không tạo nước đi hợp lệ, không mất lượt |
 
-Tất cả các bài kiểm tra được viết dưới dạng **EditMode Tests** trong [`Assets/Game/Tests/DomainTests.cs`](file:///d:/Projects/WannaSitHere-Refactor/Assets/Game/Tests/DomainTests.cs):
-- **Board & Grid**: Kiểm tra set/get trong và ngoài biên của `Grid<T>`.
-- **Condition Evaluator**: Kiểm tra chính xác các logic Like/Hate đối với đồ ăn (`Food`) và tính cách nhân vật (`PersonTrait`), bao gồm `CanSitAnywhere` với `Food.Any`.
-- **Economy**: Kiểm tra nạp/trừ tài nguyên, clamp giá trị $\ge 0$ trong `Inventory`, chuỗi điểm danh và reset shop ngày trong `EconomyManager`.
-- **MoveHistory**: Kiểm tra cơ chế stack LIFO và clear history khi chuyển màn.
-- **Boosters**:
-  - `MoreMoveBooster`: Kiểm tra cộng đúng số move và kích hoạt event.
-  - `UndoBooster`: Kiểm tra đảo ngược vị trí người giữa 2 ô ghế, hoàn lại 1 lượt đi; kiểm tra hoàn tác người từ bàn cờ về đúng ô chờ ở hàng chờ (`WaitGrid`); kiểm tra an toàn khi history trống.
-  - `RemoveBooster`: Kiểm tra ưu tiên thay điều kiện của người Angry trên MainGrid trước; fallback sang người ở WaitGrid, thay toàn bộ bằng `CanSitAnywhere`, và bỏ qua người đã có condition này.
-  - `PersonRuntimeData`: Kiểm tra `ClearConditions()` xóa sạch danh sách, `ReplaceConditions()` thay danh sách và kích hoạt sự kiện `OnConditionsCleared`.
-- **LevelManager Move Recording**:
-  - Di chuyển giữa các ghế trên MainGrid $\rightarrow$ **Được ghi nhận**.
-  - Di chuyển từ WaitLine lên MainGrid $\rightarrow$ **Được ghi nhận**.
-  - Di chuyển nội bộ WaitLine sang WaitLine $\rightarrow$ **Không bị ghi nhận (Skip)**.
+Giới hạn lượt khiến việc tìm được bố cục cuối cùng và tìm được đường đi đến bố cục đó đều quan trọng. Đổi chỗ đúng lúc có thể tiết kiệm thao tác; liên tục chuyển người qua hàng chờ sẽ làm giảm số lượt còn lại.
 
-Để chạy kiểm thử: Mở Unity Editor $\rightarrow$ `Window > General > Test Runner` $\rightarrow$ Chạy tab **EditMode**.
+## Đọc cảm xúc để tìm lời giải
 
+Sau mỗi nước đi thành công, game đánh giá lại toàn bộ nhân vật. Biểu cảm cho biết bố cục hiện tại đã phù hợp đến đâu:
 
+| Trạng thái | Ý nghĩa |
+| --- | --- |
+| **Normal** | Nhân vật còn ở hàng chờ. |
+| **Angry** | Nhân vật đã vào bàn nhưng còn ít nhất một yêu cầu chưa được đáp ứng. |
+| **Happy** | Nhân vật đã vào bàn và tất cả yêu cầu đều được đáp ứng. |
 
+Một người Happy vẫn có thể trở lại Angry nếu bạn di chuyển người hàng xóm mà họ thích hoặc đưa đến cạnh họ một người họ muốn tránh. Vì vậy, biểu cảm là phản hồi cho cách sắp xếp hiện tại, không phải dấu hiệu một nhân vật đã được giải quyết vĩnh viễn.
 
+## Khi nào thắng hoặc thua?
 
-Hãy sắp xếp các level hiện có trong Assets/Data/Level: Level 1, Level 2 và Level 3. Giữ nguyên TestLevel.
+**Bạn thắng khi hàng chờ không còn người và mọi nhân vật trên bàn đều Happy.** Nếu hết lượt khi chưa đạt mục tiêu này, màn chơi kết thúc với kết quả thua.
 
-Trước khi sửa:
-- Đọc AGENTS.md và kiểm tra cấu trúc LevelDataSO, CellDataSO, PersonDefinitionSO, ConditionDataSO.
-- Ghi nhận kích thước và loại cell tại từng tọa độ của Main Grid để đối chiếu sau khi sửa.
+Nước đi cuối cùng vẫn có thể mang lại chiến thắng: nếu thao tác đó làm tất cả hài lòng khi số lượt vừa về 0, game tính là hoàn thành màn.
 
-Giới hạn bắt buộc:
+Sau chiến thắng, người chơi có thể nhận thưởng và tiếp tục màn kế tiếp. Khi thua, chơi lại là cơ hội thử một cách bố trí hoặc thứ tự di chuyển khác.
 
-1. Main Grid
-- Giữ nguyên kích thước grid và trạng thái có/không có cell tại từng tọa độ.
-- Giữ nguyên vị trí và loại cell Block, Seat; không thay chúng bằng cell khác.
-- Cell Food chỉ được đổi sang một món ăn khác bằng SO Food đã có. Cell đó vẫn phải là Food và giữ nguyên vị trí.
-- Không thêm, xóa, di chuyển cell, hoặc đổi cell sang loại khác.
-- Vị trí cố định ở 0.5 và 0.5
+## Booster: thêm lựa chọn khi gặp khó
 
-2. Person và Condition
-- Mỗi level có tối đa 12 Person.
-- Chỉ ghép các PersonDefinitionSO và ConditionDataSO đang có trong dự án.
-- Không tạo SO Person, Condition, Cell hay asset dữ liệu mới.
-- Mỗi Person có tối đa 2 điều kiện.
-- Person phải nằm trong grid, trên Seat, không trùng vị trí với Person khác; mọi tham chiếu phải hợp lệ.
+Game có ba booster. Để sử dụng, màn chơi phải còn đang diễn ra, còn lượt và kho phải có vật phẩm tương ứng. Một vật phẩm chỉ bị tiêu hao khi sử dụng thành công.
 
-3. Wait Grid và thông số hai grid
-- Wait Grid có tối đa 6 cột và 2 hàng (`x <= 6`, `y <= 2`).
-- Với cả Main Grid và Wait Grid, giữ `CellSize = (0.5, 0.5)` và `CellDistance = (0.12, 0.12)`.
-- Đảm bảo nội dung Wait Grid khớp kích thước grid sau khi sắp xếp.
-- Vị trí cố định là 0.5 và 0.25
+### More Moves — Thêm 3 lượt
 
-Sau khi sửa, kiểm tra lại loại và vị trí cell Main Grid so với baseline; xác nhận giới hạn Person, kích thước Wait Grid, thông số hai grid và các tham chiếu SO. Không chạy Unity tests. Nếu không thể đáp ứng một giới hạn mà không phá cấu trúc Main Grid, dừng và báo rõ thay vì tự ý đổi cấu trúc.
+Bổ sung **3 lượt di chuyển** cho màn hiện tại. Đây là lựa chọn khi bạn đã tìm ra hướng giải nhưng cần thêm thao tác để hoàn thiện bàn ăn. Cần dùng trước khi hết lượt.
 
-Khi báo cáo, nêu các file đã sửa, số lượng/tên Person từng level, kích thước Wait Grid và kết quả đối chiếu Main Grid.
+### Undo — Quay lại nước đi đã ghi nhận
+
+Khôi phục vị trí trước nước đi gần nhất trong lịch sử và trả lại **1 lượt**. Với một lần hoán đổi, cả hai người đều trở về vị trí trước đó.
+
+Lịch sử hỗ trợ các nước đi trên bàn và giữa bàn với hàng chờ. **Di chuyển hoàn toàn trong hàng chờ không được ghi nhận**, nên Undo không hoàn tác trực tiếp thao tác này. Booster cần có nước đi trong lịch sử để sử dụng.
+
+### Remove — Gỡ yêu cầu của một người
+
+Thay toàn bộ điều kiện của một nhân vật bằng **Can Sit Anywhere**. Người đó vẫn ở trong màn và giữ đặc điểm của mình, nhưng không còn cần vị trí cụ thể để đáp ứng các sở thích cũ.
+
+Game chọn ngẫu nhiên mục tiêu theo thứ tự:
+
+1. Ưu tiên một người Angry trên bàn, còn điều kiện và chưa có Can Sit Anywhere.
+2. Nếu không có mục tiêu phù hợp trên bàn, xét người còn điều kiện trong hàng chờ và chưa có Can Sit Anywhere.
+
+Bạn không chọn mục tiêu thủ công. Nếu không có ai phù hợp, booster không được dùng. Nếu người được chọn đang ở hàng chờ, bạn vẫn phải đưa họ vào ghế trên bàn.
+
+## Điều tạo nên thử thách
+
+Độ phức tạp của câu đố đến từ cách các yếu tố kết hợp: số ghế có thể sử dụng, vị trí món ăn cố định, đặc điểm của khách, những cặp yêu cầu thích/ghét và số lượt được phép di chuyển.
+
+Một vài cách tiếp cận hữu ích:
+
+- **Xếp người ít lựa chọn trước:** người có hai yêu cầu hoặc cần một món ăn ở vị trí hiếm thường khó tìm chỗ hơn.
+- **Kiểm tra cả hai người:** trước khi ghép một cặp hàng xóm, hãy đọc yêu cầu của cả hai.
+- **Quan sát vùng bị ảnh hưởng:** đổi chỗ hai người còn làm thay đổi hàng xóm ở vị trí cũ và mới.
+- **Tận dụng hoán đổi:** một thao tác có thể sửa được hai chỗ ngồi cùng lúc.
+- **Tính trước số lượt:** hàng chờ giúp tổ chức lại bàn nhưng mỗi lần di chuyển vẫn có chi phí.
+
+## Tiến trình và trải nghiệm
+
+Các màn giải đố được kết nối với hệ thống **Gold, Gem, kho booster, cửa hàng và phần thưởng**. Người chơi có thể nhận thưởng hoàn thành màn và tham gia điểm danh; tiến trình cùng tài nguyên được lưu giữa các phiên chơi.
+
+Hướng dẫn trong game giới thiệu thao tác và cơ chế. Biểu cảm, chuyển động kéo thả, âm thanh và hiệu ứng giúp người chơi nhận biết kết quả hành động. Phần cài đặt âm thanh cho phép điều chỉnh âm lượng nhạc và hiệu ứng theo sở thích.
+
+## Reference
+
+### Dự án gốc
+
+[**WannaSitHere — gcc-dtung**](https://github.com/gcc-dtung/WannaSitHere) là dự án gốc mà phiên bản refactor này tiếp nối. Repository gốc có phần giới thiệu, video gameplay và thông tin đội ngũ thực hiện để tham khảo về xuất phát điểm của trò chơi.
+
+### Tài liệu thiết kế
+
+[**WannaSitHere — Raw Game Design Document**](WannaSitHere_RawGDD.md) mô tả các thành phần và cơ chế gameplay của dự án.
+
+README này ưu tiên luật đã triển khai trong mã nguồn. Một số mô tả trong bản thiết kế có thể chưa đồng bộ, chẳng hạn di chuyển giữa các ghế trong hàng chờ hiện vẫn tốn một lượt.

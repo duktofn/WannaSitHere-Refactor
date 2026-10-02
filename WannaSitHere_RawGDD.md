@@ -1,7 +1,5 @@
 # **WannaSitHere — Game Design Document**
 
-> **Phạm vi tài liệu:** Tài liệu này mô tả gameplay và meta-system đang tồn tại trong project `WannaSitHere-Refactor` tại thời điểm rà soát. Nội dung từ GDD mẫu chỉ được dùng làm **pattern trình bày và convention**, không được mặc định là feature của project hiện tại. Những hệ thống không tồn tại trong runtime hiện tại, như Star Rating hoặc IAP Shop, không được đưa vào như rule chính thức.
-
 # **Mục lục**
 
 - [**1. Game Overview**](#1-game-overview)
@@ -73,15 +71,11 @@ Person {
 | **State**                | Trạng thái feedback hiện tại: Normal, Angry hoặc Happy. |
 | **Conditions[]**         | Các Condition mà Person phải thỏa mãn.                  |
 
-Trait được dùng làm target cho các Person Condition. Condition hiện tại **không target một Person cụ thể theo tên**, mà target theo Trait.
-
 ---
 
 ## **2.2. Food**
 
-**Food** không phải một entity cố định độc lập. Food là dữ liệu nằm trên một Cell có `CellType = Food` trong MainGrid.
-
-Food Cell là static obstacle về mặt placement: Person không thể được đặt lên Cell loại Food.
+**Food** là một món ăn được đặt trên Cell và cố định trong suốt quá trình chơi, không thể thay đổi vị trí thông qua bất cứ thứ gì.
 
 ---
 
@@ -90,7 +84,7 @@ Food Cell là static obstacle về mặt placement: Person không thể được
 Mỗi level có hai Grid độc lập:
 
 1. **MainGrid:** Board chính nơi Condition được đánh giá.
-2. **WaitGrid:** Khu vực giữ Person tạm thời.
+2. **WaitGrid:** Khu vực giữ Person tạm thời khi vừa bắt đầu Level.
 
 ### **Grid**
 
@@ -116,11 +110,11 @@ Cell {
 }
 ```
 
-| CellType | Chứa Person | Ý nghĩa |
-|---|---:|---|
-| **Seat** | Có | Cell hợp lệ để Person đứng/ngồi. |
-| **Food** | Không | Cell cố định chứa Food. |
-| **Block** | Không | Cell không thể đặt Person. |
+| CellType  | Có thể chứa Person | Ý nghĩa                          |
+| --------- | -----------------: | -------------------------------- |
+| **Seat**  |                 Có | Cell hợp lệ để Person đứng/ngồi. |
+| **Food**  |              Không | Cell cố định chứa Food.          |
+| **Block** |              Không | Cell không thể đặt Person.       |
 
 ### **Adjacency**
 
@@ -133,20 +127,13 @@ Left
 Right
 ```
 
-Không xét diagonal.
-
-Một Person trên MainGrid chỉ kiểm tra Condition với các Cell cardinal-adjacent trong **MainGrid**.
-
-> **Lưu ý:** Khái niệm adjacency dùng để kiểm tra Condition, **không** giới hạn phạm vi Move. Person có thể được kéo tới bất kỳ Seat hợp lệ nào, không cần target nằm cạnh source.
+Một Person trên MainGrid chỉ kiểm tra Condition với các Cell hàng xóm trong **MainGrid**.
 
 ---
 
 ## **2.4. Conditions**
 
-Condition hiện tại được mô hình hóa bằng hai trục:
-
-- **Type:** `Like` hoặc `Hate`
-- **Target:** `Person` hoặc `Food`
+Condition có cấu trúc:
 
 ```text
 Condition {
@@ -194,7 +181,7 @@ Condition này luôn trả về `true`, không phụ thuộc vị trí của Per
 | Person thích French Fries          | `Like + Food + FrenchFries` |
 | Person có thể ngồi ở bất kỳ đâu    | `Like + Food + Any`         |
 
-### **Giới hạn authoring hiện tại**
+### **Giới hạn số lượng Condition / Person hiện tại**
 
 Mỗi Person trong một Level được phép có tối đa:
 
@@ -208,7 +195,7 @@ MAX_CONDITION_PER_PERSON = 2
 
 Project hiện có ba Booster:
 
-| Booster       | Tác dụng thực tế                                                                                               |
+| Booster       | Tác dụng                                                                                                       |
 | ------------- | -------------------------------------------------------------------------------------------------------------- |
 | **MoreMoves** | Cộng thêm `MORE_MOVE_AMOUNT = 3` vào số Moves còn lại.                                                         |
 | **Undo**      | Hoàn tác Move gần nhất có trong `MoveHistory` và hoàn lại 1 Move.                                              |

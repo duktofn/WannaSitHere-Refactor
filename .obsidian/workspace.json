@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "WannaSitHere_GDD.md",
+                "file": "README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "WannaSitHere_GDD"
+              "title": "README"
             }
           }
         ],
@@ -205,6 +205,7 @@
   },
   "active": "929f823fa11b358f",
   "lastOpenFiles": [
+    "WannaSitHere_RawGDD.md",
     "Library/Artifacts/fa/fa22e15671cac3344780673505cebe6c",
     "Library/Artifacts/d7/d7591fb7d423a7bbd7ec22ffc2287452",
     "Library/TempArtifacts/Extra/f5c7f94fb2cf710499d9206209ec0362.b.index",
@@ -216,7 +217,6 @@
     "Logs/AssetImportWorker1.log",
     "Library/AssistantRunCommand/Unity.AI.Assistant.RunCommand.Dynamic.0682a7fb29124e5ead2396c8f1e8a092.dll",
     "Difficulty Analyzer - Agents.md",
-    "Library/AssistantRunCommand/Unity.AI.Assistant.RunCommand.Dynamic.e6719a5b0f5e4366b0d1f4cb5ffb5491.dll",
     "Assets/Art/Level/Picnic/den.png",
     "Assets/Art/Level/Picnic/cho ngoi.png",
     "Assets/Art/Level/Picnic/bg.png",
@@ -231,7 +231,6 @@
     "game-manager-refactor-plan.md",
     "codebase.md",
     "Difficulty Formula.md",
-    "WannaSitHere_GDD.md",
     "Temp/DifficultyFormula.before-report.md",
     "Difficulty Analyzer.md",
     "difficulty-analyzer-alpha-plan.md",
