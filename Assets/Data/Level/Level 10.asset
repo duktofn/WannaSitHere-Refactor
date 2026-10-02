@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dafde19f4b6c67459ae741a97b9ce4f, type: 3}
   m_Name: Level 10
   m_EditorClassIdentifier: Game.Data::Game.Data.Levels.LevelDataSO
-  levelMove: 12
+  levelMove: 25
   mainGrid:
     _gridSize: {x: 4, y: 4}
     _cellSize: {x: 0.5, y: 0.5}

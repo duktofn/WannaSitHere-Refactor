@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dafde19f4b6c67459ae741a97b9ce4f, type: 3}
   m_Name: Level 29
   m_EditorClassIdentifier: Game.Data::Game.Data.Levels.LevelDataSO
-  levelMove: 15
+  levelMove: 20
   mainGrid:
     _gridSize: {x: 6, y: 6}
     _cellSize: {x: 0.5, y: 0.5}
@@ -57,7 +57,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
     - {fileID: 11400000, guid: 1217a5af7795f38469f1af54e359ef18, type: 2}
   waitGrid:
-    _gridSize: {x: 5, y: 2}
+    _gridSize: {x: 4, y: 2}
     _cellSize: {x: 0.5, y: 0.5}
     _cellDistance: {x: 0.12, y: 0.12}
     _posX: 0.5
@@ -71,8 +71,6 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
     - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
     - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
-    - {fileID: 11400000, guid: 0dde0ebad47d21846aea423ec93421e4, type: 2}
-    - {fileID: 0}
   personConfigs:
   - definition: {fileID: 11400000, guid: 1c2bbd4630cc4bc9b5354b48b864f290, type: 2}
     conditions:
