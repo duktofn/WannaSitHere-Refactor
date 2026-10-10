@@ -335,6 +335,18 @@ MonoBehaviour:
   normalFace: {fileID: 4606157284126940538, guid: 0200ef72e0c0c7b4ea478ad00fc8b280, type: 3}
   angryFace: {fileID: -9082789242079819192, guid: e3efea3c606ecb54d9f8305a4965127c, type: 3}
   personTooltip: {fileID: 0}
+  _landingFeedbackDuration: 0.1
+  _landingStretch: 0.18
+  _landingSquash: 0.16
+  _happyFeedbackDuration: 0.25
+  _happyHopHeight: 0.2
+  _happySquash: 0.08
+  _happyStretch: 0.1
+  _happyTiltAngle: 5
+  _angryFeedbackDuration: 0.25
+  _angryShakeDistance: 0.07
+  _angryShakeAngle: 10
+  _angryShakeCycles: 3
 --- !u!61 &5701669066215742745
 BoxCollider2D:
   m_ObjectHideFlags: 0

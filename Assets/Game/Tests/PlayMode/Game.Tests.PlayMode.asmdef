@@ -1,0 +1,9 @@
+{
+    "name": "Game.Tests.PlayMode",
+    "rootNamespace": "Game.Tests.PlayMode",
+    "references": ["Game.Core", "Game.App", "Game.View", "PrimeTween.Runtime"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "autoReferenced": false,
+    "optionalUnityReferences": ["TestAssemblies"]
+}

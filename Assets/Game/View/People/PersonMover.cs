@@ -22,6 +22,7 @@ namespace Game.View.People
             public Collider2D Collider;
             public Vector3 StartPosition;
             public CellView SourceCell;
+            public Tween DragTween;
         }
 
         public void BeginMove(
@@ -30,6 +31,9 @@ namespace Game.View.People
             Vector3 startPosition,
             CellView sourceCell = null)
         {
+            if (dragContexts.TryGetValue(personTransform, out DragContext previousContext))
+                previousContext.DragTween.Stop();
+            personTransform.GetComponent<PersonView>()?.CancelFeedback();
             dragContexts[personTransform] = new DragContext
             {
                 Collider = personCollider,
@@ -40,7 +44,10 @@ namespace Game.View.People
 
         public void DragTo(Transform personTransform, Vector3 targetWorldPosition)
         {
-            Tween.Position(personTransform, targetWorldPosition, snapTime, moveEase);
+            if (!dragContexts.TryGetValue(personTransform, out DragContext context))
+                return;
+            context.DragTween.Stop();
+            context.DragTween = Tween.Position(personTransform, targetWorldPosition, snapTime, moveEase);
         }
 
         public CellView GetOverlappingCell(Transform personTransform)
@@ -88,6 +95,8 @@ namespace Game.View.People
                 return false;
             }
 
+            context.DragTween.Stop();
+
             if (targetCell == null)
             {
                 Debug.LogWarning("[MoveToCell] FAIL: targetCell is null — no overlapping cell found.");
@@ -120,8 +129,20 @@ namespace Game.View.People
                 return false;
             }
 
+            PersonView movingPersonView = personTransform.GetComponent<PersonView>();
+            PersonView displacedPersonView = targetCell.CurrentPersonView;
+            bool changesSeat = context.SourceCell != targetCell;
+            if (changesSeat)
+            {
+                movingPersonView?.PrepareForPlacement();
+                displacedPersonView?.PrepareForPlacement();
+            }
+
             if (!gridManager.TryMovePerson(context.SourceCell, targetCell, person))
             {
+                movingPersonView?.CancelFeedback();
+                if (changesSeat)
+                    displacedPersonView?.CancelFeedback();
                 Debug.LogWarning($"[MoveToCell] FAIL: TryMovePerson rejected. Source={context.SourceCell?.name}, Target={targetCell.name}");
                 Tween.Position(personTransform, context.StartPosition, snapTime, moveEase);
                 dragContexts.Remove(personTransform);
@@ -130,21 +151,18 @@ namespace Game.View.People
 
             if (context.SourceCell == targetCell)
             {
-                Tween.Position(personTransform, targetCell.transform.position, snapTime, moveEase);
+                movingPersonView.PrepareForPlacement();
+                movingPersonView.MoveToSeat(targetCell.transform.position, snapTime, moveEase, playReaction: false);
                 dragContexts.Remove(personTransform);
                 return true;
             }
-
-            PersonView movingPersonView = personTransform.GetComponent<PersonView>();
-            PersonView displacedPersonView = targetCell.CurrentPersonView;
 
             context.SourceCell?.SetPersonView(displacedPersonView);
             targetCell.SetPersonView(movingPersonView);
 
             if (displacedPersonView != null && context.SourceCell != null)
             {
-                Tween.Position(
-                    displacedPersonView.transform,
+                displacedPersonView.MoveToSeat(
                     context.SourceCell.transform.position,
                     snapTime,
                     moveEase);
@@ -154,7 +172,7 @@ namespace Game.View.People
                     ?.SetCurrentCell(context.SourceCell);
             }
 
-            Tween.Position(personTransform, targetCell.transform.position, snapTime, moveEase);
+            movingPersonView.MoveToSeat(targetCell.transform.position, snapTime, moveEase);
             personTransform.GetComponent<PersonDragManager>()?.SetCurrentCell(targetCell);
             dragContexts.Remove(personTransform);
             return true;
@@ -181,13 +199,15 @@ namespace Game.View.People
             // Animate and update drag references
             if (movedView != null)
             {
-                Tween.Position(movedView.transform, sourceCell.transform.position, snapTime, moveEase);
+                movedView.PrepareForPlacement();
+                movedView.MoveToSeat(sourceCell.transform.position, snapTime, moveEase);
                 movedView.GetComponent<PersonDragManager>()?.SetCurrentCell(sourceCell);
             }
 
             if (displacedView != null)
             {
-                Tween.Position(displacedView.transform, targetCell.transform.position, snapTime, moveEase);
+                displacedView.PrepareForPlacement();
+                displacedView.MoveToSeat(targetCell.transform.position, snapTime, moveEase);
                 displacedView.GetComponent<PersonDragManager>()?.SetCurrentCell(targetCell);
             }
         }
