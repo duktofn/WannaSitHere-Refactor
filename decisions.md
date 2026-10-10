@@ -1,5 +1,17 @@
 # Technical Decisions
 
+## Index
+
+- DEC-001 — Presentation-owned VFX player with explicit calls
+- DEC-002 — Inject the CanSitAnywhere runtime condition into RemoveBooster
+- DEC-003 — Append Food.Any to preserve serialized food data
+- DEC-004 — Render Overlay UI particles through UI Particle
+- DEC-005 — Keep application state in Game.App and Unity composition in Game.Bootstrap
+- DEC-006 — Use hybrid event/direct-call communication for audio
+- DEC-007 — Keep shared person definitions separate from level occurrences
+- DEC-008 — GameManager owns runtime orchestration; Bootstrapper only composes dependencies
+- DEC-009 — PersonView owns arrival and emotion feedback
+
 ## DEC-001 — Presentation-owned VFX player with explicit calls
 
 Date: 2026-09-16
@@ -569,3 +581,36 @@ This fulfills the explicit responsibility requirement without replacing the repo
 - `Game.Editor.CheatToolWindow`
 - DEC-005
 - DEC-006
+
+## DEC-009 — PersonView owns arrival and emotion feedback
+
+Date: 2026-10-09
+
+Status: Accepted
+
+### Problem
+
+Condition evaluation happens synchronously before the movement tween reaches the seat. Immediate Happy VFX/audio therefore plays at the old location, and an unchanged emotion produces no new feedback after placement.
+
+### Options
+
+- React only to domain state events: preserves the current event-only timing, but misses unchanged emotions and plays moving-person reactions before arrival.
+- Let PersonView defer reactions while moving and replay the current emotion on arrival: keeps domain rules unchanged and aligns feedback with landing, but adds explicit presentation tween ownership and cancellation.
+
+### Decision
+
+PersonMover prepares moved/displaced views before domain evaluation. PersonView owns their snap tween, landing squash and emotion feedback. Neighbours continue to react immediately. Visual deformation affects the existing body/face children, preserving root/collider geometry. No prefab changes or new package are required.
+
+### Reason
+
+The current view already owns face, VFX and audio. Keeping timing there follows DEC-001 and DEC-006, avoids changing domain event semantics, and lets a new drag or disable cancel both pending arrival and ongoing feedback.
+
+### Consequences
+
+Accepted placement and undo play landing feedback followed by the current happy/angry motion. Happy placement replays existing VFX/audio even when the state is unchanged. Invalid drops remain silent. At the user's later request on 2026-10-09, same-seat drops play landing only, without replaying emotion/audio/VFX. Six Play Mode tests covering the original timing, cleanup and move integration passed in the project Editor on 2026-10-09; tests were not rerun for the later simple change, per user preference.
+
+### Related
+
+- PersonView
+- PersonMover
+- DEC-001, DEC-006

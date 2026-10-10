@@ -1,7 +1,7 @@
 # Codebase Context
 
-Last Updated: 2026-09-26
-Last Reviewed Commit: working tree (includes uncommitted changes)
+Last Updated: 2026-10-10
+Last Reviewed Commit: 602a420
 
 ---
 
@@ -78,7 +78,7 @@ Mobile mediation support includes the `com.unity.services.levelplay` package, ed
 - **Render pipeline:** URP `17.3.0`; the quality profiles reference `Assets/Settings/UniversalRP.asset` in `ProjectSettings/QualitySettings.asset`.
 - **Input:** Input System package `1.20.0`; `ProjectSettings/ProjectSettings.asset` sets `activeInputHandler: 1` (Input System only).
 - **Build scenes:** `Assets/Scenes/MainScene.unity` is the only enabled Build Settings scene in `ProjectSettings/EditorBuildSettings.asset`. `Assets/Scenes/LV Scene.unity` is not listed there.
-- **Tests:** `Game.Tests.EditMode` in `Assets/Game/Tests/Game.Tests.EditMode.asmdef` is the only test assembly; sources include `DomainTests.cs`, `LevelDataRefactorTests.cs`, and `GameManagerFlowTests.cs`. No PlayMode test assembly was found.
+- **Tests:** `Game.Tests.EditMode` contains domain/application tests. `Game.Tests.PlayMode` in `Assets/Game/Tests/PlayMode/` adds person feedback tests using the actual person prefab: placement timing, happy hop, angry shake, interruption, disable, swaps, undo, same-seat and invalid drops, customized hop height/duration and zero-duration motion. All eight new PlayMode tests passed in Unity 6000.3.25f1 on 2026-10-09.
 - **C# conventions:** Block-scoped namespaces, `_camelCase` private fields, and `[SerializeField] private` for Unity-serialized fields; see `AGENTS.md`.
 - **Ads and networking:** LevelPlay `9.5.1` is installed, but no first-party LevelPlay API usage was found under `Assets/Game`. `com.unity.multiplayer.center` is installed, but no runtime networking package or first-party networking API usage was found under `Assets/Game`.
 - **Unity tooling:** Unity MCP tools are available. The Editor state query succeeded and reported the Editor idle and outside Play Mode during this inspection.
@@ -951,7 +951,7 @@ Path:
 
 Responsibility:
 
-Domain rules for one level session. Validates moves, records history (skipping WaitGrid↔WaitGrid), evaluates conditions, and raises C# outcome/move notifications to the owning `GameManager`.
+Domain rules for one level session. Validates moves, records history and consumes a move unless both source and target are WaitGrid, evaluates conditions, and raises C# outcome/move notifications to the owning `GameManager`. WaitGrid↔WaitGrid moves/swaps are free and are not recorded for undo.
 
 Dependencies:
 
@@ -971,7 +971,7 @@ Dependencies:
 
 | Method | Parameters | Return Type | Purpose |
 |---|---|---|---|
-| `TryMovePerson` | `CellRuntimeData sourceCell, CellRuntimeData targetCell, PersonRuntimeData person` | `bool` | Validates, executes move, records history, decrements move, checks win/lose |
+| `TryMovePerson` | `CellRuntimeData sourceCell, CellRuntimeData targetCell, PersonRuntimeData person` | `bool` | Validates, executes move, records history and decrements move unless both cells are WaitGrid, checks win/lose |
 | `CheckAllPersonConditions` | — | `void` | Updates all states; reports win or lose through `OutcomeRaised` |
 | `CheckPersonCondition` | `CellRuntimeData containCell, PersonRuntimeData person, GridId cellGrid` | `void` | Evaluates single person |
 | `IsConditionSatisfied` | `CellRuntimeData cell, ConditionRuntimeData condition` | `bool` | Checks single condition |
@@ -1617,7 +1617,7 @@ Path:
 
 Responsibility:
 
-Visual representation of a character. Swaps facial expression sprite based on `PersonState` by subscribing to `PersonRuntimeData.OnPersonStateChanged`; plays the catalogued Happy VFX when the state becomes Happy.
+Visual representation of a character. Swaps facial expression sprites from `PersonState` and owns PrimeTween landing squash, happy hop and angry shake on body/face children. Inspector groups Landing Feedback, Happy Feedback and Angry Feedback expose durations, deformation strength, hop height, tilt, shake distance and shake cycles. Defaults preserve the original feel; a zero duration disables that motion without suppressing Happy audio/VFX. Root/collider geometry is unaffected by emotion feedback. Moving people defer reactions until arrival; neighbours react immediately. Happy placement replays the existing Happy VFX/audio even when the state is unchanged. Disabling, rebinding or starting another drag stops owned tweens and restores the original visual poses.
 
 Inherits / Implements:
 
@@ -1635,7 +1635,10 @@ Dependencies:
 |---|---|---|---|
 | `BindVfxPlayer` | `VfxPlayer vfxPlayer` | `void` | Injects the presentation VFX player and handles an already-Happy state |
 | `BindAudioPlayer` | `AudioPlayer audioPlayer` | `void` | Injects the presentation audio player without replaying the current state |
-| `HandleStateChanged` | `PersonState state` | `void` | Updates the face and plays `PersonHappy` only for a domain state-change notification |
+| `HandleStateChanged` | `PersonState state` | `void` | Updates the face and reacts immediately unless awaiting placement |
+| `PrepareForPlacement` | None | `void` | Cancels old feedback and defers state-change reactions until arrival |
+| `MoveToSeat` | `Vector3 position, float duration, Ease ease, bool playReaction = true` | `void` | Owns the snap tween and starts landing feedback at completion; optionally replays the emotion |
+| `CancelFeedback` | None | `void` | Stops snap/feedback tweens and restores body/face poses |
 
 ---
 
@@ -1646,7 +1649,7 @@ Path:
 
 Responsibility:
 
-Handles character movement tweens during drag-and-drop. Validates moves via `GridManager.TryMovePerson`. Supports `RevertMove` for undo animation.
+Handles character movement tweens during drag-and-drop. Validates moves via `GridManager.TryMovePerson`. Stops previous drag tweens before retargeting. Prepares moving/displaced views before domain evaluation, then delegates accepted snap movement and arrival feedback to `PersonView`. Same-seat drops play landing only, without replaying the emotion or consuming a move. Invalid drops do not play landing feedback. Supports `RevertMove` for undo animation with the same arrival feedback.
 
 Inherits / Implements:
 
@@ -1684,7 +1687,7 @@ Path:
 
 Responsibility:
 
-Shows the character's condition bubble on tap, including checked/unchecked status for up to two conditions. Dynamically sizes the bubble and refreshes when conditions or their satisfaction states change.
+Shows the character's condition bubble on tap, including checked/unchecked status for up to two conditions. Dynamically sizes the bubble and refreshes when conditions or their satisfaction states change. Keeps the world-space SpriteRenderer/TMP bubble inside the camera viewport and screen safe area by projecting its rendered bounds and shifting its world position. Clamping runs during showing and LateUpdate, with an Inspector-adjustable Screen Edge Padding (8 pixels by default).
 
 Inherits / Implements:
 
