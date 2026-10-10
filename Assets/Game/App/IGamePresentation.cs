@@ -20,6 +20,7 @@ namespace Game.App
         void EnterHomeAudio();
         void ApplyAudioSettings(int soundVolume, bool soundMuted, int musicVolume, bool musicMuted);
         void PlayAudioCue(AudioCueId cue);
+        Task PlayPaidContinueFeedbackAsync(CancellationToken cancellationToken);
         void RaiseItemReceived(Reward reward);
         void RaiseItemSpent(Reward reward);
         void RefreshShop();

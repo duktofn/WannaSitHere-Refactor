@@ -29,6 +29,8 @@ namespace Game.App
         private GameData _gameData;
         private CancellationTokenSource _currentOperation;
         private LevelManager _activeLevelManager;
+        private LevelManager _pendingContinueAdLevel;
+        private CancellationTokenSource _paidContinueCancellation;
         private SessionState _sessionState;
         private bool _sessionOutcomeAccepted;
         private bool _hasHandledApplicationReady;
@@ -51,6 +53,7 @@ namespace Game.App
         public event Action<TutorialTrigger> TutorialTriggerFired;
         public event Action WinAccepted;
         public event Action LoseAccepted;
+        public event Action ContinueAdRequested;
 
         public GameManager(int[] goldShopLimits, SaveLoadManager saveLoad = null)
             : this(new GameManagerConfig { GoldShopLimits = goldShopLimits }, null, null, null, saveLoad)
@@ -235,6 +238,8 @@ namespace Game.App
 
         public async Task BackToHomeAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
+            _paidContinueCancellation?.Cancel();
+            CancelContinueAd();
             _currentOperation?.Cancel();
             await _operationGate.WaitAsync(cancellationToken);
             SessionState previousState = _sessionState;
@@ -462,6 +467,76 @@ namespace Game.App
         }
 
         public void UseMoreMoves() => TryUseMoreMoves();
+
+        public bool TryContinueWithGold()
+        {
+            if (_sessionState != SessionState.Lost || _activeLevelManager == null ||
+                _paidContinueCancellation != null ||
+                !_inventory.TrySpendItem(ItemType.Gold, 500))
+                return false;
+
+            CancelContinueAd();
+            var cancellation = new CancellationTokenSource();
+            _paidContinueCancellation = cancellation;
+            SaveGame();
+            _presentation?.RaiseItemSpent(new Reward { type = ItemType.Gold, amount = 500 });
+            _presentation?.PlayAudioCue(AudioCueId.Spend);
+            ObserveCommand(ResumeAfterPaidFeedbackAsync(_activeLevelManager, cancellation));
+            return true;
+        }
+
+        public void ContinueWithGold() => TryContinueWithGold();
+
+        private async Task ResumeAfterPaidFeedbackAsync(LevelManager level, CancellationTokenSource cancellation)
+        {
+            try
+            {
+                if (_presentation != null)
+                    await _presentation.PlayPaidContinueFeedbackAsync(cancellation.Token);
+                cancellation.Token.ThrowIfCancellationRequested();
+                if (_activeLevelManager == level && _sessionState == SessionState.Lost)
+                    ResumeLostLevel(3);
+            }
+            finally
+            {
+                if (_paidContinueCancellation == cancellation)
+                    _paidContinueCancellation = null;
+                cancellation.Dispose();
+            }
+        }
+
+        public void RequestContinueAd()
+        {
+            if (_sessionState != SessionState.Lost || _activeLevelManager == null ||
+                _paidContinueCancellation != null ||
+                _pendingContinueAdLevel != null)
+                return;
+
+            _pendingContinueAdLevel = _activeLevelManager;
+            ContinueAdRequested?.Invoke();
+        }
+
+        public void ContinueAfterAd()
+        {
+            if (_sessionState != SessionState.Lost || _pendingContinueAdLevel == null ||
+                _pendingContinueAdLevel != _activeLevelManager)
+                return;
+
+            _pendingContinueAdLevel = null;
+            ResumeLostLevel(5);
+        }
+
+        public void CancelContinueAd() => _pendingContinueAdLevel = null;
+
+        private void ResumeLostLevel(int extraMoves)
+        {
+            CancelContinueAd();
+            _sessionOutcomeAccepted = false;
+            _sessionState = SessionState.Playing;
+            _activeLevelManager.CurrentLevel.ModifyMove(extraMoves);
+            _presentation?.ShowGameScreen(ActiveLevelNumber);
+            _presentation?.SetGameplayInputEnabled(true);
+        }
         public void UseUndo() => TryUseUndo();
         public void UseRemove() => TryUseRemove();
 
@@ -485,6 +560,8 @@ namespace Game.App
 
         public void CancelPendingOperations()
         {
+            _paidContinueCancellation?.Cancel();
+            CancelContinueAd();
             _currentOperation?.Cancel();
             CancelActiveTutorial();
         }
@@ -508,6 +585,8 @@ namespace Game.App
 
             using (CancellationTokenSource operation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
             {
+                _paidContinueCancellation?.Cancel();
+                CancelContinueAd();
                 _currentOperation = operation;
                 SessionState previousState = _sessionState;
                 _sessionState = SessionState.Transitioning;
@@ -638,6 +717,7 @@ namespace Game.App
             else
             {
                 _sessionState = SessionState.Lost;
+                _presentation?.SetGameplayInputEnabled(false);
                 LoseAccepted?.Invoke();
             }
         }

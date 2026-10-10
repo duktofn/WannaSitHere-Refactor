@@ -5,6 +5,7 @@ using UnityEngine;
 using Game.Events;
 using Game.Core.Economy;
 using Game.View.VFX;
+using Game.View.Effect;
 using TMPro;
 using Cysharp.Threading.Tasks;
 
@@ -26,6 +27,10 @@ namespace Game.View.UI
         [SerializeField] private GameObject levelLosePanel;
         [SerializeField] private GameObject mainSettingPanel;
         [SerializeField] private GameObject gameSettingPanel;
+
+        [Header("Paid Continue Feedback")]
+        [SerializeField] private CurrencyScatterAnimation paidContinueScatter;
+        [SerializeField, Min(0f)] private float paidContinueReturnDelay = 0.5f;
 
         [Header("Visual Effects")]
         [SerializeField] private VfxPlayer _vfxPlayer;
@@ -168,6 +173,18 @@ namespace Game.View.UI
             Debug.Log("[UIManager] Lose Event raised");
             levelLosePanel?.SetActive(true);
             CurrencyCanvas?.SetActive(true);
+        }
+
+        public async Task PlayPaidContinueFeedbackAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (paidContinueScatter != null)
+                paidContinueScatter.PlayFromTransform(paidContinueScatter.transform);
+
+            await UniTask.Delay(
+                Mathf.CeilToInt(Mathf.Max(0f, paidContinueReturnDelay) * 1000f),
+                ignoreTimeScale: true,
+                cancellationToken: cancellationToken);
         }
 
         private void HideWin()

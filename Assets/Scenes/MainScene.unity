@@ -179,6 +179,8 @@ MonoBehaviour:
   levelLosePanel: {fileID: 1963032961}
   mainSettingPanel: {fileID: 2145161255}
   gameSettingPanel: {fileID: 2113176202}
+  paidContinueScatter: {fileID: 665140567}
+  paidContinueReturnDelay: 0.5
   _vfxPlayer: {fileID: 2200000000000000003}
   OnWinEvent: {fileID: 11400000, guid: e720f7945dc0bd74b808cc6edd387b9f, type: 2}
   OnLoseEvent: {fileID: 11400000, guid: 65ac03fb9c0e67c49a5b483f6f6fcf1d, type: 2}
@@ -347,6 +349,11 @@ MonoBehaviour:
   _onClaimAdsRewardEvent: {fileID: 11400000, guid: 93f14c42ac044d14bde7bfef242277a6, type: 2}
   _onClaimDailyRewardEvent: {fileID: 11400000, guid: 4ca717cacee34dbcab2ff93c416dd4f1, type: 2}
   _onClaimWeeklyRewardEvent: {fileID: 11400000, guid: e7f21a48c9014b28a472910cbe6a11e8, type: 2}
+  _onContinueWithGoldEvent: {fileID: 11400000, guid: 3d887fd63dca9ab4a86d7edfbbabed40, type: 2}
+  _onRequestContinueAdEvent: {fileID: 11400000, guid: 0bbf7ef74e1f88c4780e48a291288d9c, type: 2}
+  _onShowContinueAdEvent: {fileID: 11400000, guid: 3d76d1debe02a15468cc925a927eb4d7, type: 2}
+  _onContinueAdRewardedEvent: {fileID: 11400000, guid: d133a42c71107214d8a94b1fe217d17b, type: 2}
+  _onContinueAdCancelledEvent: {fileID: 11400000, guid: 6dc0f50a7b500b44ea197005960080fb, type: 2}
   _onBuyRemoveEvent: {fileID: 11400000, guid: a1ade6841fcd4a78a25fbbad25d96021, type: 2}
   _onBuyUndoEvent: {fileID: 11400000, guid: 37600035e2dd49a9a5f52cfa2aa694f2, type: 2}
   _onBuyMoreMovesEvent: {fileID: 11400000, guid: b81ee51a78b247459e414b6924c09e1c, type: 2}
@@ -1695,6 +1702,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyScatterAnimation
   alwaysOnTop: 1
   overlaySortingOrder: 32767
+  finishWhenDisabled: 0
   coinSprite: {fileID: 7675826601332790545, guid: a0101473690b67b4e88b869f2b1389cf, type: 3}
   coinSize: {x: 75, y: 75}
   container: {fileID: 162871946}
@@ -5969,6 +5977,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyScatterAnimation
   alwaysOnTop: 1
   overlaySortingOrder: 32767
+  finishWhenDisabled: 0
   coinSprite: {fileID: 7675826601332790545, guid: a0101473690b67b4e88b869f2b1389cf, type: 3}
   coinSize: {x: 75, y: 75}
   container: {fileID: 597651193}
@@ -6369,7 +6378,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ComponentVersion: 2
+  m_ComponentVersion: 3
   m_LightType: 4
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
@@ -6915,6 +6924,8 @@ GameObject:
   - component: {fileID: 665140561}
   - component: {fileID: 665140564}
   - component: {fileID: 665140565}
+  - component: {fileID: 665140566}
+  - component: {fileID: 665140567}
   m_Layer: 5
   m_Name: PayButton
   m_TagString: Untagged
@@ -6997,6 +7008,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 665140566}
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
+        m_MethodName: RaiseAll
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &665140562
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7062,6 +7085,49 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.Audio.UIButtonSound
   audioPlayer: {fileID: 312201326}
+--- !u!114 &665140566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 665140559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
+  eventChannels:
+  - {fileID: 11400000, guid: 3d887fd63dca9ab4a86d7edfbbabed40, type: 2}
+  delay: 0
+  isPressedOnce: 0
+  button: {fileID: 665140561}
+--- !u!114 &665140567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 665140559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d7c4cb4b0c742c5b22a2b3d9f1e6a80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyScatterAnimation
+  alwaysOnTop: 1
+  overlaySortingOrder: 32767
+  finishWhenDisabled: 1
+  coinSprite: {fileID: 7675826601332790545, guid: a0101473690b67b4e88b869f2b1389cf, type: 3}
+  coinSize: {x: 75, y: 75}
+  container: {fileID: 0}
+  coinCount: 10
+  scatterRadius: 200
+  scatterDuration: 0.4
+  scatterEase: 6
+  delayBeforeShrink: 0.5
+  shrinkDuration: 0.2
+  shrinkStaggerInterval: 0
+  shrinkEase: 26
 --- !u!1 &668022240
 GameObject:
   m_ObjectHideFlags: 0
@@ -8365,6 +8431,7 @@ GameObject:
   - component: {fileID: 750681750}
   - component: {fileID: 750681753}
   - component: {fileID: 750681754}
+  - component: {fileID: 750681755}
   m_Layer: 5
   m_Name: AdsButton
   m_TagString: Untagged
@@ -8447,6 +8514,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 750681755}
+        m_TargetAssemblyTypeName: Game.Events.ButtonEventRaiser, Game.Events
+        m_MethodName: RaiseAll
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &750681751
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8512,6 +8591,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game.View::Game.View.Audio.UIButtonSound
   audioPlayer: {fileID: 312201326}
+--- !u!114 &750681755
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 750681748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4809ed5e9f076e645ad171fe2315a313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Events::Game.Events.ButtonEventRaiser
+  eventChannels:
+  - {fileID: 11400000, guid: 0bbf7ef74e1f88c4780e48a291288d9c, type: 2}
+  delay: 0
+  isPressedOnce: 0
+  button: {fileID: 750681750}
 --- !u!1 &754932394
 GameObject:
   m_ObjectHideFlags: 0
@@ -9280,6 +9376,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyScatterAnimation
   alwaysOnTop: 1
   overlaySortingOrder: 32767
+  finishWhenDisabled: 0
   coinSprite: {fileID: 21300000, guid: 2e0a61912ea2ca64680ee1edd34b3a2d, type: 3}
   coinSize: {x: 75, y: 75}
   container: {fileID: 597651193}
@@ -12074,6 +12171,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyScatterAnimation
   alwaysOnTop: 1
   overlaySortingOrder: 32767
+  finishWhenDisabled: 0
   coinSprite: {fileID: 21300000, guid: 2e0a61912ea2ca64680ee1edd34b3a2d, type: 3}
   coinSize: {x: 75, y: 75}
   container: {fileID: 597651193}
@@ -19533,6 +19631,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyScatterAnimation
   alwaysOnTop: 1
   overlaySortingOrder: 32767
+  finishWhenDisabled: 0
   coinSprite: {fileID: 7675826601332790545, guid: a0101473690b67b4e88b869f2b1389cf, type: 3}
   coinSize: {x: 75, y: 75}
   container: {fileID: 1770759182}
@@ -22072,6 +22171,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.View::Game.View.Effect.CurrencyScatterAnimation
   alwaysOnTop: 1
   overlaySortingOrder: 32767
+  finishWhenDisabled: 0
   coinSprite: {fileID: 21300000, guid: 2e0a61912ea2ca64680ee1edd34b3a2d, type: 3}
   coinSize: {x: 75, y: 75}
   container: {fileID: 597651193}

@@ -122,6 +122,13 @@ namespace Game.Bootstrap
             _onAudioCue?.Raise(cue);
         }
 
+        public Task PlayPaidContinueFeedbackAsync(CancellationToken cancellationToken)
+        {
+            return _uiManager != null
+                ? _uiManager.PlayPaidContinueFeedbackAsync(cancellationToken)
+                : Task.CompletedTask;
+        }
+
         public void RaiseItemReceived(Reward reward)
         {
             _onItemReceive?.Raise(reward);

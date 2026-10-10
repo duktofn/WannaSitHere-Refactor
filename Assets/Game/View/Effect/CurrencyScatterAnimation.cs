@@ -17,6 +17,7 @@ namespace Game.View.Effect
         [Tooltip("When true, coins are spawned under the same top-level overlay canvas used by CurrencyFlyAnimation.")]
         [SerializeField] private bool alwaysOnTop = true;
         [SerializeField] private int overlaySortingOrder = 32767;
+        [SerializeField] private bool finishWhenDisabled;
 
         [Header("Visual Settings")]
         [SerializeField] private Sprite coinSprite;
@@ -59,7 +60,8 @@ namespace Game.View.Effect
 
         private void OnDisable()
         {
-            CancelAndReleaseActiveCoins();
+            if (!finishWhenDisabled)
+                CancelAndReleaseActiveCoins();
         }
 
         private void OnDestroy()

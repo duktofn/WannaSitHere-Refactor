@@ -68,6 +68,13 @@ namespace Game.Bootstrap
         [SerializeField] private VoidEventChannelSO _onClaimDailyRewardEvent;
         [SerializeField] private VoidEventChannelSO _onClaimWeeklyRewardEvent;
 
+        [Header("Events - Continue After Lose")]
+        [SerializeField] private VoidEventChannelSO _onContinueWithGoldEvent;
+        [SerializeField] private VoidEventChannelSO _onRequestContinueAdEvent;
+        [SerializeField] private VoidEventChannelSO _onShowContinueAdEvent;
+        [SerializeField] private VoidEventChannelSO _onContinueAdRewardedEvent;
+        [SerializeField] private VoidEventChannelSO _onContinueAdCancelledEvent;
+
         [Header("Events - Shop")]
         [SerializeField] private VoidEventChannelSO _onBuyRemoveEvent;
         [SerializeField] private VoidEventChannelSO _onBuyUndoEvent;
@@ -132,6 +139,11 @@ namespace Game.Bootstrap
             _listener.Listen(_onClaimDailyRewardEvent, _gameManager.ClaimDailyReward);
             _listener.Listen(_onClaimWeeklyRewardEvent, _gameManager.ClaimWeeklyReward);
 
+            _listener.Listen(_onContinueWithGoldEvent, _gameManager.ContinueWithGold);
+            _listener.Listen(_onRequestContinueAdEvent, _gameManager.RequestContinueAd);
+            _listener.Listen(_onContinueAdRewardedEvent, _gameManager.ContinueAfterAd);
+            _listener.Listen(_onContinueAdCancelledEvent, _gameManager.CancelContinueAd);
+
             _listener.Listen(_onBuyRemoveEvent, _gameManager.BuyRemove);
             _listener.Listen(_onBuyUndoEvent, _gameManager.BuyUndo);
             _listener.Listen(_onBuyMoreMovesEvent, _gameManager.BuyMoreMoves);
@@ -144,6 +156,7 @@ namespace Game.Bootstrap
             {
                 _gameManager.WinAccepted += RaiseWinResult;
                 _gameManager.LoseAccepted += RaiseLoseResult;
+                _gameManager.ContinueAdRequested += RaiseContinueAdRequest;
                 _gameManager.LevelNumberChanged += RaiseLevelNumberChanged;
             }
         }
@@ -156,6 +169,7 @@ namespace Game.Bootstrap
 
             _gameManager.WinAccepted -= RaiseWinResult;
             _gameManager.LoseAccepted -= RaiseLoseResult;
+            _gameManager.ContinueAdRequested -= RaiseContinueAdRequest;
             _gameManager.LevelNumberChanged -= RaiseLevelNumberChanged;
             _gameManager.CancelPendingOperations();
         }
@@ -254,6 +268,7 @@ namespace Game.Bootstrap
 
         private void RaiseWinResult() => _onWinEvent?.Raise();
         private void RaiseLoseResult() => _onLoseEvent?.Raise();
+        private void RaiseContinueAdRequest() => _onShowContinueAdEvent?.Raise();
         private void RaiseLevelNumberChanged(int levelNumber) => _onLevelChangedEvent?.Raise(levelNumber);
     }
 }

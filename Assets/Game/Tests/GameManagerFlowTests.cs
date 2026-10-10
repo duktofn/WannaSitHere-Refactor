@@ -243,6 +243,7 @@ namespace Game.Tests.EditMode
             public void EnterHomeAudio() { }
             public void ApplyAudioSettings(int soundVolume, bool soundMuted, int musicVolume, bool musicMuted) { }
             public void PlayAudioCue(AudioCueId cue) { }
+            public Task PlayPaidContinueFeedbackAsync(CancellationToken cancellationToken) => Task.CompletedTask;
             public void RaiseItemReceived(Reward reward) { }
             public void RaiseItemSpent(Reward reward) { }
             public void RefreshShop() { }
