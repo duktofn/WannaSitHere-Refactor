@@ -29,6 +29,9 @@ namespace Game.View.People
         [SerializeField] private Ease showEase = Ease.OutBack;
         [SerializeField] private Ease hideEase = Ease.InBack;
 
+        [Header("Screen Bounds")]
+        [SerializeField, Min(0f)] private float screenEdgePadding = 8f;
+
         [Header("Mid Resize")]
         [SerializeField, FormerlySerializedAs("padding")] private float topPadding = 0.08f;
         [SerializeField] private float bottomPadding = 0.08f;
@@ -45,6 +48,8 @@ namespace Game.View.People
         private bool _hasBotAnchor;
         private float _midBaseScaleY = 1f;
         private PersonRuntimeData _boundPerson;
+        private Renderer[] _tooltipRenderers;
+        private Camera _tooltipCamera;
         private readonly TextMeshPro[] _conditionRows = new TextMeshPro[MaxConditions];
         private readonly SpriteRenderer[] _conditionCheckboxes = new SpriteRenderer[MaxConditions];
 
@@ -86,6 +91,69 @@ namespace Game.View.People
                 _conditionCheckboxes[i].sortingOrder = conditionText.GetComponent<MeshRenderer>().sortingOrder + 1;
                 checkbox.SetActive(false);
             }
+            _tooltipRenderers = tooltipsRoot.GetComponentsInChildren<Renderer>(true);
+        }
+
+        private void LateUpdate()
+        {
+            if (_isShowTooltips && tooltipsRoot.activeInHierarchy)
+                ClampToScreen();
+        }
+
+        private void ClampToScreen()
+        {
+            if (_tooltipCamera == null)
+                _tooltipCamera = Camera.main;
+            if (_tooltipCamera == null)
+                return;
+
+            Rect viewport = _tooltipCamera.pixelRect;
+            Rect safeArea = Screen.safeArea;
+            Rect area = Rect.MinMaxRect(
+                Mathf.Max(viewport.xMin, safeArea.xMin) + screenEdgePadding,
+                Mathf.Max(viewport.yMin, safeArea.yMin) + screenEdgePadding,
+                Mathf.Min(viewport.xMax, safeArea.xMax) - screenEdgePadding,
+                Mathf.Min(viewport.yMax, safeArea.yMax) - screenEdgePadding);
+            if (area.width <= 0f || area.height <= 0f)
+                return;
+
+            Vector2 screenMin = new Vector2(float.MaxValue, float.MaxValue);
+            Vector2 screenMax = new Vector2(float.MinValue, float.MinValue);
+            bool hasBounds = false;
+            foreach (Renderer visual in _tooltipRenderers)
+            {
+                if (!visual.enabled || !visual.gameObject.activeInHierarchy)
+                    continue;
+                Bounds bounds = visual.bounds;
+                for (int corner = 0; corner < 4; corner++)
+                {
+                    Vector3 worldCorner = new Vector3(
+                        (corner & 1) == 0 ? bounds.min.x : bounds.max.x,
+                        (corner & 2) == 0 ? bounds.min.y : bounds.max.y,
+                        bounds.center.z);
+                    Vector2 screenCorner = _tooltipCamera.WorldToScreenPoint(worldCorner);
+                    screenMin = Vector2.Min(screenMin, screenCorner);
+                    screenMax = Vector2.Max(screenMax, screenCorner);
+                }
+                hasBounds = true;
+            }
+            if (!hasBounds)
+                return;
+
+            Vector2 correction = new Vector2(
+                screenMax.x - screenMin.x > area.width
+                    ? area.center.x - (screenMin.x + screenMax.x) * 0.5f
+                    : Mathf.Clamp(0f, area.xMin - screenMin.x, area.xMax - screenMax.x),
+                screenMax.y - screenMin.y > area.height
+                    ? area.center.y - (screenMin.y + screenMax.y) * 0.5f
+                    : Mathf.Clamp(0f, area.yMin - screenMin.y, area.yMax - screenMax.y));
+            if (correction.sqrMagnitude < 0.01f)
+                return;
+
+            Vector3 position = _tooltipCamera.WorldToScreenPoint(tooltipsRoot.transform.position);
+            position.x += correction.x;
+            position.y += correction.y;
+            tooltipsRoot.transform.position = _tooltipCamera.ScreenToWorldPoint(position);
         }
 
         private void OnDestroy()
@@ -375,12 +443,22 @@ namespace Game.View.People
         {
             Tween.StopAll(tooltipsRoot.transform);
 
+            tooltipsRoot.transform.localPosition = _originalLocalPos;
+            tooltipsRoot.transform.localScale = Vector3.one;
+            tooltipsRoot.SetActive(true);
+            nameText.ForceMeshUpdate();
+            traitText.ForceMeshUpdate();
+            foreach (TextMeshPro row in _conditionRows)
+                if (row.gameObject.activeInHierarchy)
+                    row.ForceMeshUpdate();
+            ClampToScreen();
+            Vector3 shownPosition = tooltipsRoot.transform.localPosition;
+
             tooltipsRoot.transform.localPosition = Vector3.zero;
             tooltipsRoot.transform.localScale = Vector3.zero;
-            tooltipsRoot.SetActive(true);
 
             _ = Tween.Scale(tooltipsRoot.transform, endValue: 1f, duration: duration, ease: showEase);
-            await Tween.LocalPosition(tooltipsRoot.transform, endValue: _originalLocalPos, duration: duration, ease: showEase);
+            await Tween.LocalPosition(tooltipsRoot.transform, endValue: shownPosition, duration: duration, ease: showEase);
         }
 
         private async UniTask HideTween()
