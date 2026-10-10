@@ -47,17 +47,18 @@ MonoBehaviour:
     pitchMax: 1
     cooldown: 0
     allowOverlap: 0
-  - cue: 4
+  - cue: 5
     clips:
-    - {fileID: 8300000, guid: d8ceb034769fb2b49af03b8b8a74d8b3, type: 3}
+    - {fileID: 8300000, guid: bcc1c44480b92384eb4e50cfab6f9ca5, type: 3}
     bus: 1
     volume: 1
     pitchMin: 1
     pitchMax: 1
     cooldown: 0.4
     allowOverlap: 0
-  - cue: 5
-    clips: []
+  - cue: 4
+    clips:
+    - {fileID: 8300000, guid: c7ac48c49eec0ec4d84402020333dee4, type: 3}
     bus: 1
     volume: 1
     pitchMin: 1

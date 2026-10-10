@@ -129,7 +129,14 @@ AudioMixerController:
     name: MusicVolume
   - guid: 41670744f4034774098b37a361538a41
     name: SoundVolume
-  m_AudioMixerGroupViews: []
+  m_AudioMixerGroupViews:
+  - guids:
+    - e175bf86c53a30e44835243e45538cff
+    - 2ae333863662e0a4893d63a7a27e0262
+    - 180725a858b16ec42b6b85973fbb810c
+    - cb4d9f911075e9e48b4df246f30f56b3
+    - a73e26f5eec8af342bf7709671c04c47
+    name: View
   m_CurrentViewIndex: 0
   m_TargetSnapshot: {fileID: 24500006}
 --- !u!243 &24300002
