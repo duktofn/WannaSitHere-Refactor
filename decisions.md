@@ -11,6 +11,7 @@
 - DEC-007 — Keep shared person definitions separate from level occurrences
 - DEC-008 — GameManager owns runtime orchestration; Bootstrapper only composes dependencies
 - DEC-009 — PersonView owns arrival and emotion feedback
+- DEC-010 — Separate lose continuation requests from ad rewards
 
 ## DEC-001 — Presentation-owned VFX player with explicit calls
 
@@ -614,3 +615,32 @@ Accepted placement and undo play landing feedback followed by the current happy/
 - PersonView
 - PersonMover
 - DEC-001, DEC-006
+
+## DEC-010 — Separate lose continuation requests from ad rewards
+
+Date: 2026-10-10
+
+Status: Accepted
+
+### Problem
+
+LosePanel needs a 500-Gold/+3-move continuation and a rewarded-ad/+5-move continuation, while no rewarded-ad SDK implementation exists yet.
+
+### Options
+
+- Grant moves from the AdsButton click: minimal wiring, but grants the reward without watching an ad.
+- Separate the ad request, reward and cancel callbacks: requires additional event assets, but allows a future SDK to grant only earned rewards and retry after failures.
+
+### Decision
+
+Keep continuation authority in GameManager. Bootstrapper only binds the two button request channels and ad reward/cancel channels, and forwards ContinueAdRequested to OnShowContinueAd. Use the existing presentation ShowGameScreen method to hide LosePanel and restore input without rebuilding the board.
+
+### Reason
+
+The user explicitly requested event/callback wiring and deferred SDK integration. This follows DEC-008 and preserves the current board/history. Gold is checked and persisted before continuation; pending ad rewards are only accepted for the active Lost session and are cleared on payment or session changes.
+
+### Consequences
+
+PayButton is ready to spend 500 Gold and add three moves. AdsButton requests ads; +5 moves requires OnContinueAdRewarded. A future SDK adapter must listen to OnShowContinueAd and raise reward or cancellation callbacks. OnContinueAdCancelled covers failure/close without rewards. No ad SDK or fake completion is added.
+
+Payment feedback amendment (2026-10-10): GameManager awaits the presentation's configurable return delay after successful payment, not the entire scatter lifetime. UIManager starts the existing PayButton CurrencyScatterAnimation. Its opt-in finishWhenDisabled keeps coins running on the independent overlay after LosePanel hides; destruction retains cleanup. A cancellation token prevents a delayed continuation from reopening a replaced session, and pending payment rejects duplicate clicks.

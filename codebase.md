@@ -1,7 +1,7 @@
 # Codebase Context
 
 Last Updated: 2026-10-10
-Last Reviewed Commit: 602a420
+Last Reviewed Commit: 73b4829
 
 ---
 
@@ -1058,6 +1058,8 @@ Dependencies:
 | `_levelLoader` | `ILevelLoader` | Prepares and activates authored levels |
 | `_presentation` | `IGamePresentation` | Executes Unity transitions, UI, audio, VFX, and feedback |
 | `_activeLevelManager` | `LevelManager` | Domain manager for the current session |
+| `_pendingContinueAdLevel` | `LevelManager` | Lost session awaiting an ad reward/cancel callback |
+| `_paidContinueCancellation` | `CancellationTokenSource` | Guards a paid continuation while its presentation delay is pending; cancelled on session changes |
 | `_sessionState` | `SessionState` | Home/transition/playing/win/lose application state |
 
 ### Properties
@@ -1076,6 +1078,7 @@ Dependencies:
 | Name | Type | Purpose |
 |---|---|---|
 | `TutorialTriggerFired` | `Action<TutorialTrigger>` | Raised for each tutorial trigger request; the first-time request occurs when Level 1 is ready |
+| `ContinueAdRequested` | `Action` | Requests rewarded ads for a Lost session; Bootstrapper forwards to OnShowContinueAd |
 
 ### Key Methods
 
@@ -1087,11 +1090,16 @@ Dependencies:
 | `OnApplicationReady` | — | `void` | Marks application startup and defers the first-time tutorial until Level 1 is ready |
 | `Tick` | `DateTime nowUtc` | `void` | Advances an active tutorial and performs once-per-day refresh |
 | `TryUseMoreMoves` / `TryUseUndo` / `TryUseRemove` | — | `bool` | Validates session/inventory, executes booster, persists it, then requests success feedback |
+| `TryContinueWithGold` / `ContinueWithGold` | — | `bool` / `void` | Spends 500 Gold only while Lost, persists inventory and resumes the same board with three extra moves |
+| `RequestContinueAd` | — | `void` | Starts one pending ad continuation request while Lost |
+| `ContinueAfterAd` / `CancelContinueAd` | — | `void` | Reward callback grants five moves and resumes; cancellation grants nothing |
 | `TryPurchaseShopRequest` | `ShopPurchaseRequest request` | `bool` | Resolves configured offer and purchases it through `EconomyManager` |
 | `TryClaimDailyReward` / `TryClaimWeeklyReward` | — | `bool` | Claims configured reward and persists only on success |
 | `SetSoundSettings` / `SetMusicSettings` | `int volume, bool muted` | `void` | Clamps, persists, and applies settings through presentation boundary |
 | `CancelPendingOperations` | — | `void` | Cancels in-flight operations and tutorials during teardown |
 | `SaveGame` | — | `void` | Copies runtime economy/progression/tutorial state into `GameData` and persists |
+
+Lose continuation in MainScene uses ButtonEventRaiser on PayButton/AdsButton. GameBootstrapper binds OnContinueWithGold and OnRequestContinueAd to GameManager. OnShowContinueAd is the future SDK request output; the SDK must raise OnContinueAdRewarded after earning the reward, or OnContinueAdCancelled on cancellation/failure/close. No SDK is integrated yet. Continuing clears the accepted outcome flag, restores Playing/input, and hides LosePanel through the existing ShowGameScreen method without recreating the board. Home/restart/teardown cancel pending ad requests; paying while an ad is pending also clears it. Successful payment starts PayButton's existing scatter through IGamePresentation.PlayPaidContinueFeedbackAsync and awaits UIManager's configurable paidContinueReturnDelay (default 0.5 seconds, unscaled), then resumes with three moves. It does not wait for all coins to disappear. Pending paid feedback prevents additional payment/ad requests and is cancelled when the session changes.
 
 ---
 
@@ -1490,7 +1498,7 @@ Path:
 
 Responsibility:
 
-Presentation component that prewarms and reuses currency icon UI objects, scatters them from a screen or transform position, holds them for a configurable delay, then shrinks and releases them back to the pool.
+Presentation component that prewarms and reuses currency icon UI objects, scatters them from a screen or transform position, holds them for a configurable delay, then shrinks and releases them back to the pool. finishWhenDisabled defaults to false; PayButton explicitly enables it so its coins on the shared overlay finish after LosePanel hides. Destruction still cancels and releases active coins.
 
 Inherits / Implements:
 
