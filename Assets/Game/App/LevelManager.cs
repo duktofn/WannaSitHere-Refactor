@@ -67,7 +67,8 @@ namespace Game.App
                 _moveHistory.Record(new MoveRecord(sourceCell, targetCell, person, targetPerson));
             }
 
-            _currentLevel.ModifyMove(-1);
+            if (!isWaitLineToWaitLine)
+                _currentLevel.ModifyMove(-1);
             CheckAllPersonConditions();
             MoveSucceeded?.Invoke();
 
